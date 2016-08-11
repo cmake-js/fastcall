@@ -1,0 +1,4 @@
+URGENT:
+- discuss character literal return value specifiers (e.g. cmp %al, 'i'), we might wanna use just an int for the size
+
+- psp mips support

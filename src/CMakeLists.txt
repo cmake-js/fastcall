@@ -1,0 +1,19 @@
+file(GLOB SRC *.h* *.c*)
+
+add_library(${PROJECT_NAME} SHARED ${SRC})
+
+target_link_libraries (${PROJECT_NAME}
+  ${CMAKE_JS_LIB}
+  ${DYNCALL_LIBRARIES}
+  ${DYNCALLBACK_LIBRARIES}
+  ${DYNLOAD_LIBRARIES})
+
+set_target_properties(
+  ${PROJECT_NAME}
+  PROPERTIES
+  COTIRE_ADD_UNITY_BUILD FALSE
+  COTIRE_CXX_PREFIX_HEADER_INIT "${CMAKE_SOURCE_DIR}/src/deps.h"
+  PREFIX "" 
+  SUFFIX ".node")
+
+cotire(${PROJECT_NAME} CONFIGURATIONS Debug RelWithDebInfo)
