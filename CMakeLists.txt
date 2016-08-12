@@ -1,9 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
 
-set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
-
-include(cotire)
-
 # Configure CCache if available
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)

@@ -1,5 +1,5 @@
 #include "deps.h"
-#include "dyncallStuff.h"
+#include "dynloadStuff.h"
 #include "helpers.h"
 
 using namespace std;
@@ -14,6 +14,9 @@ NAN_METHOD(loadLibrary)
 {
     char* str = *Nan::Utf8String(info[0]);
     DLLib* pLib = dlLoadLibrary(str);
+    if (!pLib) {
+        return Nan::ThrowTypeError((string("Cannot load library or library not found: ") + str).c_str());
+    }
     return info.GetReturnValue().Set(wrapPointer(pLib));
 }
 
@@ -36,7 +39,7 @@ NAN_METHOD(findSymbol)
     char* str = *Nan::Utf8String(info[1]);
     void* pF = dlFindSymbol(pLib, str);
     if (!pF) {
-        return Nan::ThrowError((string("Specified symbol '") + str + "'' cannot be found.").c_str());
+        return info.GetReturnValue().Set(Nan::Null());
     }
     return info.GetReturnValue().Set(wrapPointer(pF));
 }

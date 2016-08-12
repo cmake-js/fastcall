@@ -11,9 +11,5 @@ target_link_libraries (${PROJECT_NAME}
 set_target_properties(
   ${PROJECT_NAME}
   PROPERTIES
-  COTIRE_ADD_UNITY_BUILD FALSE
-  COTIRE_CXX_PREFIX_HEADER_INIT "${CMAKE_SOURCE_DIR}/src/deps.h"
   PREFIX "" 
   SUFFIX ".node")
-
-cotire(${PROJECT_NAME} CONFIGURATIONS Debug RelWithDebInfo)
