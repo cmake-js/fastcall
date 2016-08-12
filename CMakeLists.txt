@@ -22,7 +22,11 @@ include(DynLoadConfig)
 
 project (fastcall CXX)
 
-include_directories(${CMAKE_JS_INC})
+include_directories(
+    ${DYNCALL_INCLUDE_DIRS}
+    ${DYNCALLBACK_INCLUDE_DIRS}
+    ${DYNLOAD_INCLUDE_DIRS}
+    ${CMAKE_JS_INC})
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -51,3 +55,4 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 add_subdirectory(src)
+add_subdirectory(test/testlib)

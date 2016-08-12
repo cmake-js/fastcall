@@ -1,10 +1,12 @@
 #include "deps.h"
+#include "dyncallStuff.h"
 
 using namespace v8;
-using namespace Nan;
+using namespace fastcall;
 
-NAN_MODULE_INIT(InitAll) {
-    // Set(target, New<String>("calculateSync").ToLocalChecked(), GetFunction(New<FunctionTemplate>(CalculateSync)).ToLocalChecked());
+NAN_MODULE_INIT(initAll)
+{
+    initDyncallStuff(target);
 }
 
-NODE_MODULE(addon, InitAll)
+NODE_MODULE(fastcall, initAll)
