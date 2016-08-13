@@ -4,9 +4,9 @@
 using namespace v8;
 using namespace fastcall;
 
-NAN_MODULE_INIT(initAll)
+NAN_MODULE_INIT(InitAll)
 {
-    initDyncallStuff(target);
+    InitDyncallStuff(target);
 }
 
 NODE_MODULE(fastcall, initAll)

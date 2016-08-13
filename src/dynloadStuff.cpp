@@ -17,7 +17,7 @@ NAN_METHOD(loadLibrary)
     if (!pLib) {
         return Nan::ThrowTypeError((string("Cannot load library or library not found: ") + str).c_str());
     }
-    return info.GetReturnValue().Set(wrapPointer(pLib));
+    return info.GetReturnValue().Set(WrapPointer(pLib));
 }
 
 NAN_METHOD(freeLibrary)
@@ -41,11 +41,11 @@ NAN_METHOD(findSymbol)
     if (!pF) {
         return info.GetReturnValue().Set(Nan::Null());
     }
-    return info.GetReturnValue().Set(wrapPointer(pF));
+    return info.GetReturnValue().Set(WrapPointer(pF));
 }
 }
 
-NAN_MODULE_INIT(fastcall::initDyncallStuff)
+NAN_MODULE_INIT(fastcall::InitDyncallStuff)
 {
     Nan::HandleScope scope;
     Nan::Set(target, Nan::New<String>("loadLibrary").ToLocalChecked(), Nan::New<FunctionTemplate>(loadLibrary)->GetFunction());
