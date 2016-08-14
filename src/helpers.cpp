@@ -13,12 +13,12 @@ v8::Local<v8::Value> fastcall::WrapPointer(char* ptr, size_t length)
     return scope.Escape(Nan::NewBuffer(ptr, length, Noop, nullptr).ToLocalChecked());
 }
 
-v8::Local<v8::Value> fastcall::wrapNullPointer()
+v8::Local<v8::Value> fastcall::WrapNullPointer()
 {
     return WrapPointer((char*)nullptr, (size_t)0);
 }
 
-char* fastcall::unwrapPointer(const v8::Local<Value>& value)
+char* fastcall::UnwrapPointer(const v8::Local<Value>& value)
 {
     Nan::HandleScope scope;
     if (value->IsObject() && Buffer::HasInstance(value)) {

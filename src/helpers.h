@@ -6,9 +6,9 @@ inline void Noop(char* data, void* hint) {}
 
 v8::Local<v8::Value> WrapPointer(char* ptr, size_t length = 0);
 
-v8::Local<v8::Value> wrapNullPointer();
+v8::Local<v8::Value> WrapNullPointer();
 
-char* unwrapPointer(const v8::Local<v8::Value>& value);
+char* UnwrapPointer(const v8::Local<v8::Value>& value);
 
 template <typename T>
 v8::Local<v8::Value> WrapPointer(T* ptr, size_t length = 0)

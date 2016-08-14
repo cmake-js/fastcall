@@ -1,5 +1,5 @@
 #include "deps.h"
-#include "dynloadStuff.h"
+#include "dynloadstuff.h"
 #include "helpers.h"
 
 using namespace std;
@@ -22,7 +22,7 @@ NAN_METHOD(loadLibrary)
 
 NAN_METHOD(freeLibrary)
 {
-    DLLib* pLib = unwrapPointer<DLLib>(info[0]);
+    DLLib* pLib = UnwrapPointer<DLLib>(info[0]);
     if (!pLib) {
         return Nan::ThrowTypeError("Argument value is null or not a pointer.");
     }
@@ -32,7 +32,7 @@ NAN_METHOD(freeLibrary)
 
 NAN_METHOD(findSymbol)
 {
-    DLLib* pLib = unwrapPointer<DLLib>(info[0]);
+    DLLib* pLib = UnwrapPointer<DLLib>(info[0]);
     if (!pLib) {
         return Nan::ThrowTypeError("First argument's value is null or not a pointer.");
     }

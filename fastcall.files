@@ -572,8 +572,8 @@ lib/index.js
 lib/native.js
 src/CMakeLists.txt
 src/deps.h
-src/dynloadStuff.cpp
-src/dynloadStuff.h
+src/dynloadstuff.cpp
+src/dynloadstuff.h
 src/fastcall.cpp
 src/helpers.cpp
 src/helpers.h
@@ -583,3 +583,7 @@ test/dynload.js
 CMakeLists.txt
 LICENSE
 package.json
+src/librarybase.h
+src/librarybase.cpp
+src/functionbase.h
+src/functionbase.cpp
