@@ -15,7 +15,8 @@ v8::Local<v8::Value> fastcall::WrapPointer(char* ptr, size_t length)
 
 v8::Local<v8::Value> fastcall::WrapNullPointer()
 {
-    return WrapPointer((char*)nullptr, (size_t)0);
+    Nan::EscapableHandleScope scope;
+    return scope.Escape(WrapPointer((char*)nullptr, (size_t)0));
 }
 
 char* fastcall::UnwrapPointer(const v8::Local<Value>& value)

@@ -32,6 +32,8 @@ documentation/site
 
 # IDE
 .idea
+*.includes
+.vscode/*.DB*
 
 # Vendor
 deps/arrayfire

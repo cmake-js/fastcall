@@ -1,5 +1,6 @@
 #include "librarybase.h"
 #include "deps.h"
+#include "helpers.h"
 
 using namespace v8;
 using namespace node;
@@ -17,11 +18,12 @@ NAN_MODULE_INIT(LibraryBase::Init)
     tmpl->InstanceTemplate()->SetInternalFieldCount(1);
     auto f = tmpl->GetFunction();
 
-    //SetPrototypeMethod(tpl, "getHandle", GetHandle);
+    SetPrototypeMethod(tmpl, "initialize", initialize);
+    SetPrototypeMethod(tmpl, "free", free);
     //f->Set(Nan::New("create").ToLocalChecked(), Nan::New<FunctionTemplate>(Create)->GetFunction());
 
     constructor.Reset(f);
-    Nan::Set(target, Nan::New<String>("LibraryBase").ToLocalChecked(), f);
+    SetValue(target, "LibraryBase", f);
 }
 
 NAN_METHOD(LibraryBase::New)
@@ -39,4 +41,31 @@ LibraryBase::LibraryBase()
 LibraryBase::~LibraryBase()
 {
 
+}
+
+NAN_METHOD(LibraryBase::initialize)
+{
+    auto self = info.This().As<Object>();
+    auto obj = ObjectWrap::Unwrap<LibraryBase>(self);
+
+    obj->pLib = FindPLib(self);
+}
+
+NAN_METHOD(LibraryBase::free)
+{
+    auto self = info.This().As<Object>();
+    auto obj = ObjectWrap::Unwrap<LibraryBase>(self);
+
+    obj->pLib = nullptr;
+}
+
+DLLib* LibraryBase::FindPLib(const v8::Local<Object>& self)
+{
+    Nan::HandleScope scope;
+
+    auto ref = GetValue(self, "_pLib");
+    assert(Buffer::HasInstance(ref));
+    auto pLib = UnwrapPointer<DLLib>(ref);
+    assert(pLib);
+    return pLib;
 }

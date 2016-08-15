@@ -5,3 +5,5 @@
 #include <dyncall_callback.h>
 #include <dynload.h>
 #include <string>
+#include <functional>
+#include <exception>

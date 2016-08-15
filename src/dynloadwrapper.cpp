@@ -1,5 +1,5 @@
 #include "deps.h"
-#include "dynloadstuff.h"
+#include "dynloadwrapper.h"
 #include "helpers.h"
 
 using namespace std;
@@ -45,7 +45,7 @@ NAN_METHOD(findSymbol)
 }
 }
 
-NAN_MODULE_INIT(fastcall::InitDyncallStuff)
+NAN_MODULE_INIT(fastcall::InitDyncallWrapper)
 {
     Nan::HandleScope scope;
     Nan::Set(target, Nan::New<String>("loadLibrary").ToLocalChecked(), Nan::New<FunctionTemplate>(loadLibrary)->GetFunction());

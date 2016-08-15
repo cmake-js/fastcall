@@ -113,7 +113,7 @@
     "consistent-this": [2, "self"],
     "func-names": 0,
     "func-style": [1, "declaration", { "allowArrowFunctions": true }],
-    "indent": [1, "tab", {"SwitchCase": 1}],
+    "indent": [1, 4, {"SwitchCase": 1}],
     "jsx-quotes": 0,
     "key-spacing": [2, {"beforeColon": false, "afterColon": true}],
     "keyword-spacing": 2,
