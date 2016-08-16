@@ -4,11 +4,27 @@
 namespace fastcall {
 inline void Noop(char* data, void* hint) {}
 
-v8::Local<v8::Value> WrapPointer(char* ptr, size_t length = 0);
+inline v8::Local<v8::Value> WrapPointer(char* ptr, size_t length = 0)
+{
+    Nan::EscapableHandleScope scope;
+    if (ptr == nullptr) length = 0;
+    return scope.Escape(Nan::NewBuffer(ptr, length, Noop, nullptr).ToLocalChecked());
+}
 
-v8::Local<v8::Value> WrapNullPointer();
+inline v8::Local<v8::Value> WrapNullPointer()
+{
+    Nan::EscapableHandleScope scope;
+    return scope.Escape(WrapPointer((char*)nullptr, (size_t)0));
+}
 
-char* UnwrapPointer(const v8::Local<v8::Value>& value);
+inline char* UnwrapPointer(const v8::Local<v8::Value>& value)
+{
+    Nan::HandleScope scope;
+    if (value->IsObject() && node::Buffer::HasInstance(value)) {
+        return node::Buffer::Data(value);
+    }
+    return nullptr;
+}
 
 template <typename S>
 v8::Local<v8::Value> GetValue(const S& value, const char* key)

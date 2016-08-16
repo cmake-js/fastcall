@@ -7,3 +7,5 @@
 #include <string>
 #include <functional>
 #include <exception>
+#include <vector>
+#include <cstdint>
