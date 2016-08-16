@@ -14,6 +14,24 @@
 #define dcArgInt64 dcArgLongLong
 #define dcArgUInt64(vm, p) { auto tmp = p; dcArgLongLong(vm, reinterpret_cast<long long&>(tmp)); }
 
+#define dcArgByte dcArgChar
+
+#define dcArgUChar(vm, p) { auto tmp = p; dcArgChar(vm, reinterpret_cast<char&>(tmp)); }
+
+#define dcArgUShort(vm, p) { auto tmp = p; dcArgShort(vm, reinterpret_cast<short&>(tmp)); }
+
+#define dcArgUInt(vm, p) { auto tmp = p; dcArgInt(vm, reinterpret_cast<int&>(tmp)); }
+
+#define dcArgULong(vm, p) { auto tmp = p; dcArgLong(vm, reinterpret_cast<long&>(tmp)); }
+
+#define dcArgULongLong(vm, p) { auto tmp = p; dcArgLongLong(vm, reinterpret_cast<long long&>(tmp)); }
+
+#define dcArgSizeT(vm, p) { auto tmp = p; dcArgLongLong(vm, reinterpret_cast<long long&>(tmp)); }
+
+#define dcArgUChar(vm, p) { auto tmp = p; dcArgChar(vm, reinterpret_cast<char&>(tmp)); }
+
+#define dcArgBool(vm, p) { auto tmp = p; dcArgChar(vm, reinterpret_cast<char&>(tmp)); }
+
 using namespace v8;
 using namespace node;
 using namespace std;
@@ -165,6 +183,11 @@ inline unsigned long long GetULongLongAt(const Nan::FunctionCallbackInfo<v8::Val
 inline size_t GetSizeTAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
     return static_cast<size_t>(GetUInt64At(info, index));
+}
+
+inline bool GetBoolAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
+{
+    return info[index]->BooleanValue();
 }
 }
 
