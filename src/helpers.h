@@ -4,14 +4,14 @@
 namespace fastcall {
 inline void Noop(char* data, void* hint) {}
 
-inline v8::Local<v8::Value> WrapPointer(char* ptr, size_t length = 0)
+inline v8::Local<v8::Object> WrapPointer(char* ptr, size_t length = 0)
 {
     Nan::EscapableHandleScope scope;
     if (ptr == nullptr) length = 0;
     return scope.Escape(Nan::NewBuffer(ptr, length, Noop, nullptr).ToLocalChecked());
 }
 
-inline v8::Local<v8::Value> WrapNullPointer()
+inline v8::Local<v8::Object> WrapNullPointer()
 {
     Nan::EscapableHandleScope scope;
     return scope.Escape(WrapPointer((char*)nullptr, (size_t)0));
@@ -55,7 +55,7 @@ void SetValue(T& value, const char* key, const S& v)
 }
 
 template <typename T>
-v8::Local<v8::Value> WrapPointer(T* ptr, size_t length = 0)
+v8::Local<v8::Object> WrapPointer(T* ptr, size_t length = 0)
 {
     Nan::EscapableHandleScope scope;
 
@@ -69,4 +69,22 @@ T* UnwrapPointer(const v8::Local<v8::Value>& value)
 
     return reinterpret_cast<T*>(UnwrapPointer(value));
 }
+
+inline v8::Local<v8::Object> GetGlobal() {
+    return Nan::GetCurrentContext()->Global();
+}
+
+inline v8::Local<v8::Value> Require(const char* name) {
+    Nan::EscapableHandleScope scope;
+
+    auto global = GetGlobal();
+    auto require = GetValue<v8::Function>(global, "require");
+    v8::Local<v8::Value> args[] = { Nan::New(name).ToLocalChecked() };
+    return scope.Escape(require->Call(global, 1, args));
+}
+
+inline v8::Local<v8::Object> GetRef() {
+    return Require("ref").As<v8::Object>();
+}
+
 }

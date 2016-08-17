@@ -12,6 +12,9 @@ struct FunctionBase : public node::ObjectWrap {
 
     static NAN_MODULE_INIT(Init);
 
+    static FunctionBase* Get(v8::Local<v8::Value> value);
+    void* GetFuncPtr();
+
 private:
     FunctionBase();
 
