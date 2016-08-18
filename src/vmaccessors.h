@@ -8,5 +8,5 @@ typedef std::function<void(DCCallVM*, const Nan::FunctionCallbackInfo<v8::Value>
 typedef std::function<v8::Local<v8::Value>(DCCallVM*)> TVMInvoker;
 
 TVMInitialzer MakeVMInitializer(const v8::Local<v8::Object>& func);
-TVMInvoker MakeVMInvoker(const v8::Local<v8::Object>& func);
+TVMInvoker MakeSyncVMInvoker(const v8::Local<v8::Object>& func);
 }

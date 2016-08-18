@@ -1,6 +1,7 @@
 #pragma once
 #include <nan.h>
 #include "vmaccessors.h"
+#include <dyncall.h>
 
 namespace fastcall {
 struct LibraryBase;
@@ -22,11 +23,14 @@ private:
 
     bool initialized = false;
     LibraryBase* library = nullptr;
+    DCCallVM* vm = nullptr;
     TVMInitialzer vmInitializer;
+    TVMInvoker vmInvoker;
 
     static NAN_METHOD(New);
 
     static NAN_METHOD(initialize);
+    static NAN_METHOD(func);
 
     static v8::Local<v8::Object> FindLibrary(const v8::Local<v8::Object>& self);
     static LibraryBase* FindLibraryBase(const v8::Local<v8::Object>& self);

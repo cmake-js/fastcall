@@ -39,20 +39,49 @@ FunctionBase::FunctionBase()
 
 FunctionBase::~FunctionBase()
 {
+    if (vm) {
+        dcFree(vm);
+        vm = nullptr;
+    }
 }
 
 NAN_METHOD(FunctionBase::initialize)
 {
     auto self = info.This().As<Object>();
     auto obj = ObjectWrap::Unwrap<FunctionBase>(self);
+    unsigned callMode = GetValue(self, "callMode")->Uint32Value();
 
     if (obj->initialized) {
         return;
     }
 
     obj->library = FindLibraryBase(info.This());
-
+    obj->vmInitializer = MakeVMInitializer(info.This());
+    // TODO: implement async
+    obj->vmInvoker = callMode == 1 ? MakeSyncVMInvoker(info.This()) : MakeSyncVMInvoker(info.This());
+    // TODO: make size parameter + add GC memory usage
+    obj->vm = dcNewCallVM(4096);
     obj->initialized = true;
+}
+
+NAN_METHOD(FunctionBase::func)
+{
+    auto self = info.This().As<Object>();
+    auto obj = ObjectWrap::Unwrap<FunctionBase>(self);
+
+    if (!obj->initialized) {
+        return Nan::ThrowError("Function is not initialized.");
+    }
+
+    Local<Value> result;
+    try {
+        obj->vmInitializer(obj->vm, info);
+        result = obj->vmInvoker(obj->vm);
+    }
+    catch (exception& ex) {
+        return Nan::ThrowError(ex.what());
+    }
+    info.GetReturnValue().Set(result);
 }
 
 Local<Object> FunctionBase::FindLibrary(const Local<Object>& self)

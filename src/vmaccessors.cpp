@@ -19,7 +19,7 @@
 #define dcArgUInt64(vm, p) { auto tmp = p; dcArgLongLong(vm, reinterpret_cast<long long&>(tmp)); }
 #define dcCallInt64 dcCallLongLong
 
-#define dcArgByte dcArgChar
+#define dcArgByte(vm, p) { auto tmp = p; dcArgChar(vm, reinterpret_cast<char&>(tmp)); }
 
 #define dcArgUChar(vm, p) { auto tmp = p; dcArgChar(vm, reinterpret_cast<char&>(tmp)); }
 
@@ -66,6 +66,38 @@ inline uint64_t dcCallUInt64(DCCallVM* vm, void *f) {
     return reinterpret_cast<uint64_t&>(tmp);
 }
 
+#define dcCallByte dcCallUInt8
+
+inline unsigned char dcCallUChar(DCCallVM* vm, void *f) {
+    char tmp = dcCallChar(vm, f);
+    return reinterpret_cast<unsigned char&>(tmp);
+}
+
+inline unsigned short dcCallUShort(DCCallVM* vm, void *f) {
+    short tmp = dcCallShort(vm, f);
+    return reinterpret_cast<unsigned short&>(tmp);
+}
+
+inline unsigned int dcCallUInt(DCCallVM* vm, void *f) {
+    int tmp = dcCallInt(vm, f);
+    return reinterpret_cast<unsigned int&>(tmp);
+}
+
+inline unsigned long dcCallULong(DCCallVM* vm, void *f) {
+    long tmp = dcCallLong(vm, f);
+    return reinterpret_cast<unsigned long&>(tmp);
+}
+
+inline unsigned long long dcCallULongLong(DCCallVM* vm, void *f) {
+    long long tmp = dcCallLongLong(vm, f);
+    return reinterpret_cast<unsigned long long&>(tmp);
+}
+
+inline size_t dcCallSizeT(DCCallVM* vm, void *f) {
+    long long tmp = dcCallLongLong(vm, f);
+    return reinterpret_cast<size_t&>(tmp);
+}
+
 inline void* GetPointerAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
     Nan::HandleScope scope;
@@ -83,73 +115,53 @@ inline void* GetPointerAt(const Nan::FunctionCallbackInfo<v8::Value>& info, cons
 
 inline int8_t GetInt8At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
-    Nan::HandleScope scope;
-
     return static_cast<int8_t>(info[index]->Int32Value());
 }
 
 inline uint8_t GetUInt8At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
-    Nan::HandleScope scope;
-
     return static_cast<uint8_t>(info[index]->Uint32Value());
 }
 
 inline int16_t GetInt16At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
-    Nan::HandleScope scope;
-
     return static_cast<int16_t>(info[index]->Int32Value());
 }
 
 inline uint16_t GetUInt16At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
-    Nan::HandleScope scope;
-
     return static_cast<uint16_t>(info[index]->Uint32Value());
 }
 
 inline int32_t GetInt32At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
-    Nan::HandleScope scope;
-
     return static_cast<int32_t>(info[index]->Int32Value());
 }
 
 inline uint32_t GetUInt32At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
-    Nan::HandleScope scope;
-
     return static_cast<uint32_t>(info[index]->Uint32Value());
 }
 
 // TODO: proper 64 bit support, like node-ffi
 inline int64_t GetInt64At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
-    Nan::HandleScope scope;
-
     return static_cast<int64_t>(info[index]->NumberValue());
 }
 
 // TODO: proper 64 bit support, like node-ffi
 inline uint64_t GetUInt64At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
-    Nan::HandleScope scope;
-
     return static_cast<uint64_t>(info[index]->NumberValue());
 }
 
 inline float GetFloatAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
-    Nan::HandleScope scope;
-
     return static_cast<float>(info[index]->NumberValue());
 }
 
 inline double GetDoubleAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
-    Nan::HandleScope scope;
-
     return info[index]->NumberValue();
 }
 
@@ -208,6 +220,7 @@ inline unsigned long long GetULongLongAt(const Nan::FunctionCallbackInfo<v8::Val
     return static_cast<unsigned long long>(GetUInt64At(info, index));
 }
 
+// TODO: proper 64 bit support, like node-ffi
 inline size_t GetSizeTAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
     return static_cast<size_t>(GetUInt64At(info, index));
@@ -362,12 +375,14 @@ TVMInitialzer fastcall::MakeVMInitializer(const v8::Local<Object>& func)
                 });
                 continue;
             }
+            // TODO: proper 64 bit support, like node-ffi
             if (!strcmp(typeName, "longlong")) {
                 list.emplace_back([=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
                     dcArgLongLong(vm, GetLongLongAt(info, i));
                 });
                 continue;
             }
+            // TODO: proper 64 bit support, like node-ffi
             if (!strcmp(typeName, "ulonglong")) {
                 list.emplace_back([=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
                     dcArgULongLong(vm, GetULongLongAt(info, i));
@@ -380,6 +395,7 @@ TVMInitialzer fastcall::MakeVMInitializer(const v8::Local<Object>& func)
                 });
                 continue;
             }
+            // TODO: proper 64 bit support, like node-ffi
             if (!strcmp(typeName, "size_t")) {
                 list.emplace_back([=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
                     dcArgSizeT(vm, GetSizeTAt(info, i));
@@ -399,198 +415,179 @@ TVMInitialzer fastcall::MakeVMInitializer(const v8::Local<Object>& func)
     };
 }
 
-TVMInvoker MakeVMInvoker(const v8::Local<Object>& func)
+TVMInvoker MakeSyncVMInvoker(const v8::Local<Object>& func)
 {
     Nan::HandleScope scope;
 
     auto resultType = GetValue<Object>(func, "resultType");
     auto resultTypeName = string(*Nan::Utf8String(GetValue<String>(resultType, "name")));
     auto indirection = GetValue(resultType, "indirection")->Uint32Value();
-    unsigned callMode = GetValue(func, "callMode")->Uint32Value();
     void* funcPtr = FunctionBase::Get(func)->GetFuncPtr();
 
-    if (callMode == syncCallMode) {
-        if (indirection > 1) {
-            return [=](DCCallVM* vm) {
-                Nan::EscapableHandleScope scope;
+    assert(GetValue(func, "callMode")->Uint32Value() == 1);
 
-                void* result = dcCallPointer(vm, funcPtr);
-                auto ref = WrapPointer(result);
-                auto refType = GetResultPointerType(resultType);
-                SetValue(ref, "type", refType);
-                return scope.Escape(ref);
+    if (indirection > 1) {
+        return [=](DCCallVM* vm) {
+            Nan::EscapableHandleScope scope;
+
+            void* result = dcCallPointer(vm, funcPtr);
+            auto ref = WrapPointer(result);
+            auto refType = GetResultPointerType(resultType);
+            SetValue(ref, "type", refType);
+            return scope.Escape(ref);
+        };
+    }
+    else if (indirection == 1) {
+        auto typeName = resultTypeName.c_str();
+
+        if (!strcmp(typeName, "void")) {
+            return [=](DCCallVM* vm) {
+                return Nan::Undefined();
             };
         }
-        else if (indirection == 1) {
-            auto typeName = resultTypeName.c_str();
-
-            if (!strcmp(typeName, "int8")) {
-                return [=](DCCallVM* vm) {
-                    Nan::EscapableHandleScope scope;
-
-                    int8_t result = dcCallInt8(vm, funcPtr);
-                    return scope.Escape(Nan::New(result));
-                };
-            }
-            if (!strcmp(typeName, "uint8")) {
-                return [=](DCCallVM* vm) {
-                    Nan::EscapableHandleScope scope;
-
-                    uint8_t result = dcCallUInt8(vm, funcPtr);
-                    return scope.Escape(Nan::New(result));
-                };
-            }
-            if (!strcmp(typeName, "int16")) {
-                return [=](DCCallVM* vm) {
-                    Nan::EscapableHandleScope scope;
-
-                    int16_t result = dcCallInt16(vm, funcPtr);
-                    return scope.Escape(Nan::New(result));
-                };
-            }
-            if (!strcmp(typeName, "uint16")) {
-                return [=](DCCallVM* vm) {
-                    Nan::EscapableHandleScope scope;
-
-                    uint16_t result = dcCallUInt16(vm, funcPtr);
-                    return scope.Escape(Nan::New(result));
-                };
-            }
-            if (!strcmp(typeName, "int32")) {
-                return [=](DCCallVM* vm) {
-                    Nan::EscapableHandleScope scope;
-
-                    int32_t result = dcCallInt32(vm, funcPtr);
-                    return scope.Escape(Nan::New(result));
-                };
-            }
-            if (!strcmp(typeName, "uint32")) {
-                return [=](DCCallVM* vm) {
-                    Nan::EscapableHandleScope scope;
-
-                    uint32_t result = dcCallUInt32(vm, funcPtr);
-                    return scope.Escape(Nan::New(result));
-                };
-            }
-            if (!strcmp(typeName, "int64")) {
-                // TODO: proper 64 bit support, like node-ffi
-                return [=](DCCallVM* vm) {
-                    Nan::EscapableHandleScope scope;
-
-                    int64_t result = dcCallInt64(vm, funcPtr);
-                    return scope.Escape(Nan::New((double)result));
-                };
-            }
-            if (!strcmp(typeName, "uint64")) {
-                // TODO: proper 64 bit support, like node-ffi
-                return [=](DCCallVM* vm) {
-                    Nan::EscapableHandleScope scope;
-
-                    uint64_t result = dcCallUInt64(vm, funcPtr);
-                    return scope.Escape(Nan::New((double)result));
-                };
-            }
-            if (!strcmp(typeName, "float")) {
-                return [=](DCCallVM* vm) {
-                    Nan::EscapableHandleScope scope;
-
-                    float result = dcCallFloat(vm, funcPtr);
-                    return scope.Escape(Nan::New(result));
-                };
-            }
-            if (!strcmp(typeName, "double")) {
-                return [=](DCCallVM* vm) {
-                    Nan::EscapableHandleScope scope;
-
-                    double result = dcCallDouble(vm, funcPtr);
-                    return scope.Escape(Nan::New(result));
-                };
-            }
-            if (!strcmp(typeName, "char")) {
-                return [=](DCCallVM* vm) {
-                    Nan::EscapableHandleScope scope;
-
-                    char result = dcCallChar(vm, funcPtr);
-                    return scope.Escape(Nan::New(result));
-                };
-            }
-            /*
-            if (!strcmp(typeName, "byte")) {
-                list.emplace_back([=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    dcArgByte(vm, GetByteAt(info, i));
-                });
-                continue;
-            }
-            if (!strcmp(typeName, "uchar")) {
-                list.emplace_back([=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    dcArgUChar(vm, GetUCharAt(info, i));
-                });
-                continue;
-            }
-            if (!strcmp(typeName, "short")) {
-                list.emplace_back([=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    dcArgShort(vm, GetShortAt(info, i));
-                });
-                continue;
-            }
-            if (!strcmp(typeName, "ushort")) {
-                list.emplace_back([=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    dcArgUShort(vm, GetUShortAt(info, i));
-                });
-                continue;
-            }
-            if (!strcmp(typeName, "int")) {
-                list.emplace_back([=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    dcArgInt(vm, GetIntAt(info, i));
-                });
-                continue;
-            }
-            if (!strcmp(typeName, "uint")) {
-                list.emplace_back([=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    dcArgUInt(vm, GetUIntAt(info, i));
-                });
-                continue;
-            }
-            if (!strcmp(typeName, "long")) {
-                list.emplace_back([=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    dcArgLong(vm, GetLongAt(info, i));
-                });
-                continue;
-            }
-            if (!strcmp(typeName, "ulong")) {
-                list.emplace_back([=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    dcArgULong(vm, GetULongAt(info, i));
-                });
-                continue;
-            }
-            if (!strcmp(typeName, "longlong")) {
-                list.emplace_back([=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    dcArgLongLong(vm, GetLongLongAt(info, i));
-                });
-                continue;
-            }
-            if (!strcmp(typeName, "ulonglong")) {
-                list.emplace_back([=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    dcArgULongLong(vm, GetULongLongAt(info, i));
-                });
-                continue;
-            }
-            if (!strcmp(typeName, "bool")) {
-                list.emplace_back([=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    dcArgBool(vm, GetBoolAt(info, i));
-                });
-                continue;
-            }
-            if (!strcmp(typeName, "size_t")) {
-                list.emplace_back([=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    dcArgSizeT(vm, GetSizeTAt(info, i));
-                });
-                continue;
-            }*/
+        if (!strcmp(typeName, "int8")) {
+            return [=](DCCallVM* vm) {
+                int8_t result = dcCallInt8(vm, funcPtr);
+                return Nan::New(result);
+            };
         }
-        throw logic_error("Invalid resultType.");
+        if (!strcmp(typeName, "uint8")) {
+            return [=](DCCallVM* vm) {
+                uint8_t result = dcCallUInt8(vm, funcPtr);
+                return Nan::New(result);
+            };
+        }
+        if (!strcmp(typeName, "int16")) {
+            return [=](DCCallVM* vm) {
+                int16_t result = dcCallInt16(vm, funcPtr);
+                return Nan::New(result);
+            };
+        }
+        if (!strcmp(typeName, "uint16")) {
+            return [=](DCCallVM* vm) {
+                uint16_t result = dcCallUInt16(vm, funcPtr);
+                return Nan::New(result);
+            };
+        }
+        if (!strcmp(typeName, "int32")) {
+            return [=](DCCallVM* vm) {
+                int32_t result = dcCallInt32(vm, funcPtr);
+                return Nan::New(result);
+            };
+        }
+        if (!strcmp(typeName, "uint32")) {
+            return [=](DCCallVM* vm) {
+                uint32_t result = dcCallUInt32(vm, funcPtr);
+                return Nan::New(result);
+            };
+        }
+        if (!strcmp(typeName, "int64")) {
+            // TODO: proper 64 bit support, like node-ffi
+            return [=](DCCallVM* vm) {
+                int64_t result = dcCallInt64(vm, funcPtr);
+                return Nan::New((double)result);
+            };
+        }
+        if (!strcmp(typeName, "uint64")) {
+            // TODO: proper 64 bit support, like node-ffi
+            return [=](DCCallVM* vm) {
+                uint64_t result = dcCallUInt64(vm, funcPtr);
+                return Nan::New((double)result);
+            };
+        }
+        if (!strcmp(typeName, "float")) {
+            return [=](DCCallVM* vm) {
+                float result = dcCallFloat(vm, funcPtr);
+                return Nan::New(result);
+            };
+        }
+        if (!strcmp(typeName, "double")) {
+            return [=](DCCallVM* vm) {
+                double result = dcCallDouble(vm, funcPtr);
+                return Nan::New(result);
+            };
+        }
+        if (!strcmp(typeName, "char")) {
+            return [=](DCCallVM* vm) {
+                char result = dcCallChar(vm, funcPtr);
+                return Nan::New(result);
+            };
+        }
+        if (!strcmp(typeName, "byte")) {
+            return [=](DCCallVM* vm) {
+                uint8_t result = dcCallUInt8(vm, funcPtr);
+                return Nan::New(result);
+            };
+        }
+        if (!strcmp(typeName, "uchar")) {
+            return [=](DCCallVM* vm) {
+                unsigned char result = dcCallUChar(vm, funcPtr);
+                return Nan::New(result);
+            };
+        }
+        if (!strcmp(typeName, "short")) {
+            return [=](DCCallVM* vm) {
+                short result = dcCallShort(vm, funcPtr);
+                return Nan::New(result);
+            };
+        }
+        if (!strcmp(typeName, "ushort")) {
+            return [=](DCCallVM* vm) {
+                unsigned short result = dcCallUShort(vm, funcPtr);
+                return Nan::New(result);
+            };
+        }
+        if (!strcmp(typeName, "int")) {
+            return [=](DCCallVM* vm) {
+                int result = dcCallInt(vm, funcPtr);
+                return Nan::New(result);
+            };
+        }
+        if (!strcmp(typeName, "uint")) {
+            return [=](DCCallVM* vm) {
+                unsigned int result = dcCallUInt(vm, funcPtr);
+                return Nan::New(result);
+            };
+        }
+        if (!strcmp(typeName, "long")) {
+            return [=](DCCallVM* vm) {
+                long result = dcCallLong(vm, funcPtr);
+                return Nan::New((double)result);
+            };
+        }
+        if (!strcmp(typeName, "ulong")) {
+            return [=](DCCallVM* vm) {
+                unsigned long result = dcCallULong(vm, funcPtr);
+                return Nan::New((double)result);
+            };
+        }
+        // TODO: proper 64 bit support, like node-ffi
+        if (!strcmp(typeName, "longlong")) {
+            return [=](DCCallVM* vm) {
+                long long result = dcCallLongLong(vm, funcPtr);
+                return Nan::New((double)result);
+            };
+        }
+        // TODO: proper 64 bit support, like node-ffi
+        if (!strcmp(typeName, "ulonglong")) {
+            return [=](DCCallVM* vm) {
+                unsigned long long result = dcCallULongLong(vm, funcPtr);
+                return Nan::New((double)result);
+            };
+        }
+        if (!strcmp(typeName, "bool")) {
+            return [=](DCCallVM* vm) {
+                bool result = dcCallBool(vm, funcPtr);
+                return Nan::New(result);
+            };
+        }
+        // TODO: proper 64 bit support, like node-ffi
+        if (!strcmp(typeName, "size_t")) {
+            return [=](DCCallVM* vm) {
+                size_t result = dcCallSizeT(vm, funcPtr);
+                return Nan::New((double)result);
+            };
+        }
     }
-    else {
-        throw logic_error("Not implemented.");
-    }
+    throw logic_error("Invalid resultType.");
 }
