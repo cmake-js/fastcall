@@ -17,11 +17,11 @@ NAN_MODULE_INIT(FunctionBase::Init)
     auto tmpl = Nan::New<FunctionTemplate>(New);
     tmpl->SetClassName(Nan::New("FunctionBase").ToLocalChecked());
     tmpl->InstanceTemplate()->SetInternalFieldCount(1);
+
+    Nan::SetPrototypeTemplate(tmpl, Nan::New("initialize").ToLocalChecked(), Nan::New<FunctionTemplate>(initialize), v8::ReadOnly);
+    Nan::SetPrototypeTemplate(tmpl, Nan::New("call").ToLocalChecked(), Nan::New<FunctionTemplate>(call), v8::ReadOnly);
+
     auto f = tmpl->GetFunction();
-
-    SetPrototypeMethod(tmpl, "initialize", initialize);
-    //f->Set(Nan::New("create").ToLocalChecked(), Nan::New<FunctionTemplate>(Create)->GetFunction());
-
     constructor.Reset(f);
     SetValue(target, "FunctionBase", f);
 }
@@ -45,6 +45,17 @@ FunctionBase::~FunctionBase()
     }
 }
 
+void* FunctionBase::FindFuncPtr(const v8::Local<v8::Object>& self)
+{
+    Nan::HandleScope scope;
+
+    auto ref = GetValue(self, "_ptr");
+    assert(Buffer::HasInstance(ref));
+    auto ptr = UnwrapPointer<void>(ref);
+    assert(ptr);
+    return ptr;
+}
+
 NAN_METHOD(FunctionBase::initialize)
 {
     auto self = info.This().As<Object>();
@@ -64,7 +75,7 @@ NAN_METHOD(FunctionBase::initialize)
     obj->initialized = true;
 }
 
-NAN_METHOD(FunctionBase::func)
+NAN_METHOD(FunctionBase::call)
 {
     auto self = info.This().As<Object>();
     auto obj = ObjectWrap::Unwrap<FunctionBase>(self);

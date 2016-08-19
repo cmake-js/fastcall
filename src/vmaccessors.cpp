@@ -415,14 +415,14 @@ TVMInitialzer fastcall::MakeVMInitializer(const v8::Local<Object>& func)
     };
 }
 
-TVMInvoker MakeSyncVMInvoker(const v8::Local<Object>& func)
+TVMInvoker fastcall::MakeSyncVMInvoker(const v8::Local<Object>& func)
 {
     Nan::HandleScope scope;
 
     auto resultType = GetValue<Object>(func, "resultType");
     auto resultTypeName = string(*Nan::Utf8String(GetValue<String>(resultType, "name")));
     auto indirection = GetValue(resultType, "indirection")->Uint32Value();
-    void* funcPtr = FunctionBase::Get(func)->GetFuncPtr();
+    void* funcPtr = FunctionBase::FindFuncPtr(func);
 
     assert(GetValue(func, "callMode")->Uint32Value() == 1);
 
@@ -577,7 +577,7 @@ TVMInvoker MakeSyncVMInvoker(const v8::Local<Object>& func)
         }
         if (!strcmp(typeName, "bool")) {
             return [=](DCCallVM* vm) {
-                bool result = dcCallBool(vm, funcPtr);
+                bool result = dcCallBool(vm, funcPtr) != 0;
                 return Nan::New(result);
             };
         }

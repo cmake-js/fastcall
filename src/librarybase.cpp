@@ -15,13 +15,12 @@ NAN_MODULE_INIT(LibraryBase::Init)
 
     auto tmpl = Nan::New<FunctionTemplate>(New);
     tmpl->SetClassName(Nan::New("LibraryBase").ToLocalChecked());
-    tmpl->InstanceTemplate()->SetInternalFieldCount(1);
+    tmpl->InstanceTemplate()->SetInternalFieldCount(1);    
+
+    Nan::SetPrototypeTemplate(tmpl, Nan::New("initialize").ToLocalChecked(), Nan::New<FunctionTemplate>(initialize), v8::ReadOnly);
+    Nan::SetPrototypeTemplate(tmpl, Nan::New("free").ToLocalChecked(), Nan::New<FunctionTemplate>(free), v8::ReadOnly);
+
     auto f = tmpl->GetFunction();
-
-    SetPrototypeMethod(tmpl, "initialize", initialize);
-    SetPrototypeMethod(tmpl, "free", free);
-    //f->Set(Nan::New("create").ToLocalChecked(), Nan::New<FunctionTemplate>(Create)->GetFunction());
-
     constructor.Reset(f);
     SetValue(target, "LibraryBase", f);
 }
