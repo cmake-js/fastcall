@@ -66,12 +66,17 @@ NAN_METHOD(FunctionBase::initialize)
         return;
     }
 
-    obj->library = FindLibraryBase(info.This());
-    obj->vmInitializer = MakeVMInitializer(info.This());
-    // TODO: implement async
-    obj->vmInvoker = callMode == 1 ? MakeSyncVMInvoker(info.This()) : MakeSyncVMInvoker(info.This());
-    // TODO: make size parameter + add GC memory usage
-    obj->vm = dcNewCallVM(4096);
+    try {
+        obj->library = FindLibraryBase(info.This());
+        obj->vmInitializer = MakeVMInitializer(info.This());
+        // TODO: implement async
+        obj->vmInvoker = callMode == 1 ? MakeSyncVMInvoker(info.This()) : MakeSyncVMInvoker(info.This());
+        // TODO: make size parameter + add GC memory usage
+        obj->vm = dcNewCallVM(4096);
+    }
+    catch(exception& ex) {
+        Nan::ThrowError(ex.what());
+    }
     obj->initialized = true;
 }
 

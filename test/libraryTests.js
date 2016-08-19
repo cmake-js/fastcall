@@ -80,17 +80,28 @@ describe('Library', function () {
 
         describe('node-ffi style declaration', function () {
             it('should invoke "mul" with "declare"', function () {
-                lib.declare({
-                    mul: ['int', [ref.types.int, 'int']]
-                });
+                lib.declare({ mul: ['int', [ref.types.int, 'int']] });
                 testMulSync('int mul(int arg0, int arg1)');
             });
 
             it('should invoke "mul" with "declareSync"', function () {
-                lib.declareSync({
-                    mul: ['int', [ref.types.int, 'int']]
-                });
+                lib.declareSync({ mul: ['int', [ref.types.int, 'int']] });
                 testMulSync('int mul(int arg0, int arg1)');
+            });
+
+            it("should send Node.js Buffer's memory content to native code", function () {
+                lib.declare({ readLongPtr: ['long', [ref.refType('long'), 'uint']] });
+                testReadLongPtrSync('long readLongPtr(long* arg0, uint arg1)');
+            });
+
+            it("should allow to write Node.js's string content in native code", function () {
+                lib.declare({ writeString: ['void', ['char*']] });
+                testWriteStringSync('void writeString(char* arg0)');
+            });
+
+            it('should read natvie memory', function () {
+                lib.declare({ getString: ['char*', []] });
+                testGetStringSync('char* getString()');
             });
         });
 
@@ -105,6 +116,16 @@ describe('Library', function () {
                 // Argument name is optional:
                 lib.declare('int mul(int, int by)');
                 testMulSync('int mul(int arg0, int by)');
+            });
+
+            it("should send Node.js Buffer's memory content to native code", function () {
+                lib.declare('long readLongPtr(long* ptr, uint offset)');
+                testReadLongPtrSync('long readLongPtr(long* ptr, uint offset)');
+            });
+
+            it("should allow to write Node.js's string content in native code", function () {
+                lib.declare('void writeString(char* )');
+                testWriteStringSync('void writeString(char* arg0)');
             });
         });
 
@@ -135,6 +156,35 @@ describe('Library', function () {
             assert.equal(mul(10), 0);
             assert.equal(mul(), 0);
             assert.equal(mul("a", "b"), 0);
+        }
+
+        function testReadLongPtrSync(declaration) {
+            const readLongPtr = lib.interface.readLongPtr;
+            assert(_.isFunction(readLongPtr));
+            assert.equal(readLongPtr.declaration, declaration);
+            const long = ref.types.long;
+            const data = new Buffer(long.size * 2);
+            long.set(data, 0, 1);
+            long.set(data, long.size, 42);
+            assert.equal(readLongPtr(data, 0), 1);
+            assert.equal(readLongPtr(data, 1), 42);
+        }
+
+        function testWriteStringSync(declaration) {
+            const writeString = lib.interface.writeString;
+            assert(_.isFunction(writeString));
+            assert.equal(writeString.declaration, declaration);
+            const string = ref.allocCString('          ');
+            writeString(string);
+            assert.equal(ref.readCString(string), 'hello');
+        }
+
+        function testGetStringSync(declaration) {
+            const getString = lib.interface.getString;
+            assert(_.isFunction(getString));
+            assert.equal(getString.declaration, declaration);
+            const string = getString();
+            assert(_.isBuffer(string));
         }
     });
 });

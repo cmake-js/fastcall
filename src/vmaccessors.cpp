@@ -107,8 +107,8 @@ inline void* GetPointerAt(const Nan::FunctionCallbackInfo<v8::Value>& info, cons
         return nullptr;
     }
     auto obj = val.As<Object>();
-    if (Buffer::HasInstance(obj)) {
-        throw new logic_error(string("Argument at index ") + to_string(index) + " is not a pointer.");
+    if (!Buffer::HasInstance(obj)) {
+        throw logic_error(string("Argument at index ") + to_string(index) + " is not a pointer.");
     }
     return reinterpret_cast<void*>(Buffer::Data(obj));
 }
@@ -442,6 +442,7 @@ TVMInvoker fastcall::MakeSyncVMInvoker(const v8::Local<Object>& func)
 
         if (!strcmp(typeName, "void")) {
             return [=](DCCallVM* vm) {
+                dcCallVoid(vm, funcPtr);
                 return Nan::Undefined();
             };
         }
