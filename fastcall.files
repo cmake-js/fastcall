@@ -15,3 +15,5 @@ src/vmaccessors.h
 src/vmaccessors.cpp
 test/testlib/testlib.cpp
 test/testlib/CMakeLists.txt
+src/target.h
+src/target.cpp

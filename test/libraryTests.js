@@ -127,6 +127,11 @@ describe('Library', function () {
                 lib.declare('void writeString(char* )');
                 testWriteStringSync('void writeString(char* arg0)');
             });
+
+            it('should read natvie memory', function () {
+                lib.declare('char *getString()');
+                testGetStringSync('char* getString()');
+            });
         });
 
         function testMulSync(declaration) {
@@ -185,6 +190,11 @@ describe('Library', function () {
             assert.equal(getString.declaration, declaration);
             const string = getString();
             assert(_.isBuffer(string));
+            assert(_.isObject(string.type));
+            assert.equal(string.type.name, 'char');
+            assert.equal(string.type.indirection, 1);
+            assert.equal(string.length, 0);
+            assert.equal(ref.readCString(string), 'world');
         }
     });
 });

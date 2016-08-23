@@ -73,21 +73,4 @@ T* UnwrapPointer(const v8::Local<v8::Value>& value)
 inline v8::Local<v8::Object> GetGlobal() {
     return Nan::GetCurrentContext()->Global();
 }
-
-inline v8::Local<v8::Value> Require(const char* name) {
-    Nan::EscapableHandleScope scope;
-
-    auto global = GetGlobal();
-    assert(!global.IsEmpty() && global->IsObject());
-    auto require = GetValue<v8::Function>(global, "require");
-    assert(!require.IsEmpty());
-    v8::Local<v8::Value> args[] = { Nan::New<v8::String>(name).ToLocalChecked() };
-    auto module = Nan::Call(require, global, 1, args).ToLocalChecked();
-    return scope.Escape(module);
-}
-
-inline v8::Local<v8::Object> GetRef() {
-    return Require("ref").As<v8::Object>();
-}
-
 }
