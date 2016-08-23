@@ -232,14 +232,15 @@ inline bool GetBoolAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const un
     return info[index]->BooleanValue();
 }
 
-inline v8::Local<v8::Value> GetResultPointerType(v8::Local<v8::Object> refType) {
+inline v8::Local<v8::Object> GetResultPointerType(v8::Local<v8::Object> refType) {
     Nan::EscapableHandleScope scope;
 
     auto ref = RequireRef();
     auto derefType = GetValue<Function>(ref, "derefType");
     assert(!derefType.IsEmpty());
     v8::Local<v8::Value> args[] = { refType };
-    auto result = Nan::Call(derefType, ref, 1, args).ToLocalChecked();
+    auto result = Nan::Call(derefType, ref, 1, args).ToLocalChecked().As<Object>();
+    assert(!result.IsEmpty());
     return scope.Escape(result);
 }
 }
@@ -430,14 +431,16 @@ TVMInvoker fastcall::MakeSyncVMInvoker(const v8::Local<Object>& func)
     assert(GetValue(func, "callMode")->Uint32Value() == 1);
 
     if (indirection > 1) {
-        return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+        auto resultPointerType = GetResultPointerType(resultType);
+        auto pResultType = make_shared<Nan::Persistent<Object>>();
+        pResultType->Reset(resultPointerType);
+
+        return [=](DCCallVM* vm) {
             Nan::EscapableHandleScope scope;
 
             void* result = dcCallPointer(vm, funcPtr);
             auto ref = WrapPointer(result);
-            auto resultType = GetValue<Object>(func, "resultType");
-            auto refType = GetResultPointerType(resultType);
-            SetValue(ref, "type", refType);
+            SetValue(ref, "type", Nan::New(*pResultType));
             return scope.Escape(ref);
         };
     }
@@ -445,150 +448,150 @@ TVMInvoker fastcall::MakeSyncVMInvoker(const v8::Local<Object>& func)
         auto typeName = resultTypeName.c_str();
 
         if (!strcmp(typeName, "void")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 dcCallVoid(vm, funcPtr);
                 return Nan::Undefined();
             };
         }
         if (!strcmp(typeName, "int8")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 int8_t result = dcCallInt8(vm, funcPtr);
                 return Nan::New(result);
             };
         }
         if (!strcmp(typeName, "uint8")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 uint8_t result = dcCallUInt8(vm, funcPtr);
                 return Nan::New(result);
             };
         }
         if (!strcmp(typeName, "int16")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 int16_t result = dcCallInt16(vm, funcPtr);
                 return Nan::New(result);
             };
         }
         if (!strcmp(typeName, "uint16")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 uint16_t result = dcCallUInt16(vm, funcPtr);
                 return Nan::New(result);
             };
         }
         if (!strcmp(typeName, "int32")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 int32_t result = dcCallInt32(vm, funcPtr);
                 return Nan::New(result);
             };
         }
         if (!strcmp(typeName, "uint32")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 uint32_t result = dcCallUInt32(vm, funcPtr);
                 return Nan::New(result);
             };
         }
         if (!strcmp(typeName, "int64")) {
             // TODO: proper 64 bit support, like node-ffi
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 int64_t result = dcCallInt64(vm, funcPtr);
                 return Nan::New((double)result);
             };
         }
         if (!strcmp(typeName, "uint64")) {
             // TODO: proper 64 bit support, like node-ffi
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 uint64_t result = dcCallUInt64(vm, funcPtr);
                 return Nan::New((double)result);
             };
         }
         if (!strcmp(typeName, "float")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 float result = dcCallFloat(vm, funcPtr);
                 return Nan::New(result);
             };
         }
         if (!strcmp(typeName, "double")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 double result = dcCallDouble(vm, funcPtr);
                 return Nan::New(result);
             };
         }
         if (!strcmp(typeName, "char")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 char result = dcCallChar(vm, funcPtr);
                 return Nan::New(result);
             };
         }
         if (!strcmp(typeName, "byte")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 uint8_t result = dcCallUInt8(vm, funcPtr);
                 return Nan::New(result);
             };
         }
         if (!strcmp(typeName, "uchar")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 unsigned char result = dcCallUChar(vm, funcPtr);
                 return Nan::New(result);
             };
         }
         if (!strcmp(typeName, "short")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 short result = dcCallShort(vm, funcPtr);
                 return Nan::New(result);
             };
         }
         if (!strcmp(typeName, "ushort")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 unsigned short result = dcCallUShort(vm, funcPtr);
                 return Nan::New(result);
             };
         }
         if (!strcmp(typeName, "int")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 int result = dcCallInt(vm, funcPtr);
                 return Nan::New(result);
             };
         }
         if (!strcmp(typeName, "uint")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 unsigned int result = dcCallUInt(vm, funcPtr);
                 return Nan::New(result);
             };
         }
         if (!strcmp(typeName, "long")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 long result = dcCallLong(vm, funcPtr);
                 return Nan::New((double)result);
             };
         }
         if (!strcmp(typeName, "ulong")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 unsigned long result = dcCallULong(vm, funcPtr);
                 return Nan::New((double)result);
             };
         }
         // TODO: proper 64 bit support, like node-ffi
         if (!strcmp(typeName, "longlong")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 long long result = dcCallLongLong(vm, funcPtr);
                 return Nan::New((double)result);
             };
         }
         // TODO: proper 64 bit support, like node-ffi
         if (!strcmp(typeName, "ulonglong")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 unsigned long long result = dcCallULongLong(vm, funcPtr);
                 return Nan::New((double)result);
             };
         }
         if (!strcmp(typeName, "bool")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 bool result = dcCallBool(vm, funcPtr) != 0;
                 return Nan::New(result);
             };
         }
         // TODO: proper 64 bit support, like node-ffi
         if (!strcmp(typeName, "size_t")) {
-            return [=](const v8::Local<Object>& func, DCCallVM* vm) {
+            return [=](DCCallVM* vm) {
                 size_t result = dcCallSizeT(vm, funcPtr);
                 return Nan::New((double)result);
             };

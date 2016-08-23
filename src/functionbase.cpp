@@ -92,7 +92,7 @@ NAN_METHOD(FunctionBase::call)
     Local<Value> result;
     try {
         obj->vmInitializer(obj->vm, info);
-        result = obj->vmInvoker(self, obj->vm);
+        result = obj->vmInvoker(obj->vm);
     }
     catch (exception& ex) {
         return Nan::ThrowError(ex.what());

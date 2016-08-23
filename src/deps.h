@@ -9,3 +9,4 @@
 #include <exception>
 #include <vector>
 #include <cstdint>
+#include <memory>
