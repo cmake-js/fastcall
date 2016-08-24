@@ -1,4 +1,4 @@
-#include "vmaccessors.h"
+#include "invokers.h"
 #include "deps.h"
 #include "helpers.h"
 #include "functionbase.h"
@@ -47,8 +47,8 @@ using namespace std;
 using namespace fastcall;
 
 namespace {
-typedef std::function<void(DCCallVM*, const Nan::FunctionCallbackInfo<v8::Value>&)> TVMInitialzer;
-typedef std::function<v8::Local<v8::Value>(DCCallVM*)> TVMInvoker;
+typedef std::function<void(DCCallVM*, const Nan::FunctionCallbackInfo<v8::Value>&)> TSyncVMInitialzer;
+typedef std::function<v8::Local<v8::Value>(DCCallVM*)> TSyncVMInvoker;
 
 inline uint8_t dcCallUInt8(DCCallVM* vm, void *f) {
     int8_t tmp = dcCallInt8(vm, f);
@@ -247,11 +247,11 @@ inline v8::Local<v8::Object> GetResultPointerType(v8::Local<v8::Object> refType)
     return scope.Escape(result);
 }
 
-TVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
+TSyncVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
 {
     Nan::HandleScope scope;
 
-    std::vector<TVMInitialzer> list;
+    std::vector<TSyncVMInitialzer> list;
 
     auto args = GetValue<Array>(func, "args");
     for (unsigned i = 0, len = args->Length(); i < len; i++) {
@@ -421,7 +421,7 @@ TVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
     };
 }
 
-TVMInvoker MakeSyncVMInvoker(const v8::Local<Object>& func)
+TSyncVMInvoker MakeSyncVMInvoker(const v8::Local<Object>& func)
 {
     Nan::HandleScope scope;
 
@@ -609,8 +609,7 @@ TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
 
     if (callMode == 1) {
         // TODO: make size parameter + add GC memory usage
-        auto vm = dcNewCallVM(4096);
-        std::shared_ptr<DCCallVM> vmPtr(vm, dcFree);
+        std::shared_ptr<DCCallVM> vmPtr(dcNewCallVM(4096), dcFree);
         auto initializer = MakeSyncVMInitializer(func);
         auto invoker = MakeSyncVMInvoker(func);
         return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {

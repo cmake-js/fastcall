@@ -1,6 +1,6 @@
 #pragma once
 #include <nan.h>
-#include "vmaccessors.h"
+#include "invokers.h"
 #include <dyncall.h>
 
 namespace fastcall {

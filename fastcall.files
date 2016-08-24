@@ -11,8 +11,8 @@ src/helpers.h
 src/librarybase.cpp
 src/librarybase.h
 CMakeLists.txt
-src/vmaccessors.h
-src/vmaccessors.cpp
+src/invokers.h
+src/invokers.cpp
 test/testlib/testlib.cpp
 test/testlib/CMakeLists.txt
 src/target.h
