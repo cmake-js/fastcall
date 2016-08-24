@@ -103,6 +103,11 @@ describe('Library', function () {
                 lib.declare({ getString: ['char*', []] });
                 testGetStringSync('char* getString()');
             });
+
+            it('should handle out arguments', function () {
+                lib.declare({ getNumbers: ['void', ['double**', ref.refType('size_t')]] });
+                testGetNumbersSync('void getNumbers(double** arg0, size_t* arg1)');
+            });
         });
 
         describe('string declaration', function () {
@@ -131,6 +136,11 @@ describe('Library', function () {
             it('should read natvie memory', function () {
                 lib.declare('char *getString()');
                 testGetStringSync('char* getString()');
+            });
+
+            it('should handle out arguments', function () {
+                lib.declare('  void   getNumbers ( double *  * nums , size_t*count) ');
+                testGetNumbersSync('void getNumbers(double** nums, size_t* count)');
             });
         });
 
@@ -195,6 +205,30 @@ describe('Library', function () {
             assert.equal(string.type.indirection, 1);
             assert.equal(string.length, 0);
             assert.equal(ref.readCString(string), 'world');
+        }
+
+        // void getNumbers(double** nums, size_t* size)
+        function testGetNumbersSync(declaration) {
+            const getNumbers = lib.interface.getNumbers;
+            assert(_.isFunction(getNumbers));
+            assert.equal(getNumbers.declaration, declaration);
+            
+            const double = ref.types.double;
+            const doublePtrType = ref.refType(double);
+            const doublePtrPtr = ref.alloc(doublePtrType);
+            const sizeTPtr = ref.alloc('size_t');
+            getNumbers(doublePtrPtr, sizeTPtr);
+
+            const size = ref.deref(sizeTPtr);
+            assert.equal(size, 3);
+            let doublePtr = ref.deref(doublePtrPtr);
+            assert(_.isBuffer(doublePtr));
+            const first = ref.deref(doublePtr);
+            assert(_.isNumber(first));
+            assert.equal(first, 1.1);
+            doublePtr = ref.reinterpret(doublePtr, size * double.size);
+            assert.equal(double.get(doublePtr, 1 * double.size), 2.2);
+            assert.equal(double.get(doublePtr, 2 * double.size), 3.3);
         }
     });
 });
