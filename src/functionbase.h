@@ -22,9 +22,7 @@ private:
 
     bool initialized = false;
     LibraryBase* library = nullptr;
-    DCCallVM* vm = nullptr;
-    TVMInitialzer vmInitializer;
-    TVMInvoker vmInvoker;
+    TInvoker invoker;
 
     static NAN_METHOD(New);
 

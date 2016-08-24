@@ -47,6 +47,9 @@ using namespace std;
 using namespace fastcall;
 
 namespace {
+typedef std::function<void(DCCallVM*, const Nan::FunctionCallbackInfo<v8::Value>&)> TVMInitialzer;
+typedef std::function<v8::Local<v8::Value>(DCCallVM*)> TVMInvoker;
+
 inline uint8_t dcCallUInt8(DCCallVM* vm, void *f) {
     int8_t tmp = dcCallInt8(vm, f);
     return reinterpret_cast<uint8_t&>(tmp);
@@ -243,9 +246,8 @@ inline v8::Local<v8::Object> GetResultPointerType(v8::Local<v8::Object> refType)
     assert(!result.IsEmpty());
     return scope.Escape(result);
 }
-}
 
-TVMInitialzer fastcall::MakeVMInitializer(const v8::Local<Object>& func)
+TVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
 {
     Nan::HandleScope scope;
 
@@ -419,7 +421,7 @@ TVMInitialzer fastcall::MakeVMInitializer(const v8::Local<Object>& func)
     };
 }
 
-TVMInvoker fastcall::MakeSyncVMInvoker(const v8::Local<Object>& func)
+TVMInvoker MakeSyncVMInvoker(const v8::Local<Object>& func)
 {
     Nan::HandleScope scope;
 
@@ -598,4 +600,29 @@ TVMInvoker fastcall::MakeSyncVMInvoker(const v8::Local<Object>& func)
         }
     }
     throw logic_error("Invalid resultType.");
+}
+}
+
+TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
+{
+    unsigned callMode = GetValue(func, "callMode")->Uint32Value();
+
+    if (callMode == 1) {
+        // TODO: make size parameter + add GC memory usage
+        auto vm = dcNewCallVM(4096);
+        std::shared_ptr<DCCallVM> vmPtr(vm, dcFree);
+        auto initializer = MakeSyncVMInitializer(func);
+        auto invoker = MakeSyncVMInvoker(func);
+        return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+            initializer(vmPtr.get(), info);
+            return invoker(vmPtr.get());
+        };
+    }
+    else if (callMode == 2) {
+        // TODO: implement async
+        assert(false);
+    }
+    else {
+        assert(false);
+    }
 }

@@ -39,10 +39,6 @@ FunctionBase::FunctionBase()
 
 FunctionBase::~FunctionBase()
 {
-    if (vm) {
-        dcFree(vm);
-        vm = nullptr;
-    }
 }
 
 void* FunctionBase::FindFuncPtr(const v8::Local<v8::Object>& self)
@@ -68,11 +64,7 @@ NAN_METHOD(FunctionBase::initialize)
 
     try {
         obj->library = FindLibraryBase(info.This());
-        obj->vmInitializer = MakeVMInitializer(info.This());
-        // TODO: implement async
-        obj->vmInvoker = callMode == 1 ? MakeSyncVMInvoker(info.This()) : MakeSyncVMInvoker(info.This());
-        // TODO: make size parameter + add GC memory usage
-        obj->vm = dcNewCallVM(4096);
+        obj->invoker = MakeInvoker(info.This());
     }
     catch(exception& ex) {
         Nan::ThrowError(ex.what());
@@ -91,8 +83,7 @@ NAN_METHOD(FunctionBase::call)
 
     Local<Value> result;
     try {
-        obj->vmInitializer(obj->vm, info);
-        result = obj->vmInvoker(obj->vm);
+        result = obj->invoker(info);
     }
     catch (exception& ex) {
         return Nan::ThrowError(ex.what());
