@@ -11,8 +11,8 @@ Loop::Loop(size_t vmSize)
     : vm(dcNewCallVM(vmSize))
 {
     uv_loop_init(&loop);
-    uv_async_init(&loop, &processCodeQueueHandle, ProcessCallQueue);
-    processCodeQueueHandle.data = reinterpret_cast<void*>(this);
+    uv_async_init(&loop, &processCallQueueHandle, ProcessCallQueue);
+    processCallQueueHandle.data = reinterpret_cast<void*>(this);
     uv_async_init(uv_default_loop(), &processSyncCallbackQueueHandle, ProcessSyncQueue);
     processSyncCallbackQueueHandle.data = reinterpret_cast<void*>(this);
 }
@@ -29,21 +29,7 @@ void Loop::Push(const TAsyncInvoker& invoker)
     Lock _(locker);
     counter++;
     callQueue.push(invoker);
-    uv_async_send(&processCodeQueueHandle);
-}
-
-void Loop::ProcessCallQueue(uv_async_t* handle)
-{
-    assert(handle);
-    auto self = reinterpret_cast<Loop*>(handle->data);
-    assert(self);
-    
-    Lock _(self->locker);
-    while (!self->callQueue.empty()) {
-        auto& func = self->callQueue.front();
-        self->callQueue.pop();
-        func(self->vm);
-    }
+    uv_async_send(&processCallQueueHandle);
 }
 
 void Loop::Synchronize(const v8::Local<v8::Function>& callback)
@@ -60,6 +46,20 @@ void Loop::Synchronize(const v8::Local<v8::Function>& callback)
             uv_async_send(handle);
         });
         lastSyncOn = counter;
+    }
+}
+
+void Loop::ProcessCallQueue(uv_async_t* handle)
+{
+    assert(handle);
+    auto self = reinterpret_cast<Loop*>(handle->data);
+    assert(self);
+    
+    Lock _(self->locker);
+    while (!self->callQueue.empty()) {
+        auto& func = self->callQueue.front();
+        self->callQueue.pop();
+        func(self->vm);
     }
 }
 

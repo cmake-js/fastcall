@@ -20,7 +20,7 @@ struct Loop
     
 private:
     uv_loop_t loop;
-    uv_async_t processCodeQueueHandle;
+    uv_async_t processCallQueueHandle;
     uv_async_t processSyncCallbackQueueHandle;
     DCCallVM* vm;
     Locker locker;
