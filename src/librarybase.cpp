@@ -68,3 +68,9 @@ DLLib* LibraryBase::FindPLib(const v8::Local<Object>& self)
     assert(pLib);
     return pLib;
 }
+
+Lock LibraryBase::AcquireLock()
+{
+    return Lock(locker);
+}
+

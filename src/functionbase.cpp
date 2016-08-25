@@ -41,7 +41,7 @@ FunctionBase::~FunctionBase()
 {
 }
 
-void* FunctionBase::FindFuncPtr(const v8::Local<v8::Object>& self)
+void* FunctionBase::GetFuncPtr(const v8::Local<v8::Object>& self)
 {
     Nan::HandleScope scope;
 
@@ -52,10 +52,17 @@ void* FunctionBase::FindFuncPtr(const v8::Local<v8::Object>& self)
     return ptr;
 }
 
+FunctionBase* FunctionBase::GetFunctionBase(const v8::Local<v8::Object>& self)
+{
+    auto obj = ObjectWrap::Unwrap<FunctionBase>(self);
+    assert(obj);
+    return obj;
+}
+
 NAN_METHOD(FunctionBase::initialize)
 {
     auto self = info.This().As<Object>();
-    auto obj = ObjectWrap::Unwrap<FunctionBase>(self);
+    auto obj = GetFunctionBase(self);
 
     if (obj->initialized) {
         return;
@@ -74,7 +81,7 @@ NAN_METHOD(FunctionBase::initialize)
 NAN_METHOD(FunctionBase::call)
 {
     auto self = info.This().As<Object>();
-    auto obj = ObjectWrap::Unwrap<FunctionBase>(self);
+    auto obj = GetFunctionBase(self);
 
     if (!obj->initialized) {
         return Nan::ThrowError("Function is not initialized.");

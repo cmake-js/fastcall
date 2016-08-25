@@ -3,6 +3,8 @@
 #include "helpers.h"
 #include "functionbase.h"
 #include "target.h"
+#include "locker.h"
+#include "librarybase.h"
 
 #define dcArgInt8 dcArgChar
 #define dcArgUInt8(vm, p) { auto tmp = p; dcArgChar(vm, reinterpret_cast<char&>(tmp)); }
@@ -428,7 +430,7 @@ TSyncVMInvoker MakeSyncVMInvoker(const v8::Local<Object>& func)
     auto resultType = GetValue<Object>(func, "resultType");
     auto resultTypeName = string(*Nan::Utf8String(GetValue<String>(resultType, "name")));
     auto indirection = GetValue(resultType, "indirection")->Uint32Value();
-    void* funcPtr = FunctionBase::FindFuncPtr(func);
+    void* funcPtr = FunctionBase::GetFuncPtr(func);
 
     assert(GetValue(func, "callMode")->Uint32Value() == 1);
 
@@ -606,6 +608,7 @@ TSyncVMInvoker MakeSyncVMInvoker(const v8::Local<Object>& func)
 TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
 {
     unsigned callMode = GetValue(func, "callMode")->Uint32Value();
+    auto funcBase = FunctionBase::GetFunctionBase(func);
 
     if (callMode == 1) {
         // TODO: make size parameter + add GC memory usage
@@ -613,6 +616,7 @@ TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
         auto initializer = MakeSyncVMInitializer(func);
         auto invoker = MakeSyncVMInvoker(func);
         return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+            auto lock(funcBase->GetLibrary()->AcquireLock());
             initializer(vmPtr.get(), info);
             return invoker(vmPtr.get());
         };

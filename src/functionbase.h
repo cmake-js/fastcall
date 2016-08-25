@@ -13,7 +13,13 @@ struct FunctionBase : public node::ObjectWrap {
 
     static NAN_MODULE_INIT(Init);
 
-    static void* FindFuncPtr(const v8::Local<v8::Object>& self);
+    static FunctionBase* GetFunctionBase(const v8::Local<v8::Object>& self);
+    static void* GetFuncPtr(const v8::Local<v8::Object>& self);
+    LibraryBase* GetLibrary()
+    {
+        assert(library);
+        return library;
+    }
 
 private:
     FunctionBase();

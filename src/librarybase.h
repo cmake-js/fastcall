@@ -1,6 +1,7 @@
 #pragma once
 #include <nan.h>
 #include <dynload.h>
+#include "locker.h"
 
 namespace fastcall {
 struct LibraryBase : public node::ObjectWrap {
@@ -9,6 +10,8 @@ struct LibraryBase : public node::ObjectWrap {
     ~LibraryBase();
 
     static NAN_MODULE_INIT(Init);
+    
+    Lock AcquireLock();
 
 private:
     LibraryBase();
@@ -16,6 +19,7 @@ private:
     static Nan::Persistent<v8::Function> constructor;
 
     DLLib* pLib = nullptr;
+    Locker locker;
 
     static NAN_METHOD(New);
 
