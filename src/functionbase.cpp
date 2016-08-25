@@ -56,7 +56,6 @@ NAN_METHOD(FunctionBase::initialize)
 {
     auto self = info.This().As<Object>();
     auto obj = ObjectWrap::Unwrap<FunctionBase>(self);
-    unsigned callMode = GetValue(self, "callMode")->Uint32Value();
 
     if (obj->initialized) {
         return;

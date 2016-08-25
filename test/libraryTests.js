@@ -56,12 +56,6 @@ describe('Library', function () {
                     const lib = new Library(libPath, { defaultCallMode: 42 });
                 });
             });
-
-            it('should throw when mode is not supported', function () {
-                const libPath = helpers.findTestlib();
-                assert.throws(() => new Library(libPath, { defaultCallMode: Library.callMode.async, supportedCallModes: Library.callMode.sync }));
-                assert.throws(() => new Library(libPath, { defaultCallMode: Library.callMode.sync, supportedCallModes: Library.callMode.async }));
-            });
         });
     });
 
