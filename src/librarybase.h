@@ -1,9 +1,12 @@
 #pragma once
 #include <nan.h>
 #include <dynload.h>
+#include <memory>
 #include "locker.h"
 
 namespace fastcall {
+struct Loop;
+
 struct LibraryBase : public node::ObjectWrap {
     LibraryBase(const LibraryBase&) = delete;
     LibraryBase(LibraryBase&&) = delete;
@@ -12,6 +15,8 @@ struct LibraryBase : public node::ObjectWrap {
     static NAN_MODULE_INIT(Init);
     
     Lock AcquireLock();
+    void EnsureAsyncSupport();
+    Loop* GetLoop();
 
 private:
     LibraryBase();
@@ -20,6 +25,7 @@ private:
 
     DLLib* pLib = nullptr;
     Locker locker;
+    std::unique_ptr<Loop> loop;
 
     static NAN_METHOD(New);
 
@@ -28,4 +34,9 @@ private:
 
     static DLLib* FindPLib(const v8::Local<v8::Object>& self);
 };
+
+inline Loop* LibraryBase::GetLoop()
+{
+    return loop.get();
+}
 }

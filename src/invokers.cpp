@@ -610,7 +610,7 @@ TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
     unsigned callMode = GetValue(func, "callMode")->Uint32Value();
     auto funcBase = FunctionBase::GetFunctionBase(func);
 
-    if (callMode == 1) {
+    if (callMode == syncCallMode) {
         // TODO: make size parameter + add GC memory usage
         std::shared_ptr<DCCallVM> vmPtr(dcNewCallVM(4096), dcFree);
         auto initializer = MakeSyncVMInitializer(func);
@@ -621,7 +621,8 @@ TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
             return invoker(vmPtr.get());
         };
     }
-    else if (callMode == 2) {
+    else if (callMode == asyncCallMode) {
+        funcBase->GetLibrary()->EnsureAsyncSupport();
         // TODO: implement async
         assert(false);
     }

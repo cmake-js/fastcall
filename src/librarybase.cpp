@@ -1,6 +1,7 @@
 #include "librarybase.h"
 #include "deps.h"
 #include "helpers.h"
+#include "loop.h"
 
 using namespace v8;
 using namespace node;
@@ -39,7 +40,6 @@ LibraryBase::LibraryBase()
 
 LibraryBase::~LibraryBase()
 {
-
 }
 
 NAN_METHOD(LibraryBase::initialize)
@@ -56,6 +56,7 @@ NAN_METHOD(LibraryBase::free)
     auto obj = ObjectWrap::Unwrap<LibraryBase>(self);
 
     obj->pLib = nullptr;
+    obj->loop = nullptr;
 }
 
 DLLib* LibraryBase::FindPLib(const v8::Local<Object>& self)
@@ -72,5 +73,11 @@ DLLib* LibraryBase::FindPLib(const v8::Local<Object>& self)
 Lock LibraryBase::AcquireLock()
 {
     return Lock(locker);
+}
+
+void LibraryBase::EnsureAsyncSupport()
+{
+    assert(pLib);
+    loop = unique_ptr<Loop>(new Loop(4096));
 }
 

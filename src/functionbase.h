@@ -15,11 +15,7 @@ struct FunctionBase : public node::ObjectWrap {
 
     static FunctionBase* GetFunctionBase(const v8::Local<v8::Object>& self);
     static void* GetFuncPtr(const v8::Local<v8::Object>& self);
-    LibraryBase* GetLibrary()
-    {
-        assert(library);
-        return library;
-    }
+    LibraryBase* GetLibrary();
 
 private:
     FunctionBase();
@@ -38,4 +34,10 @@ private:
     static v8::Local<v8::Object> FindLibrary(const v8::Local<v8::Object>& self);
     static LibraryBase* FindLibraryBase(const v8::Local<v8::Object>& self);
 };
+
+inline LibraryBase* FunctionBase::GetLibrary()
+{
+    assert(library);
+    return library;
+}
 }
