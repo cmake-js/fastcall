@@ -52,6 +52,9 @@ namespace {
 typedef std::function<void(DCCallVM*, const Nan::FunctionCallbackInfo<v8::Value>&)> TSyncVMInitialzer;
 typedef std::function<v8::Local<v8::Value>(DCCallVM*)> TSyncVMInvoker;
 
+typedef std::function<TAsyncInvoker(const Nan::FunctionCallbackInfo<v8::Value>&)> TAsyncVMInitialzer;
+typedef std::function<TAsyncInvoker()> TAsyncVMInvoker;
+
 inline uint8_t dcCallUInt8(DCCallVM* vm, void *f) {
     int8_t tmp = dcCallInt8(vm, f);
     return reinterpret_cast<uint8_t&>(tmp);
@@ -256,7 +259,9 @@ TSyncVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
     std::vector<TSyncVMInitialzer> list;
 
     auto args = GetValue<Array>(func, "args");
-    for (unsigned i = 0, len = args->Length(); i < len; i++) {
+    unsigned length = args->Length();
+    list.reserve(length);
+    for (unsigned i = 0; i < length; i++) {
         auto arg = args->Get(i).As<Object>();
         auto type = GetValue<Object>(arg, "type");
         auto typeName = *Nan::Utf8String(GetValue<String>(type, "name"));
@@ -420,6 +425,265 @@ TSyncVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
         for (auto& f : list) {
             f(vm, info);
         }
+    };
+}
+
+TAsyncVMInitialzer MakeAsyncVMInitializer(const v8::Local<Object>& func)
+{
+    Nan::HandleScope scope;
+
+    std::vector<TAsyncVMInitialzer> list;
+
+    auto args = GetValue<Array>(func, "args");
+    unsigned length = args->Length();
+    list.reserve(length);
+    for (unsigned i = 0; i < length; i++) {
+        auto arg = args->Get(i).As<Object>();
+        auto type = GetValue<Object>(arg, "type");
+        auto typeName = *Nan::Utf8String(GetValue<String>(type, "name"));
+        auto indirection = GetValue(type, "indirection")->Uint32Value();
+        if (indirection > 1) {
+            // pointer:
+            list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                auto ptr = GetPointerAt(info, i);
+                return [=](DCCallVM* vm) {
+                    dcArgPointer(vm, ptr);
+                };
+            });
+            continue;
+        }
+        else if (indirection == 1) {
+            if (!strcmp(typeName, "int8")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetInt8At(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgInt8(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "uint8")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetUInt8At(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgUInt8(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "int16")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetInt16At(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgInt16(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "uint16")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetUInt16At(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgUInt16(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "int32")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetInt32At(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgInt32(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "uint32")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetUInt32At(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgUInt32(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "int64")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetInt64At(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgInt64(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "uint64")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetUInt64At(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgUInt64(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "float")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetFloatAt(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgFloat(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "double")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetDoubleAt(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgDouble(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "char")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetCharAt(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgChar(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "byte")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetByteAt(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgByte(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "uchar")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetUCharAt(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgUChar(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "short")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetShortAt(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgShort(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "ushort")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetUShortAt(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgUShort(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "int")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetIntAt(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgInt(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "uint")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetUIntAt(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgUInt(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "long")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetLongAt(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgLong(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "ulong")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetULongAt(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgULong(vm, value);
+                    };
+                });
+                continue;
+            }
+            // TODO: proper 64 bit support, like node-ffi
+            if (!strcmp(typeName, "longlong")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetLongLongAt(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgLongLong(vm, value);
+                    };
+                });
+                continue;
+            }
+            // TODO: proper 64 bit support, like node-ffi
+            if (!strcmp(typeName, "ulonglong")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetULongLongAt(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgULongLong(vm, value);
+                    };
+                });
+                continue;
+            }
+            if (!strcmp(typeName, "bool")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetBoolAt(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgBool(vm, value);
+                    };
+                });
+                continue;
+            }
+            // TODO: proper 64 bit support, like node-ffi
+            if (!strcmp(typeName, "size_t")) {
+                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+                    auto value = GetSizeTAt(info, i);
+                    return [=](DCCallVM* vm) {
+                        dcArgSizeT(vm, value);
+                    };
+                });
+                continue;
+            }
+        }
+
+        throw logic_error(string("Invalid argument type definition at: ") + to_string(i) + ".");
+    }
+
+    return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+        std::vector<TAsyncInvoker> invokers;
+        invokers.reserve(list.size());
+        for (auto& f : list) {
+            invokers.emplace_back(f(info));
+        }
+        
+        return bind(
+            [=](const std::vector<TAsyncInvoker>& invokers, DCCallVM* vm) {
+                dcReset(vm);
+                for (auto& f : invokers) {
+                    f(vm);
+                }
+            },
+            std::move(invokers),
+            std::placeholders::_1);
     };
 }
 
@@ -623,7 +887,6 @@ TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
     }
     else if (callMode == asyncCallMode) {
         funcBase->GetLibrary()->EnsureAsyncSupport();
-        // TODO: implement async
         assert(false);
     }
     else {
