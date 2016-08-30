@@ -57,9 +57,14 @@ AsyncResultBase::~AsyncResultBase()
 {
 }
 
+AsyncResultBase* AsyncResultBase::AsAsyncResultBase(const v8::Local<v8::Object>& self)
+{
+    return ObjectWrap::Unwrap<AsyncResultBase>(self);
+}
+
 AsyncResultBase* AsyncResultBase::GetAsyncResultBase(const v8::Local<v8::Object>& self)
 {
-    auto obj = ObjectWrap::Unwrap<AsyncResultBase>(self);
+    auto obj = AsAsyncResultBase(self);
     assert(obj);
     return obj;
 }

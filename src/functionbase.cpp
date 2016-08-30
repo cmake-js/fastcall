@@ -69,6 +69,8 @@ NAN_METHOD(FunctionBase::initialize)
     }
 
     try {
+        // TODO: make size parameter + add GC memory usage
+        obj->vm = shared_ptr<DCCallVM>(dcNewCallVM(4096), dcFree);
         obj->library = FindLibraryBase(info.This());
         obj->invoker = MakeInvoker(info.This());
     }
