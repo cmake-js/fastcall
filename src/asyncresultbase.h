@@ -6,7 +6,7 @@ namespace fastcall
 struct LibraryBase;
 struct FunctionBase;
 
-struct AsyncResultBase : public node::ObjectWrap
+struct AsyncResultBase : public Nan::ObjectWrap
 {
     AsyncResultBase(const AsyncResultBase&) = delete;
     AsyncResultBase(AsyncResultBase&&) = delete;
@@ -21,6 +21,8 @@ struct AsyncResultBase : public node::ObjectWrap
     T* GetPtr();
     
 private:
+    static const unsigned typeId;
+
     AsyncResultBase(FunctionBase* func, void* ptr);
 
     static Nan::Persistent<v8::Function> constructor;

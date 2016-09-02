@@ -7,7 +7,7 @@
 namespace fastcall {
 struct LibraryBase;
 
-struct FunctionBase : public node::ObjectWrap {
+struct FunctionBase : public Nan::ObjectWrap {
     FunctionBase(const FunctionBase&) = delete;
     FunctionBase(FunctionBase&&) = delete;
     ~FunctionBase();

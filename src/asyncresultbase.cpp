@@ -9,6 +9,8 @@ using namespace node;
 using namespace std;
 using namespace fastcall;
 
+const unsigned AsyncResultBase::typeId = 28396483;
+
 Nan::Persistent<Function> AsyncResultBase::constructor;
 
 NAN_MODULE_INIT(AsyncResultBase::Init)
@@ -43,6 +45,8 @@ NAN_METHOD(AsyncResultBase::New)
     auto asyncResultBase = new AsyncResultBase(func, ptr);
     asyncResultBase->Wrap(self);
     info.GetReturnValue().Set(self);
+
+    SetValue(self, "__typeId", Nan::New(AsyncResultBase::typeId));
 }
 
 AsyncResultBase::AsyncResultBase(FunctionBase* func, void* ptr)
@@ -59,12 +63,21 @@ AsyncResultBase::~AsyncResultBase()
 
 AsyncResultBase* AsyncResultBase::AsAsyncResultBase(const v8::Local<v8::Object>& self)
 {
-    return ObjectWrap::Unwrap<AsyncResultBase>(self);
+    Nan::HandleScope scope;
+
+    if (self.IsEmpty() || !self->IsObject()) {
+        return nullptr;
+    }
+    auto typeId = GetValue(self, "__typeId");
+    if (typeId->IsNumber() && typeId->Uint32Value() == AsyncResultBase::typeId) {
+        return GetAsyncResultBase(self);
+    }
+    return nullptr;
 }
 
 AsyncResultBase* AsyncResultBase::GetAsyncResultBase(const v8::Local<v8::Object>& self)
 {
-    auto obj = AsAsyncResultBase(self);
+    auto obj = Unwrap<AsyncResultBase>(self);
     assert(obj);
     return obj;
 }

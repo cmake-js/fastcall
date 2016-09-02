@@ -7,7 +7,7 @@
 namespace fastcall {
 struct Loop;
 
-struct LibraryBase : public node::ObjectWrap {
+struct LibraryBase : public Nan::ObjectWrap {
     LibraryBase(const LibraryBase&) = delete;
     LibraryBase(LibraryBase&&) = delete;
     ~LibraryBase();
