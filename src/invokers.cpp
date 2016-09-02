@@ -459,6 +459,29 @@ TSyncVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
     };
 }
 
+template <typename T, typename F, typename G>
+TAsyncVMInitialzer MakeAsyncArgProcessor(unsigned i, F f, G g)
+{
+    return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+        auto ar = AsAsyncResultBase(info, i);
+        TAsyncInvoker result;
+        if (ar) {
+            T* valPtr = ar->GetPtr<T>();
+            result = [=](DCCallVM* vm)
+            {
+                f(vm, *valPtr);
+            };
+        }
+        else {
+            auto value = g(info, i);
+            result = [=](DCCallVM* vm) {
+                f(vm, value);
+            };
+        }
+        return result;
+    };
+}
+
 TAsyncVMInitialzer MakeAsyncVMInitializer(const v8::Local<Object>& func)
 {
     Nan::HandleScope scope;
@@ -475,222 +498,102 @@ TAsyncVMInitialzer MakeAsyncVMInitializer(const v8::Local<Object>& func)
         auto indirection = GetValue(type, "indirection")->Uint32Value();
         if (indirection > 1) {
             // pointer:
-            list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                auto ptr = GetPointerAt(info, i);
-                return [=](DCCallVM* vm) {
-                    dcArgPointer(vm, ptr);
-                };
-            });
+            list.emplace_back(MakeAsyncArgProcessor<void*>(i, dcArgPointer, GetPointerAt));
             continue;
         } else if (indirection == 1) {
             if (!strcmp(typeName, "int8")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetInt8At(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgInt8(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<int8_t>(i, dcArgInt8, GetInt8At));
                 continue;
             }
             if (!strcmp(typeName, "uint8")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetUInt8At(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgUInt8(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<uint8_t>(i, dcArgUInt8, GetUInt8At));
                 continue;
             }
             if (!strcmp(typeName, "int16")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetInt16At(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgInt16(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<int16_t>(i, dcArgInt16, GetInt16At));
                 continue;
             }
             if (!strcmp(typeName, "uint16")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetUInt16At(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgUInt16(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<uint16_t>(i, dcArgUInt16, GetUInt16At));
                 continue;
             }
             if (!strcmp(typeName, "int32")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetInt32At(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgInt32(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<int32_t>(i, dcArgInt32, GetInt32At));
                 continue;
             }
             if (!strcmp(typeName, "uint32")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetUInt32At(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgUInt32(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<uint32_t>(i, dcArgUInt32, GetUInt32At));
                 continue;
             }
             if (!strcmp(typeName, "int64")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetInt64At(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgInt64(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<int64_t>(i, dcArgInt64, GetInt64At));
                 continue;
             }
             if (!strcmp(typeName, "uint64")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetUInt64At(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgUInt64(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<uint64_t>(i, dcArgUInt64, GetUInt64At));
                 continue;
             }
             if (!strcmp(typeName, "float")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetFloatAt(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgFloat(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<float>(i, dcArgFloat, GetFloatAt));
                 continue;
             }
             if (!strcmp(typeName, "double")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetDoubleAt(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgDouble(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<double>(i, dcArgDouble, GetDoubleAt));
                 continue;
             }
             if (!strcmp(typeName, "char")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetCharAt(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgChar(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<char>(i, dcArgChar, GetCharAt));
                 continue;
             }
             if (!strcmp(typeName, "byte")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetByteAt(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgByte(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<uint8_t>(i, dcArgByte, GetByteAt));
                 continue;
             }
             if (!strcmp(typeName, "uchar")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetUCharAt(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgUChar(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<unsigned char>(i, dcArgUChar, GetUCharAt));
                 continue;
             }
             if (!strcmp(typeName, "short")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetShortAt(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgShort(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<short>(i, dcArgShort, GetShortAt));
                 continue;
             }
             if (!strcmp(typeName, "ushort")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetUShortAt(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgUShort(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<unsigned short>(i, dcArgUShort, GetUShortAt));
                 continue;
             }
             if (!strcmp(typeName, "int")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetIntAt(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgInt(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<int>(i, dcArgInt, GetIntAt));
                 continue;
             }
             if (!strcmp(typeName, "uint")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetUIntAt(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgUInt(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<unsigned int>(i, dcArgUInt, GetUIntAt));
                 continue;
             }
             if (!strcmp(typeName, "long")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetLongAt(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgLong(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<long>(i, dcArgLong, GetLongAt));
                 continue;
             }
             if (!strcmp(typeName, "ulong")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetULongAt(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgULong(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<unsigned long>(i, dcArgULong, GetULongAt));
                 continue;
             }
             // TODO: proper 64 bit support, like node-ffi
             if (!strcmp(typeName, "longlong")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetLongLongAt(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgLongLong(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<long long>(i, dcArgLongLong, GetLongLongAt));
                 continue;
             }
             // TODO: proper 64 bit support, like node-ffi
             if (!strcmp(typeName, "ulonglong")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetULongLongAt(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgULongLong(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<unsigned long long>(i, dcArgULongLong, GetULongLongAt));
                 continue;
             }
             if (!strcmp(typeName, "bool")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetBoolAt(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgBool(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<bool>(i, dcArgBool, GetBoolAt));
                 continue;
             }
             // TODO: proper 64 bit support, like node-ffi
             if (!strcmp(typeName, "size_t")) {
-                list.emplace_back([=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-                    auto value = GetSizeTAt(info, i);
-                    return [=](DCCallVM* vm) {
-                        dcArgSizeT(vm, value);
-                    };
-                });
+                list.emplace_back(MakeAsyncArgProcessor<size_t>(i, dcArgSizeT, GetSizeTAt));
                 continue;
             }
         }
@@ -912,6 +815,7 @@ TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
             return invoker(funcBase->GetVM());
         };
     } else if (callMode == asyncCallMode) {
+        // Note: this branch's invocation and stuff gets locked in the Loop.
         funcBase->GetLibrary()->EnsureAsyncSupport();
         assert(false);
     } else {

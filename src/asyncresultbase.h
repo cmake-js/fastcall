@@ -16,12 +16,11 @@ struct AsyncResultBase : public Nan::ObjectWrap
     
     static AsyncResultBase* AsAsyncResultBase(const v8::Local<v8::Object>& self);
     static AsyncResultBase* GetAsyncResultBase(const v8::Local<v8::Object>& self);
-
     template <typename T>
     T* GetPtr();
     
 private:
-    static const unsigned typeId;
+    static const unsigned typeId = 354366471;
 
     AsyncResultBase(FunctionBase* func, void* ptr);
 
@@ -29,6 +28,7 @@ private:
     
     FunctionBase* func = nullptr;
     void* ptr = nullptr;
+    Nan::Persistent<v8::Object> me;
 
     static NAN_METHOD(New);
 };

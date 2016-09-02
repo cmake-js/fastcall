@@ -9,8 +9,6 @@ using namespace node;
 using namespace std;
 using namespace fastcall;
 
-const unsigned AsyncResultBase::typeId = 28396483;
-
 Nan::Persistent<Function> AsyncResultBase::constructor;
 
 NAN_MODULE_INIT(AsyncResultBase::Init)
@@ -47,6 +45,10 @@ NAN_METHOD(AsyncResultBase::New)
     info.GetReturnValue().Set(self);
 
     SetValue(self, "__typeId", Nan::New(AsyncResultBase::typeId));
+
+    // We gotta prevent GC to collect AsyncResult
+    // until it's natice part gets deleted.
+    asyncResultBase->me.Reset(self);
 }
 
 AsyncResultBase::AsyncResultBase(FunctionBase* func, void* ptr)
@@ -59,6 +61,7 @@ AsyncResultBase::AsyncResultBase(FunctionBase* func, void* ptr)
 
 AsyncResultBase::~AsyncResultBase()
 {
+    me.Reset();
 }
 
 AsyncResultBase* AsyncResultBase::AsAsyncResultBase(const v8::Local<v8::Object>& self)

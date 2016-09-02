@@ -78,6 +78,6 @@ Lock LibraryBase::AcquireLock()
 void LibraryBase::EnsureAsyncSupport()
 {
     assert(pLib);
-    loop = unique_ptr<Loop>(new Loop(4096));
+    loop = unique_ptr<Loop>(new Loop(this, 4096));
 }
 
