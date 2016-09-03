@@ -40,7 +40,7 @@ void Loop::Push(const TCallable& callable)
 {
     auto lock(AcquireLock());
     counter++;
-    callQueue.emplace(callable);
+    callQueue.emplace_back(callable);
     uv_async_send(&processCallQueueHandle);
 }
 
@@ -52,7 +52,7 @@ void Loop::Synchronize(const v8::Local<v8::Function>& callback)
         callback->Call(Nan::Null(), 0, {});
     }
     else {
-        syncQueue.emplace(make_shared<Nan::Callback>(callback));
+        syncQueue.emplace_back(make_shared<Nan::Callback>(callback));
         auto handle = &processSyncCallbackQueueHandle;
         Push(make_pair(nullptr, [=](DCCallVM*) {
             uv_async_send(handle);
@@ -69,15 +69,18 @@ void Loop::ProcessCallQueue(uv_async_t* handle)
     
     bool isDestroyable = false;
     auto lock(self->AcquireLock());
-    while (!self->callQueue.empty()) {
-        auto& callable = self->callQueue.front();
+
+    for (int i = self->callQueue.size() - 1; i >= 0; i--)
+    {
+        auto& callable = self->callQueue[i];
         callable.second(self->vm);
         if (callable.first) {
             self->destroyQueue.emplace_back(callable.first);
             isDestroyable = true;
         }
-        self->callQueue.pop();
     }
+    self->callQueue.clear();
+
     if (isDestroyable) {
         uv_async_send(&self->processDestroyQueueHandle);
     }
@@ -100,11 +103,12 @@ void Loop::ProcessSyncQueue(uv_async_t* handle)
     assert(self);
     
     auto lock(self->AcquireLock());
-    while (!self->syncQueue.empty()) {
+    for (int i = self->syncQueue.size() - 1; i >= 0; i--)
+    {
         Nan::HandleScope scope;
-        
-        auto cb = self->syncQueue.front();
+
+        auto& cb = self->syncQueue[i];
         cb->Call(0, {});
-        self->syncQueue.pop();
     }
+    self->callQueue.clear();
 }

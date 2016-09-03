@@ -13,9 +13,9 @@ struct LibraryBase;
 struct AsyncResultBase;
 
 typedef std::pair<std::shared_ptr<AsyncResultBase>, TAsyncInvoker> TCallable;
-typedef std::queue<TCallable> TCallQueue;
+typedef std::vector<TCallable> TCallQueue;
 typedef std::vector<std::shared_ptr<AsyncResultBase>> TDestroyQueue;
-typedef std::queue<std::shared_ptr<Nan::Callback>> TSyncQueue;
+typedef std::vector<std::shared_ptr<Nan::Callback>> TSyncQueue;
 
 struct Loop
 {
