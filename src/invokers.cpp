@@ -16,6 +16,8 @@ namespace {
 const unsigned syncCallMode = 1;
 const unsigned asyncCallMode = 2;
 
+typedef Nan::Persistent<Object, CopyablePersistentTraits<Object> > TCopyablePersistent;
+
 typedef std::function<void(DCCallVM*, const Nan::FunctionCallbackInfo<v8::Value>&)> TSyncVMInitialzer;
 typedef std::function<v8::Local<v8::Value>(DCCallVM*)> TSyncVMInvoker;
 
@@ -325,8 +327,7 @@ TSyncVMInitialzer MakeSyncArgProcessor(unsigned i, F f, G g)
         T* valPtr = AsAsyncResultPtr<T>(info, i);
         if (valPtr) {
             f(vm, *valPtr);
-        }
-        else {
+        } else {
             f(vm, g(info, i));
         }
     };
@@ -467,12 +468,10 @@ TAsyncVMInitialzer MakeAsyncArgProcessor(unsigned i, F f, G g)
         TAsyncInvoker result;
         if (ar) {
             T* valPtr = ar->GetPtr<T>();
-            result = [=](DCCallVM* vm)
-            {
+            result = [=](DCCallVM* vm) {
                 f(vm, *valPtr);
             };
-        }
-        else {
+        } else {
             auto value = g(info, i);
             result = [=](DCCallVM* vm) {
                 f(vm, value);
@@ -620,6 +619,45 @@ TAsyncVMInitialzer MakeAsyncVMInitializer(const v8::Local<Object>& func)
     };
 }
 
+template <typename T, typename F>
+TSyncVMInvoker MakeSyncVMInvoker(F f, void* funcPtr)
+{
+    return [=](DCCallVM* vm) {
+        T result = f(vm, funcPtr);
+        return Nan::New(result);
+    };
+}
+
+template <typename T, typename NanT, typename F>
+TSyncVMInvoker MakeSyncVMInvoker(F f, void* funcPtr)
+{
+    return [=](DCCallVM* vm) {
+        T result = f(vm, funcPtr);
+        return Nan::New(static_cast<NanT>(result));
+    };
+}
+
+template <typename F>
+TSyncVMInvoker MakeSyncVMInvoker(F f, void* funcPtr)
+{
+    return [=](DCCallVM* vm) {
+        f(vm, funcPtr);
+        return Nan::Undefined();
+    };
+}
+
+TSyncVMInvoker MakeSyncVMInvoker(void* funcPtr, const TCopyablePersistent& resultPointerTypeHolder)
+{
+    return [=](DCCallVM* vm) {
+        Nan::EscapableHandleScope scope;
+
+        void* result = dcCallPointer(vm, funcPtr);
+        auto ref = WrapPointer(result);
+        SetValue(ref, "type", Nan::New(resultPointerTypeHolder));
+        return scope.Escape(ref);
+    };
+}
+
 TSyncVMInvoker MakeSyncVMInvoker(const v8::Local<Object>& func)
 {
     Nan::HandleScope scope;
@@ -633,168 +671,86 @@ TSyncVMInvoker MakeSyncVMInvoker(const v8::Local<Object>& func)
 
     if (indirection > 1) {
         auto resultPointerType = GetResultPointerType(resultType);
-        auto pResultType = Nan::Persistent<Object, CopyablePersistentTraits<Object> >();
-        pResultType.Reset(resultPointerType);
-
-        return [=](DCCallVM* vm) {
-            Nan::EscapableHandleScope scope;
-
-            void* result = dcCallPointer(vm, funcPtr);
-            auto ref = WrapPointer(result);
-            SetValue(ref, "type", Nan::New(pResultType));
-            return scope.Escape(ref);
-        };
+        auto resultPointerTypeHolder = TCopyablePersistent();
+        resultPointerTypeHolder.Reset(resultPointerType);
+        return MakeSyncVMInvoker(funcPtr, resultPointerTypeHolder);
     } else if (indirection == 1) {
         auto typeName = resultTypeName.c_str();
 
         if (!strcmp(typeName, "void")) {
-            return [=](DCCallVM* vm) {
-                dcCallVoid(vm, funcPtr);
-                return Nan::Undefined();
-            };
+            return MakeSyncVMInvoker(dcCallVoid, funcPtr);
         }
         if (!strcmp(typeName, "int8")) {
-            return [=](DCCallVM* vm) {
-                int8_t result = dcCallInt8(vm, funcPtr);
-                return Nan::New(result);
-            };
+            return MakeSyncVMInvoker<int8_t>(dcCallInt8, funcPtr);
         }
         if (!strcmp(typeName, "uint8")) {
-            return [=](DCCallVM* vm) {
-                uint8_t result = dcCallUInt8(vm, funcPtr);
-                return Nan::New(result);
-            };
+            return MakeSyncVMInvoker<uint8_t>(dcCallUInt8, funcPtr);
         }
         if (!strcmp(typeName, "int16")) {
-            return [=](DCCallVM* vm) {
-                int16_t result = dcCallInt16(vm, funcPtr);
-                return Nan::New(result);
-            };
+            return MakeSyncVMInvoker<int16_t>(dcCallInt16, funcPtr);
         }
         if (!strcmp(typeName, "uint16")) {
-            return [=](DCCallVM* vm) {
-                uint16_t result = dcCallUInt16(vm, funcPtr);
-                return Nan::New(result);
-            };
+            return MakeSyncVMInvoker<uint16_t>(dcCallUInt16, funcPtr);
         }
         if (!strcmp(typeName, "int32")) {
-            return [=](DCCallVM* vm) {
-                int32_t result = dcCallInt32(vm, funcPtr);
-                return Nan::New(result);
-            };
+            return MakeSyncVMInvoker<int32_t>(dcCallInt32, funcPtr);
         }
         if (!strcmp(typeName, "uint32")) {
-            return [=](DCCallVM* vm) {
-                uint32_t result = dcCallUInt32(vm, funcPtr);
-                return Nan::New(result);
-            };
+            return MakeSyncVMInvoker<uint32_t>(dcCallUInt32, funcPtr);
         }
         if (!strcmp(typeName, "int64")) {
-            // TODO: proper 64 bit support, like node-ffi
-            return [=](DCCallVM* vm) {
-                int64_t result = dcCallInt64(vm, funcPtr);
-                return Nan::New((double)result);
-            };
+            return MakeSyncVMInvoker<int64_t, double>(dcCallInt64, funcPtr);
         }
         if (!strcmp(typeName, "uint64")) {
-            // TODO: proper 64 bit support, like node-ffi
-            return [=](DCCallVM* vm) {
-                uint64_t result = dcCallUInt64(vm, funcPtr);
-                return Nan::New((double)result);
-            };
+            return MakeSyncVMInvoker<uint64_t, double>(dcCallUInt64, funcPtr);
         }
         if (!strcmp(typeName, "float")) {
-            return [=](DCCallVM* vm) {
-                float result = dcCallFloat(vm, funcPtr);
-                return Nan::New(result);
-            };
+            return MakeSyncVMInvoker<float>(dcCallFloat, funcPtr);
         }
         if (!strcmp(typeName, "double")) {
-            return [=](DCCallVM* vm) {
-                double result = dcCallDouble(vm, funcPtr);
-                return Nan::New(result);
-            };
+            return MakeSyncVMInvoker<double>(dcCallDouble, funcPtr);
         }
         if (!strcmp(typeName, "char")) {
-            return [=](DCCallVM* vm) {
-                char result = dcCallChar(vm, funcPtr);
-                return Nan::New(result);
-            };
+            return MakeSyncVMInvoker<char>(dcCallChar, funcPtr);
         }
         if (!strcmp(typeName, "byte")) {
-            return [=](DCCallVM* vm) {
-                uint8_t result = dcCallUInt8(vm, funcPtr);
-                return Nan::New(result);
-            };
+            return MakeSyncVMInvoker<uint8_t>(dcCallUInt8, funcPtr);
         }
         if (!strcmp(typeName, "uchar")) {
-            return [=](DCCallVM* vm) {
-                unsigned char result = dcCallUChar(vm, funcPtr);
-                return Nan::New(result);
-            };
+            return MakeSyncVMInvoker<unsigned char>(dcCallUChar, funcPtr);
         }
         if (!strcmp(typeName, "short")) {
-            return [=](DCCallVM* vm) {
-                short result = dcCallShort(vm, funcPtr);
-                return Nan::New(result);
-            };
+            return MakeSyncVMInvoker<short>(dcCallShort, funcPtr);
         }
         if (!strcmp(typeName, "ushort")) {
-            return [=](DCCallVM* vm) {
-                unsigned short result = dcCallUShort(vm, funcPtr);
-                return Nan::New(result);
-            };
+            return MakeSyncVMInvoker<unsigned short>(dcCallUShort, funcPtr);
         }
         if (!strcmp(typeName, "int")) {
-            return [=](DCCallVM* vm) {
-                int result = dcCallInt(vm, funcPtr);
-                return Nan::New(result);
-            };
+            return MakeSyncVMInvoker<int>(dcCallInt, funcPtr);
         }
         if (!strcmp(typeName, "uint")) {
-            return [=](DCCallVM* vm) {
-                unsigned int result = dcCallUInt(vm, funcPtr);
-                return Nan::New(result);
-            };
+            return MakeSyncVMInvoker<unsigned int>(dcCallUInt, funcPtr);
         }
         if (!strcmp(typeName, "long")) {
-            return [=](DCCallVM* vm) {
-                long result = dcCallLong(vm, funcPtr);
-                return Nan::New((double)result);
-            };
+            return MakeSyncVMInvoker<long, double>(dcCallLong, funcPtr);
         }
         if (!strcmp(typeName, "ulong")) {
-            return [=](DCCallVM* vm) {
-                unsigned long result = dcCallULong(vm, funcPtr);
-                return Nan::New((double)result);
-            };
+            return MakeSyncVMInvoker<unsigned long, double>(dcCallULong, funcPtr);
         }
         // TODO: proper 64 bit support, like node-ffi
         if (!strcmp(typeName, "longlong")) {
-            return [=](DCCallVM* vm) {
-                long long result = dcCallLongLong(vm, funcPtr);
-                return Nan::New((double)result);
-            };
+            return MakeSyncVMInvoker<long long, double>(dcCallLongLong, funcPtr);
         }
         // TODO: proper 64 bit support, like node-ffi
         if (!strcmp(typeName, "ulonglong")) {
-            return [=](DCCallVM* vm) {
-                unsigned long long result = dcCallULongLong(vm, funcPtr);
-                return Nan::New((double)result);
-            };
+            return MakeSyncVMInvoker<unsigned long long, double>(dcCallULongLong, funcPtr);
         }
         if (!strcmp(typeName, "bool")) {
-            return [=](DCCallVM* vm) {
-                bool result = dcCallBool(vm, funcPtr) != 0;
-                return Nan::New(result);
-            };
+            return MakeSyncVMInvoker<bool>(dcCallBool, funcPtr);
         }
         // TODO: proper 64 bit support, like node-ffi
         if (!strcmp(typeName, "size_t")) {
-            return [=](DCCallVM* vm) {
-                size_t result = dcCallSizeT(vm, funcPtr);
-                return Nan::New((double)result);
-            };
+            return MakeSyncVMInvoker<size_t, double>(dcCallSizeT, funcPtr);
         }
     }
     throw logic_error("Invalid resultType.");
