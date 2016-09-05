@@ -3,10 +3,11 @@
 #include "deps.h"
 #include "functionbase.h"
 #include "helpers.h"
+#include "int64.h"
 #include "librarybase.h"
 #include "locker.h"
+#include "loop.h"
 #include "target.h"
-#include "int64.h"
 
 using namespace v8;
 using namespace node;
@@ -23,7 +24,7 @@ typedef std::function<void(DCCallVM*, const Nan::FunctionCallbackInfo<v8::Value>
 typedef std::function<v8::Local<v8::Value>(DCCallVM*)> TSyncVMInvoker;
 
 typedef std::function<TAsyncInvoker(const Nan::FunctionCallbackInfo<v8::Value>&)> TAsyncVMInitialzer;
-typedef std::function<TAsyncInvoker()> TAsyncVMInvoker;
+typedef std::function<TAsyncInvoker(const v8::Local<Object>& asyncResult)> TAsyncVMInvoker;
 
 #define dcArgInt8 dcArgChar
 
@@ -642,7 +643,7 @@ TSyncVMInvoker MakeSyncUint64VMInvoker(const F& f, void* funcPtr)
 }
 
 template <typename F>
-TSyncVMInvoker MakeSyncVMInvoker(const F& f, void* funcPtr)
+TSyncVMInvoker MakeSyncVoidVMInvoker(const F& f, void* funcPtr)
 {
     return [=](DCCallVM* vm) {
         f(vm, funcPtr);
@@ -682,7 +683,7 @@ TSyncVMInvoker MakeSyncVMInvoker(const v8::Local<Object>& func)
         auto typeName = resultTypeName.c_str();
 
         if (!strcmp(typeName, "void")) {
-            return MakeSyncVMInvoker(dcCallVoid, funcPtr);
+            return MakeSyncVoidVMInvoker(dcCallVoid, funcPtr);
         }
         if (!strcmp(typeName, "int8")) {
             return MakeSyncVMInvoker<int8_t>(dcCallInt8, funcPtr);
@@ -756,6 +757,123 @@ TSyncVMInvoker MakeSyncVMInvoker(const v8::Local<Object>& func)
     }
     throw logic_error("Invalid resultType.");
 }
+
+template <typename T, typename F>
+TAsyncVMInvoker MakeAsyncVMInvoker(F f, void* funcPtr)
+{
+    return [=](const v8::Local<Object>& asyncResult) {
+        auto ar = AsyncResultBase::GetAsyncResultBase(asyncResult);
+        assert(ar);
+        T* valPtr = ar->GetPtr<T>();
+        assert(valPtr);
+        return [=](DCCallVM* vm) {
+            T result = f(vm, funcPtr);
+            return *valPtr = result;
+        };
+    };
+}
+
+template <typename F>
+TAsyncVMInvoker MakeAsyncVoidVMInvoker(F f, void* funcPtr)
+{
+    return [=](const v8::Local<Object>& x) {
+        return [=](DCCallVM* vm) {
+            f(vm, funcPtr);
+        };
+    };
+}
+
+TAsyncVMInvoker MakeAsyncVMInvoker(const v8::Local<Object>& func)
+{
+    Nan::HandleScope scope;
+
+    auto resultType = GetValue<Object>(func, "resultType");
+    auto resultTypeName = string(*Nan::Utf8String(GetValue<String>(resultType, "name")));
+    auto indirection = GetValue(resultType, "indirection")->Uint32Value();
+    void* funcPtr = FunctionBase::GetFuncPtr(func);
+
+    assert(GetValue(func, "callMode")->Uint32Value() == 1);
+
+    if (indirection > 1) {
+        return MakeAsyncVMInvoker<void*>(dcCallPointer, funcPtr);
+    } else if (indirection == 1) {
+        auto typeName = resultTypeName.c_str();
+
+        if (!strcmp(typeName, "void")) {
+            return MakeAsyncVoidVMInvoker(dcCallVoid, funcPtr);
+        }
+        if (!strcmp(typeName, "int8")) {
+            return MakeAsyncVMInvoker<int8_t>(dcCallInt8, funcPtr);
+        }
+        if (!strcmp(typeName, "uint8")) {
+            return MakeAsyncVMInvoker<uint8_t>(dcCallUInt8, funcPtr);
+        }
+        if (!strcmp(typeName, "int16")) {
+            return MakeAsyncVMInvoker<int16_t>(dcCallInt16, funcPtr);
+        }
+        if (!strcmp(typeName, "uint16")) {
+            return MakeAsyncVMInvoker<uint16_t>(dcCallUInt16, funcPtr);
+        }
+        if (!strcmp(typeName, "int32")) {
+            return MakeAsyncVMInvoker<int32_t>(dcCallInt32, funcPtr);
+        }
+        if (!strcmp(typeName, "uint32")) {
+            return MakeAsyncVMInvoker<uint32_t>(dcCallUInt32, funcPtr);
+        }
+        if (!strcmp(typeName, "int64")) {
+            return MakeAsyncVMInvoker<int64_t>(dcCallInt64, funcPtr);
+        }
+        if (!strcmp(typeName, "uint64")) {
+            return MakeAsyncVMInvoker<uint64_t>(dcCallUInt64, funcPtr);
+        }
+        if (!strcmp(typeName, "float")) {
+            return MakeAsyncVMInvoker<float>(dcCallFloat, funcPtr);
+        }
+        if (!strcmp(typeName, "double")) {
+            return MakeAsyncVMInvoker<double>(dcCallDouble, funcPtr);
+        }
+        if (!strcmp(typeName, "char")) {
+            return MakeAsyncVMInvoker<char>(dcCallChar, funcPtr);
+        }
+        if (!strcmp(typeName, "byte")) {
+            return MakeAsyncVMInvoker<uint8_t>(dcCallUInt8, funcPtr);
+        }
+        if (!strcmp(typeName, "uchar")) {
+            return MakeAsyncVMInvoker<unsigned char>(dcCallUChar, funcPtr);
+        }
+        if (!strcmp(typeName, "short")) {
+            return MakeAsyncVMInvoker<short>(dcCallShort, funcPtr);
+        }
+        if (!strcmp(typeName, "ushort")) {
+            return MakeAsyncVMInvoker<unsigned short>(dcCallUShort, funcPtr);
+        }
+        if (!strcmp(typeName, "int")) {
+            return MakeAsyncVMInvoker<int>(dcCallInt, funcPtr);
+        }
+        if (!strcmp(typeName, "uint")) {
+            return MakeAsyncVMInvoker<unsigned int>(dcCallUInt, funcPtr);
+        }
+        if (!strcmp(typeName, "long")) {
+            return MakeAsyncVMInvoker<long>(dcCallLong, funcPtr);
+        }
+        if (!strcmp(typeName, "ulong")) {
+            return MakeAsyncVMInvoker<unsigned long>(dcCallULong, funcPtr);
+        }
+        if (!strcmp(typeName, "longlong")) {
+            return MakeAsyncVMInvoker<long long>(dcCallLongLong, funcPtr);
+        }
+        if (!strcmp(typeName, "ulonglong")) {
+            return MakeAsyncVMInvoker<unsigned long long>(dcCallULongLong, funcPtr);
+        }
+        if (!strcmp(typeName, "bool")) {
+            return MakeAsyncVMInvoker<bool>(dcCallBool, funcPtr);
+        }
+        if (!strcmp(typeName, "size_t")) {
+            return MakeAsyncVMInvoker<size_t>(dcCallSizeT, funcPtr);
+        }
+    }
+    throw logic_error("Invalid resultType.");
+}
 }
 
 TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
@@ -772,10 +890,29 @@ TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
             return invoker(funcBase->GetVM());
         };
     } else if (callMode == asyncCallMode) {
+        auto initializer = MakeAsyncVMInitializer(func);
+        auto invoker = MakeAsyncVMInvoker(func);
         // Note: this branch's invocation and stuff gets locked in the Loop.
         funcBase->GetLibrary()->EnsureAsyncSupport();
-        assert(false);
+        return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+            Nan::EscapableHandleScope scope;
+
+            auto resultType = GetValue<Object>(info.This(), "resultType");
+            auto asyncResult = MakeAsyncResult(func, resultType);
+            auto currentInitializer = initializer(info);
+            auto currentInvoker = invoker(info.This());
+            funcBase->GetLibrary()->GetLoop()->Push(
+                make_pair(
+                    AsyncResultBase::GetAsyncResultBase(asyncResult),
+                    [=](DCCallVM* vm) {
+                        currentInitializer(vm);
+                        currentInvoker(vm);
+                    }));
+
+            return scope.Escape(asyncResult);
+        };
+
     } else {
-        assert(false);
+        throw logic_error("Unknown call mode.");
     }
 }

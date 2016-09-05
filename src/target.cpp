@@ -38,3 +38,17 @@ v8::Local<Object> fastcall::RequireRef()
     assert(!ref.IsEmpty());
     return scope.Escape(ref);
 }
+
+v8::Local<Object> MakeAsyncResult(const v8::Local<Object>& func, const v8::Local<Object>& type)
+{
+    Nan::EscapableHandleScope scope;
+
+    auto target = Nan::New(savedTarget);
+    assert(!target.IsEmpty() && target->IsObject());
+    auto ctor = GetValue<v8::Function>(target, "AsyncResult");
+    v8::Local<v8::Value> args[] = { func, type };
+    auto asyncResult = Nan::NewInstance(ctor, 2, args).ToLocalChecked();
+    assert(!asyncResult.IsEmpty() && asyncResult->IsObject());
+
+    return scope.Escape(asyncResult);
+}

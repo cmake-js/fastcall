@@ -18,6 +18,7 @@ struct AsyncResultBase : public Nan::ObjectWrap
     static AsyncResultBase* GetAsyncResultBase(const v8::Local<v8::Object>& self);
     template <typename T>
     T* GetPtr();
+    void Release();
     
 private:
     static const unsigned typeId = 354366471;

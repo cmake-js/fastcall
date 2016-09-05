@@ -61,7 +61,6 @@ AsyncResultBase::AsyncResultBase(FunctionBase* func, void* ptr)
 
 AsyncResultBase::~AsyncResultBase()
 {
-    me.Reset();
 }
 
 AsyncResultBase* AsyncResultBase::AsAsyncResultBase(const v8::Local<v8::Object>& self)
@@ -83,4 +82,9 @@ AsyncResultBase* AsyncResultBase::GetAsyncResultBase(const v8::Local<v8::Object>
     auto obj = Unwrap<AsyncResultBase>(self);
     assert(obj);
     return obj;
+}
+
+void AsyncResultBase::Release()
+{
+    me.Reset();
 }

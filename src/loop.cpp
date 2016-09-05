@@ -2,6 +2,7 @@
 #include "deps.h"
 #include "locker.h"
 #include "librarybase.h"
+#include "asyncresultbase.h"
 
 using namespace v8;
 using namespace node;
@@ -93,6 +94,10 @@ void Loop::ProcessDestroyQueue(uv_async_t* handle)
     assert(self);
 
     auto lock(self->AcquireLock());
+    for (auto item : self->destroyQueue)
+    {
+        item->Release();
+    }
     self->destroyQueue.clear();
 }
 

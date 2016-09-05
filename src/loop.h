@@ -12,9 +12,9 @@ namespace fastcall {
 struct LibraryBase;
 struct AsyncResultBase;
 
-typedef std::pair<std::shared_ptr<AsyncResultBase>, TAsyncInvoker> TCallable;
+typedef std::pair<AsyncResultBase*, TAsyncInvoker> TCallable;
 typedef std::vector<TCallable> TCallQueue;
-typedef std::vector<std::shared_ptr<AsyncResultBase>> TDestroyQueue;
+typedef std::vector<AsyncResultBase*> TDestroyQueue;
 typedef std::vector<std::shared_ptr<Nan::Callback>> TSyncQueue;
 
 struct Loop
