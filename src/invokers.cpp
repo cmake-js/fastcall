@@ -202,16 +202,40 @@ inline uint32_t GetUInt32At(const Nan::FunctionCallbackInfo<v8::Value>& info, co
     return static_cast<uint32_t>(info[index]->Uint32Value());
 }
 
-// TODO: proper 64 bit support, like node-ffi
 inline int64_t GetInt64At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
-    return static_cast<int64_t>(info[index]->NumberValue());
+    Nan::HandleScope scope;
+
+    auto number = MakeNumber(info[index]);
+    if (number->IsNumber()) {
+        return static_cast<int64_t>(info[index]->NumberValue());
+    }
+    else {
+        auto value = info[index];
+        assert(Buffer::HasInstance(value));
+        char* ptr = Buffer::Data(value);
+        assert(ptr);
+        int64_t* numPtr = reinterpret_cast<int64_t*>(ptr);
+        return *numPtr;
+    }
 }
 
-// TODO: proper 64 bit support, like node-ffi
 inline uint64_t GetUInt64At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
-    return static_cast<uint64_t>(info[index]->NumberValue());
+    Nan::HandleScope scope;
+
+    auto number = MakeNumber(info[index]);
+    if (number->IsNumber()) {
+        return static_cast<uint64_t>(info[index]->NumberValue());
+    }
+    else {
+        auto value = info[index];
+        assert(Buffer::HasInstance(value));
+        char* ptr = Buffer::Data(value);
+        assert(ptr);
+        uint64_t* numPtr = reinterpret_cast<uint64_t*>(ptr);
+        return *numPtr;
+    }
 }
 
 inline float GetFloatAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
@@ -279,7 +303,6 @@ inline unsigned long long GetULongLongAt(const Nan::FunctionCallbackInfo<v8::Val
     return static_cast<unsigned long long>(GetUInt64At(info, index));
 }
 
-// TODO: proper 64 bit support, like node-ffi
 inline size_t GetSizeTAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
     return static_cast<size_t>(GetUInt64At(info, index));
@@ -321,7 +344,7 @@ inline v8::Local<v8::Object> GetResultPointerType(v8::Local<v8::Object> refType)
 }
 
 template <typename T, typename F, typename G>
-TSyncVMInitialzer MakeSyncArgProcessor(unsigned i, F f, G g)
+TSyncVMInitialzer MakeSyncArgProcessor(unsigned i, const F& f, const G& g)
 {
     return [=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
         T* valPtr = AsAsyncResultPtr<T>(info, i);
@@ -428,12 +451,10 @@ TSyncVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
                 list.emplace_back(MakeSyncArgProcessor<unsigned long>(i, dcArgULong, GetULongAt));
                 continue;
             }
-            // TODO: proper 64 bit support, like node-ffi
             if (!strcmp(typeName, "longlong")) {
                 list.emplace_back(MakeSyncArgProcessor<long long>(i, dcArgLongLong, GetLongLongAt));
                 continue;
             }
-            // TODO: proper 64 bit support, like node-ffi
             if (!strcmp(typeName, "ulonglong")) {
                 list.emplace_back(MakeSyncArgProcessor<unsigned long long>(i, dcArgULongLong, GetULongLongAt));
                 continue;
@@ -442,7 +463,6 @@ TSyncVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
                 list.emplace_back(MakeSyncArgProcessor<bool>(i, dcArgBool, GetBoolAt));
                 continue;
             }
-            // TODO: proper 64 bit support, like node-ffi
             if (!strcmp(typeName, "size_t")) {
                 list.emplace_back(MakeSyncArgProcessor<size_t>(i, dcArgSizeT, GetSizeTAt));
                 continue;
@@ -461,7 +481,7 @@ TSyncVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
 }
 
 template <typename T, typename F, typename G>
-TAsyncVMInitialzer MakeAsyncArgProcessor(unsigned i, F f, G g)
+TAsyncVMInitialzer MakeAsyncArgProcessor(unsigned i, F f, const G& g)
 {
     return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
         auto ar = AsAsyncResultBase(info, i);
@@ -620,7 +640,7 @@ TAsyncVMInitialzer MakeAsyncVMInitializer(const v8::Local<Object>& func)
 }
 
 template <typename T, typename F>
-TSyncVMInvoker MakeSyncVMInvoker(F f, void* funcPtr)
+TSyncVMInvoker MakeSyncVMInvoker(const F& f, void* funcPtr)
 {
     return [=](DCCallVM* vm) {
         T result = f(vm, funcPtr);
@@ -628,17 +648,26 @@ TSyncVMInvoker MakeSyncVMInvoker(F f, void* funcPtr)
     };
 }
 
-template <typename T, typename NanT, typename F>
-TSyncVMInvoker MakeSyncVMInvoker(F f, void* funcPtr)
+template <typename F>
+TSyncVMInvoker MakeSyncInt64VMInvoker(const F& f, void* funcPtr)
 {
     return [=](DCCallVM* vm) {
-        T result = f(vm, funcPtr);
-        return Nan::New(static_cast<NanT>(result));
+        int64_t result = f(vm, funcPtr);
+        return MakeInt64(result);
     };
 }
 
 template <typename F>
-TSyncVMInvoker MakeSyncVMInvoker(F f, void* funcPtr)
+TSyncVMInvoker MakeSyncUint64VMInvoker(const F& f, void* funcPtr)
+{
+    return [=](DCCallVM* vm) {
+        uint64_t result = f(vm, funcPtr);
+        return MakeUint64(result);
+    };
+}
+
+template <typename F>
+TSyncVMInvoker MakeSyncVMInvoker(const F& f, void* funcPtr)
 {
     return [=](DCCallVM* vm) {
         f(vm, funcPtr);
@@ -699,10 +728,10 @@ TSyncVMInvoker MakeSyncVMInvoker(const v8::Local<Object>& func)
             return MakeSyncVMInvoker<uint32_t>(dcCallUInt32, funcPtr);
         }
         if (!strcmp(typeName, "int64")) {
-            return MakeSyncVMInvoker<int64_t, double>(dcCallInt64, funcPtr);
+            return MakeSyncInt64VMInvoker(dcCallInt64, funcPtr);
         }
         if (!strcmp(typeName, "uint64")) {
-            return MakeSyncVMInvoker<uint64_t, double>(dcCallUInt64, funcPtr);
+            return MakeSyncUint64VMInvoker(dcCallUInt64, funcPtr);
         }
         if (!strcmp(typeName, "float")) {
             return MakeSyncVMInvoker<float>(dcCallFloat, funcPtr);
@@ -732,25 +761,22 @@ TSyncVMInvoker MakeSyncVMInvoker(const v8::Local<Object>& func)
             return MakeSyncVMInvoker<unsigned int>(dcCallUInt, funcPtr);
         }
         if (!strcmp(typeName, "long")) {
-            return MakeSyncVMInvoker<long, double>(dcCallLong, funcPtr);
+            return MakeSyncInt64VMInvoker(dcCallLong, funcPtr);
         }
         if (!strcmp(typeName, "ulong")) {
-            return MakeSyncVMInvoker<unsigned long, double>(dcCallULong, funcPtr);
+            return MakeSyncUint64VMInvoker(dcCallULong, funcPtr);
         }
-        // TODO: proper 64 bit support, like node-ffi
         if (!strcmp(typeName, "longlong")) {
-            return MakeSyncVMInvoker<long long, double>(dcCallLongLong, funcPtr);
+            return MakeSyncInt64VMInvoker(dcCallLongLong, funcPtr);
         }
-        // TODO: proper 64 bit support, like node-ffi
         if (!strcmp(typeName, "ulonglong")) {
-            return MakeSyncVMInvoker<unsigned long long, double>(dcCallULongLong, funcPtr);
+            return MakeSyncUint64VMInvoker(dcCallULongLong, funcPtr);
         }
         if (!strcmp(typeName, "bool")) {
             return MakeSyncVMInvoker<bool>(dcCallBool, funcPtr);
         }
-        // TODO: proper 64 bit support, like node-ffi
         if (!strcmp(typeName, "size_t")) {
-            return MakeSyncVMInvoker<size_t, double>(dcCallSizeT, funcPtr);
+            return MakeSyncUint64VMInvoker(dcCallSizeT, funcPtr);
         }
     }
     throw logic_error("Invalid resultType.");
