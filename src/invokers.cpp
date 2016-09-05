@@ -6,6 +6,7 @@
 #include "librarybase.h"
 #include "locker.h"
 #include "target.h"
+#include "int64.h"
 
 using namespace v8;
 using namespace node;
@@ -204,38 +205,12 @@ inline uint32_t GetUInt32At(const Nan::FunctionCallbackInfo<v8::Value>& info, co
 
 inline int64_t GetInt64At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
-    Nan::HandleScope scope;
-
-    auto number = MakeNumber(info[index]);
-    if (number->IsNumber()) {
-        return static_cast<int64_t>(info[index]->NumberValue());
-    }
-    else {
-        auto value = info[index];
-        assert(Buffer::HasInstance(value));
-        char* ptr = Buffer::Data(value);
-        assert(ptr);
-        int64_t* numPtr = reinterpret_cast<int64_t*>(ptr);
-        return *numPtr;
-    }
+    return GetInt64(info[index]);
 }
 
 inline uint64_t GetUInt64At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
 {
-    Nan::HandleScope scope;
-
-    auto number = MakeNumber(info[index]);
-    if (number->IsNumber()) {
-        return static_cast<uint64_t>(info[index]->NumberValue());
-    }
-    else {
-        auto value = info[index];
-        assert(Buffer::HasInstance(value));
-        char* ptr = Buffer::Data(value);
-        assert(ptr);
-        uint64_t* numPtr = reinterpret_cast<uint64_t*>(ptr);
-        return *numPtr;
-    }
+    return GetUint64(info[index]);
 }
 
 inline float GetFloatAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
