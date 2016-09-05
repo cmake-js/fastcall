@@ -14,7 +14,7 @@ struct AsyncResultBase;
 
 typedef std::pair<AsyncResultBase*, TAsyncInvoker> TCallable;
 typedef std::vector<TCallable> TCallQueue;
-typedef std::vector<AsyncResultBase*> TDestroyQueue;
+typedef std::vector<AsyncResultBase*> TReleaseQueue;
 typedef std::vector<std::shared_ptr<Nan::Callback>> TSyncQueue;
 
 struct Loop
@@ -33,17 +33,17 @@ private:
     LibraryBase* library;
     uv_loop_t loop;
     uv_async_t processCallQueueHandle;
-    uv_async_t processDestroyQueueHandle;
+    uv_async_t processReleaseQueueHandle;
     uv_async_t processSyncCallbackQueueHandle;
     DCCallVM* vm;
     TCallQueue callQueue;
-    TDestroyQueue destroyQueue;
+    TReleaseQueue releaseQueue;
     TSyncQueue syncQueue;
     unsigned counter = 0;
     unsigned lastSyncOn = 0;
     
     static void ProcessCallQueue(uv_async_t* handle);
-    static void ProcessDestroyQueue(uv_async_t* handle);
+    static void ProcessReleaseQueue(uv_async_t* handle);
     static void ProcessSyncQueue(uv_async_t* handle);
 };
 }

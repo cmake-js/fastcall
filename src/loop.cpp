@@ -18,8 +18,8 @@ Loop::Loop(LibraryBase* library, size_t vmSize)
     uv_async_init(&loop, &processCallQueueHandle, ProcessCallQueue);
     processCallQueueHandle.data = reinterpret_cast<void*>(this);
 
-    uv_async_init(&loop, &processDestroyQueueHandle, ProcessDestroyQueue);
-    processDestroyQueueHandle.data = reinterpret_cast<void*>(this);
+    uv_async_init(&loop, &processReleaseQueueHandle, ProcessReleaseQueue);
+    processReleaseQueueHandle.data = reinterpret_cast<void*>(this);
 
     uv_async_init(uv_default_loop(), &processSyncCallbackQueueHandle, ProcessSyncQueue);
     processSyncCallbackQueueHandle.data = reinterpret_cast<void*>(this);
@@ -74,31 +74,32 @@ void Loop::ProcessCallQueue(uv_async_t* handle)
     for (int i = self->callQueue.size() - 1; i >= 0; i--)
     {
         auto& callable = self->callQueue[i];
+        dcReset(self->vm);
         callable.second(self->vm);
         if (callable.first) {
-            self->destroyQueue.emplace_back(callable.first);
+            self->releaseQueue.emplace_back(callable.first);
             isDestroyable = true;
         }
     }
     self->callQueue.clear();
 
     if (isDestroyable) {
-        uv_async_send(&self->processDestroyQueueHandle);
+        uv_async_send(&self->processReleaseQueueHandle);
     }
 }
 
-void Loop::ProcessDestroyQueue(uv_async_t* handle)
+void Loop::ProcessReleaseQueue(uv_async_t* handle)
 {
     assert(handle);
     auto self = reinterpret_cast<Loop*>(handle->data);
     assert(self);
 
     auto lock(self->AcquireLock());
-    for (auto item : self->destroyQueue)
+    for (auto item : self->releaseQueue)
     {
         item->Release();
     }
-    self->destroyQueue.clear();
+    self->releaseQueue.clear();
 }
 
 void Loop::ProcessSyncQueue(uv_async_t* handle)
