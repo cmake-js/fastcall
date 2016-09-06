@@ -77,7 +77,7 @@ void Loop::ProcessCallQueue(uv_async_t* handle)
         dcReset(self->vm);
         callable.second(self->vm);
         if (callable.first) {
-            self->releaseQueue.emplace_back(callable.first);
+            self->releaseQueue.push_back(callable.first);
             isDestroyable = true;
         }
     }
