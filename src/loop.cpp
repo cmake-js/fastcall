@@ -34,8 +34,6 @@ Loop::Loop(LibraryBase* library, size_t vmSize)
 
 Loop::~Loop()
 {
-    auto lock(AcquireLock());
-
     int result;
     uv_close((uv_handle_t*)(&processCallQueueHandle), nullptr);
     uv_close((uv_handle_t*)(&processReleaseQueueHandle), nullptr);
@@ -48,12 +46,16 @@ Loop::~Loop()
     assert(!result);
     dcFree(vm);
 
-    processSyncCallbackQueueHandle->data = nullptr;
-    uv_close(
-        (uv_handle_t*)(processSyncCallbackQueueHandle),
-        [](uv_handle_t* ptr) {
-            delete (uv_async_t*)ptr;
-        });
+    {
+        auto lock(AcquireLock());
+
+        processSyncCallbackQueueHandle->data = nullptr;
+        uv_close(
+            (uv_handle_t*)(processSyncCallbackQueueHandle),
+            [](uv_handle_t* ptr) {
+                delete (uv_async_t*)ptr;
+            });
+    }
 }
 
 Lock Loop::AcquireLock()
