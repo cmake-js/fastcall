@@ -15,8 +15,8 @@ using namespace std;
 using namespace fastcall;
 
 namespace {
-const unsigned syncCallMode = 1;
-const unsigned asyncCallMode = 2;
+const unsigned SYNC_CALL_MODE = 1;
+const unsigned ASYNC_CALL_MODE = 2;
 
 typedef Nan::Persistent<Object, CopyablePersistentTraits<Object> > TCopyablePersistent;
 
@@ -672,7 +672,7 @@ TSyncVMInvoker MakeSyncVMInvoker(const v8::Local<Object>& func)
     auto indirection = GetValue(resultType, "indirection")->Uint32Value();
     void* funcPtr = FunctionBase::GetFuncPtr(func);
 
-    assert(GetValue(func, "callMode")->Uint32Value() == 1);
+    assert(GetValue(func, "callMode")->Uint32Value() == SYNC_CALL_MODE);
 
     if (indirection > 1) {
         auto resultPointerType = GetResultPointerType(resultType);
@@ -792,7 +792,7 @@ TAsyncVMInvoker MakeAsyncVMInvoker(const v8::Local<Object>& func)
     auto indirection = GetValue(resultType, "indirection")->Uint32Value();
     void* funcPtr = FunctionBase::GetFuncPtr(func);
 
-    assert(GetValue(func, "callMode")->Uint32Value() == 1);
+    assert(GetValue(func, "callMode")->Uint32Value() == ASYNC_CALL_MODE);
 
     if (indirection > 1) {
         return MakeAsyncVMInvoker<void*>(dcCallPointer, funcPtr);
@@ -881,7 +881,7 @@ TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
     unsigned callMode = GetValue(func, "callMode")->Uint32Value();
     auto funcBase = FunctionBase::GetFunctionBase(func);
 
-    if (callMode == syncCallMode) {
+    if (callMode == SYNC_CALL_MODE) {
         auto initializer = MakeSyncVMInitializer(func);
         auto invoker = MakeSyncVMInvoker(func);
         return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
@@ -889,7 +889,7 @@ TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
             initializer(funcBase->GetVM(), info);
             return invoker(funcBase->GetVM());
         };
-    } else if (callMode == asyncCallMode) {
+    } else if (callMode == ASYNC_CALL_MODE) {
         auto initializer = MakeAsyncVMInitializer(func);
         auto invoker = MakeAsyncVMInvoker(func);
         // Note: this branch's invocation and stuff gets locked in the Loop.

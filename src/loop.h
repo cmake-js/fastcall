@@ -34,7 +34,7 @@ private:
     uv_loop_t loop;
     uv_async_t processCallQueueHandle;
     uv_async_t processReleaseQueueHandle;
-    uv_async_t processSyncCallbackQueueHandle;
+    uv_async_t* processSyncCallbackQueueHandle;
     DCCallVM* vm;
     TCallQueue callQueue;
     TReleaseQueue releaseQueue;

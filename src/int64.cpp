@@ -6,8 +6,8 @@ using namespace node;
 using namespace std;
 using namespace fastcall;
 
-#define JS_MAX_INT +9007199254740992LL
-#define JS_MIN_INT -9007199254740992LL
+const long long JS_MAX_INT = +9007199254740992LL;
+const long long JS_MIN_INT = -9007199254740992LL;
 
 int64_t fastcall::GetInt64(const v8::Local<Value>& value)
 {
