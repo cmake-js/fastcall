@@ -308,7 +308,6 @@ describe('Library', function () {
         });
 
         var testMulAsync = async(function *(declaration) {
-            throw new Error('TODO');
             assert(lib._funcs);
             assert(lib._funcs.mul);
             assert(lib.interface);
@@ -326,15 +325,15 @@ describe('Library', function () {
             assert.equal(mul.args[1].type.name, 'int');
 
             // Call!
-            assert.equal(mul(2, 2), 4);
-            assert.equal(mul(10, 2), 20);
-            assert.equal(mul(10, "3"), 30);
-            assert.equal(mul(10.1, 2.1), 20);
+            assert.equal(yield mul(2, 2).get(), 4);
+            assert.equal(yield mul(10, 2).get(), 20);
+            assert.equal(yield mul(10, "3").get(), 30);
+            assert.equal(yield mul(10.1, 2.1).get(), 20);
 
             // Zero is the default:
-            assert.equal(mul(10), 0);
-            assert.equal(mul(), 0);
-            assert.equal(mul("a", "b"), 0);
+            assert.equal(yield mul(10).get(), 0);
+            assert.equal(yield mul().get(), 0);
+            assert.equal(yield mul("a", "b").get(), 0);
         });
 
         var testReadLongPtrAsync = async(function *(declaration) {

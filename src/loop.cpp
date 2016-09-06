@@ -140,6 +140,13 @@ void Loop::ProcessSyncQueue(uv_async_t* handle)
     }
     
     auto lock(self->AcquireLock());
+
+    // Again, because loop could be destructed before the lock kicked in
+    self = reinterpret_cast<Loop*>(handle->data);
+    if (!self) {
+        return;
+    }
+
     for (int i = self->syncQueue.size() - 1; i >= 0; i--)
     {
         Nan::HandleScope scope;

@@ -39,7 +39,7 @@ v8::Local<Object> fastcall::RequireRef()
     return scope.Escape(ref);
 }
 
-v8::Local<Object> MakeAsyncResult(const v8::Local<Object>& func, const v8::Local<Object>& type)
+v8::Local<Object> fastcall::MakeAsyncResult(const v8::Local<Object>& func, const v8::Local<Object>& type)
 {
     Nan::EscapableHandleScope scope;
 
