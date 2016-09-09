@@ -1,22 +1,17 @@
 #pragma once
-#include <nan.h>
+#include <mutex>
 
 namespace fastcall {
 struct Locker {
     friend struct Lock;
-    
+
     Locker(const Locker&) = delete;
     Locker(Locker&&) = delete;
-    Locker() 
+    Locker()
     {
-        uv_mutex_init(&mutex);
-    }
-    ~Locker()
-    {
-        uv_mutex_destroy(&mutex);
     }
 private:
-    uv_mutex_t mutex;
+    std::recursive_mutex mutex;
 };
 
 struct Lock
@@ -24,22 +19,14 @@ struct Lock
     Lock() = delete;
     Lock(const Lock&) = delete;
     Lock(Lock&& other)
-        : pMutex(other.pMutex)
+        : locker(std::move(other.locker))
     {
-        other.pMutex = nullptr;
     }
     Lock(Locker& locker)
-        : pMutex(&locker.mutex)
+        : locker(locker.mutex)
     {
-        uv_mutex_lock(pMutex);
-    }
-    ~Lock() 
-    {
-        if (pMutex) {
-            uv_mutex_unlock(pMutex);
-        }
     }
 private:
-    uv_mutex_t* pMutex;
+    std::unique_lock<std::recursive_mutex> locker;
 };
 }

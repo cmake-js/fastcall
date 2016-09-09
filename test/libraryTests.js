@@ -242,7 +242,7 @@ describe('Library', function () {
         });
 
         describe('node-ffi style declaration', function () {
-            it('should invoke "mul" with "declare"', function () {
+            it.only('should invoke "mul" with "declare"', function () {
                 lib.declare({ mul: ['int', [ref.types.int, 'int']] });
                 return testMulAsync('int mul(int arg0, int arg1)');
             });

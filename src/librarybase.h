@@ -31,6 +31,7 @@ private:
 
     static NAN_METHOD(initialize);
     static NAN_METHOD(free);
+    static NAN_METHOD(_synchronize);
 
     static DLLib* FindPLib(const v8::Local<v8::Object>& self);
 };

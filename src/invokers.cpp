@@ -884,7 +884,7 @@ TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
     if (callMode == SYNC_CALL_MODE) {
         auto initializer = MakeSyncVMInitializer(func);
         auto invoker = MakeSyncVMInvoker(func);
-        return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+        return [funcBase, initializer, invoker](const Nan::FunctionCallbackInfo<v8::Value>& info) {
             auto lock(funcBase->GetLibrary()->AcquireLock());
             initializer(funcBase->GetVM(), info);
             return invoker(funcBase->GetVM());
@@ -894,11 +894,11 @@ TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
         auto invoker = MakeAsyncVMInvoker(func);
         // Note: this branch's invocation and stuff gets locked in the Loop.
         funcBase->GetLibrary()->EnsureAsyncSupport();
-        return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+        return [funcBase, initializer, invoker](const Nan::FunctionCallbackInfo<v8::Value>& info) {
             Nan::EscapableHandleScope scope;
 
             auto resultType = GetValue<Object>(info.This(), "resultType");
-            auto asyncResult = MakeAsyncResult(func, resultType);
+            auto asyncResult = MakeAsyncResult(info.This(), resultType);
             auto currentInitializer = initializer(info);
             auto currentInvoker = invoker(info.This());
             funcBase->GetLibrary()->GetLoop()->Push(

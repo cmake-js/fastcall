@@ -11,22 +11,25 @@ using namespace fastcall;
 
 Loop::Loop(LibraryBase* library, size_t vmSize)
     : library(library)
+    , loop(new uv_loop_t)
+    , processCallQueueHandle(new uv_async_t)
+    , processReleaseQueueHandle(new uv_async_t)
+    , processSyncCallbackQueueHandle(new uv_async_t)
     , vm(dcNewCallVM(vmSize))
 {
     int result;
 
-    result = uv_loop_init(&loop);
+    result = uv_loop_init(loop);
     assert(!result);
 
-    result = uv_async_init(&loop, &processCallQueueHandle, ProcessCallQueue);
-    processCallQueueHandle.data = reinterpret_cast<void*>(this);
+    result = uv_async_init(loop, processCallQueueHandle, ProcessCallQueue);
+    processCallQueueHandle->data = reinterpret_cast<void*>(this);
     assert(!result);
 
-    result = uv_async_init(&loop, &processReleaseQueueHandle, ProcessReleaseQueue);
-    processReleaseQueueHandle.data = reinterpret_cast<void*>(this);
+    result = uv_async_init(loop, processReleaseQueueHandle, ProcessReleaseQueue);
+    processReleaseQueueHandle->data = reinterpret_cast<void*>(this);
     assert(!result);
 
-    processSyncCallbackQueueHandle = new uv_async_t;
     result = uv_async_init(uv_default_loop(), processSyncCallbackQueueHandle, ProcessSyncQueue);
     processSyncCallbackQueueHandle->data = reinterpret_cast<void*>(this);
     assert(!result);
@@ -34,28 +37,48 @@ Loop::Loop(LibraryBase* library, size_t vmSize)
 
 Loop::~Loop()
 {
-    int result;
-    uv_close((uv_handle_t*)(&processCallQueueHandle), nullptr);
-    uv_close((uv_handle_t*)(&processReleaseQueueHandle), nullptr);
-    result = uv_run(&loop, UV_RUN_DEFAULT);
-    assert(!result);
-    uv_stop(&loop);
-    result = uv_run(&loop, UV_RUN_DEFAULT);
-    assert(!result);
-    result = uv_loop_close(&loop);
-    assert(!result);
-    dcFree(vm);
-
     {
         auto lock(AcquireLock());
 
+        processCallQueueHandle->data = nullptr;
+        processReleaseQueueHandle->data = nullptr;
         processSyncCallbackQueueHandle->data = nullptr;
-        uv_close(
-            (uv_handle_t*)(processSyncCallbackQueueHandle),
-            [](uv_handle_t* ptr) {
-                delete (uv_async_t*)ptr;
-            });
     }
+
+    uv_close(
+        (uv_handle_t*)(processCallQueueHandle),
+        [](uv_handle_t* ptr) {
+            delete (uv_async_t*)ptr;
+        });
+
+    uv_close(
+        (uv_handle_t*)(processReleaseQueueHandle),
+        [](uv_handle_t* ptr) {
+            delete (uv_async_t*)ptr;
+        });
+
+    uv_close(
+        (uv_handle_t*)(processSyncCallbackQueueHandle),
+        [](uv_handle_t* ptr) {
+            delete (uv_async_t*)ptr;
+        });
+
+    uv_stop(loop);
+}
+
+void Loop::LoopMain(void* threadArg)
+{
+    int result;
+    auto self = reinterpret_cast<Loop*>(threadArg);
+    auto loop = self->loop;
+    auto vm = self->vm;
+
+    result = uv_run(loop, UV_RUN_DEFAULT);
+    assert(!result);
+    result = uv_loop_close(loop);
+    assert(!result);
+    delete loop;
+    dcFree(vm);
 }
 
 Lock Loop::AcquireLock()
@@ -68,7 +91,7 @@ void Loop::Push(const TCallable& callable)
     auto lock(AcquireLock());
     counter++;
     callQueue.emplace_back(callable);
-    int result = uv_async_send(&processCallQueueHandle);
+    int result = uv_async_send(processCallQueueHandle);
     assert(!result);
 }
 
@@ -76,7 +99,7 @@ void Loop::Synchronize(const v8::Local<v8::Function>& callback)
 {
     Nan::HandleScope scope;
     auto lock(AcquireLock());
-    if (counter == lastSyncOn) {
+    if (counter == lastSyncOn || true) { // DEBUG DEBUG DEBUG DEBUG DEBUG
         callback->Call(Nan::Null(), 0, {});
     }
     else {
@@ -94,10 +117,19 @@ void Loop::ProcessCallQueue(uv_async_t* handle)
 {
     assert(handle);
     auto self = reinterpret_cast<Loop*>(handle->data);
-    assert(self);
+    if (!self) {
+        return;
+    }
+
+    auto lock(self->AcquireLock());
+
+    // Again, because loop could be destructed before the lock kicked in
+    self = reinterpret_cast<Loop*>(handle->data);
+    if (!self) {
+        return;
+    }
     
     bool isDestroyable = false;
-    auto lock(self->AcquireLock());
 
     for (int i = self->callQueue.size() - 1; i >= 0; i--)
     {
@@ -112,7 +144,7 @@ void Loop::ProcessCallQueue(uv_async_t* handle)
     self->callQueue.clear();
 
     if (isDestroyable) {
-        int result = uv_async_send(&self->processReleaseQueueHandle);
+        int result = uv_async_send(self->processReleaseQueueHandle);
         assert(!result);
     }
 }
@@ -121,9 +153,18 @@ void Loop::ProcessReleaseQueue(uv_async_t* handle)
 {
     assert(handle);
     auto self = reinterpret_cast<Loop*>(handle->data);
-    assert(self);
+    if (!self) {
+        return;
+    }
 
     auto lock(self->AcquireLock());
+
+    // Again, because loop could be destructed before the lock kicked in
+    self = reinterpret_cast<Loop*>(handle->data);
+    if (!self) {
+        return;
+    }
+
     for (auto item : self->releaseQueue)
     {
         item->Release();
