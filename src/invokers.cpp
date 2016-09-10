@@ -768,7 +768,7 @@ TAsyncVMInvoker MakeAsyncVMInvoker(F f, void* funcPtr)
         assert(valPtr);
         return [=](DCCallVM* vm) {
             T result = f(vm, funcPtr);
-            return *valPtr = result;
+            *valPtr = result;
         };
     };
 }
@@ -900,7 +900,7 @@ TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
             auto resultType = GetValue<Object>(info.This(), "resultType");
             auto asyncResult = MakeAsyncResult(info.This(), resultType);
             auto currentInitializer = initializer(info);
-            auto currentInvoker = invoker(info.This());
+            auto currentInvoker = invoker(asyncResult);
             funcBase->GetLibrary()->GetLoop()->Push(
                 make_pair(
                     AsyncResultBase::GetAsyncResultBase(asyncResult),

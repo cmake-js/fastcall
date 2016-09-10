@@ -30,8 +30,8 @@ NAN_MODULE_INIT(LibraryBase::Init)
 NAN_METHOD(LibraryBase::New)
 {
     auto libraryBase = new LibraryBase();
-    libraryBase->Wrap(info.Holder());
-    info.GetReturnValue().Set(info.Holder());
+    libraryBase->Wrap(info.This());
+    info.GetReturnValue().Set(info.This());
 }
 
 LibraryBase::LibraryBase()

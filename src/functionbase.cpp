@@ -29,8 +29,8 @@ NAN_MODULE_INIT(FunctionBase::Init)
 NAN_METHOD(FunctionBase::New)
 {
     auto functionBase = new FunctionBase();
-    functionBase->Wrap(info.Holder());
-    info.GetReturnValue().Set(info.Holder());
+    functionBase->Wrap(info.This());
+    info.GetReturnValue().Set(info.This());
 }
 
 FunctionBase::FunctionBase()
@@ -54,7 +54,7 @@ void* FunctionBase::GetFuncPtr(const v8::Local<v8::Object>& self)
 
 FunctionBase* FunctionBase::GetFunctionBase(const v8::Local<v8::Object>& self)
 {
-    auto obj = ObjectWrap::Unwrap<FunctionBase>(self);
+    auto obj = Nan::ObjectWrap::Unwrap<FunctionBase>(self);
     assert(obj);
     return obj;
 }
@@ -112,7 +112,7 @@ LibraryBase* FunctionBase::FindLibraryBase(const Local<Object>& self)
     Nan::HandleScope scope;
 
     auto library = FindLibrary(self);
-    auto ptr = ObjectWrap::Unwrap<LibraryBase>(library);
+    auto ptr = Nan::ObjectWrap::Unwrap<LibraryBase>(library);
     assert(ptr);
     return ptr;
 }

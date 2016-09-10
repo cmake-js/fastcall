@@ -29,7 +29,7 @@ NAN_METHOD(AsyncResultBase::New)
     //super(func, ref.alloc(type))
     assert(info.Length() == 2);
     
-    auto self = info.Holder();
+    auto self = info.This();
     
     assert(info[0]->IsObject());
     SetValue(self, "func", info[0]);
@@ -37,18 +37,19 @@ NAN_METHOD(AsyncResultBase::New)
     assert(func);
     
     auto ptr = UnwrapPointer(info[1]);
-    SetValue(self, "ptr", info[1]);
     assert(ptr);
+    SetValue(self, "ptr", info[1]);
     
     auto asyncResultBase = new AsyncResultBase(func, ptr);
     asyncResultBase->Wrap(self);
-    info.GetReturnValue().Set(self);
 
     SetValue(self, "__typeId", Nan::New(AsyncResultBase::typeId));
 
     // We gotta prevent GC to collect AsyncResult
     // until it's natice part gets deleted.
     asyncResultBase->me.Reset(self);
+
+    info.GetReturnValue().Set(self);
 }
 
 AsyncResultBase::AsyncResultBase(FunctionBase* func, void* ptr)
@@ -79,7 +80,7 @@ AsyncResultBase* AsyncResultBase::AsAsyncResultBase(const v8::Local<v8::Object>&
 
 AsyncResultBase* AsyncResultBase::GetAsyncResultBase(const v8::Local<v8::Object>& self)
 {
-    auto obj = Unwrap<AsyncResultBase>(self);
+    auto obj = Nan::ObjectWrap::Unwrap<AsyncResultBase>(self);
     assert(obj);
     return obj;
 }

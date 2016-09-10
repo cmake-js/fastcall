@@ -242,7 +242,7 @@ describe('Library', function () {
         });
 
         describe('node-ffi style declaration', function () {
-            it.only('should invoke "mul" with "declare"', function () {
+            it('should invoke "mul" with "declare"', function () {
                 lib.declare({ mul: ['int', [ref.types.int, 'int']] });
                 return testMulAsync('int mul(int arg0, int arg1)');
             });
@@ -337,7 +337,6 @@ describe('Library', function () {
         });
 
         var testReadLongPtrAsync = async(function *(declaration) {
-            throw new Error('TODO');
             const readLongPtr = lib.interface.readLongPtr;
             assert(_.isFunction(readLongPtr));
             assert.equal(readLongPtr.declaration, declaration);
@@ -345,37 +344,34 @@ describe('Library', function () {
             const data = new Buffer(long.size * 2);
             long.set(data, 0, 1);
             long.set(data, long.size, 42);
-            assert.equal(readLongPtr(data, 0), 1);
-            assert.equal(readLongPtr(data, 1), 42);
+            assert.equal(yield readLongPtr(data, 0).get(), 1);
+            assert.equal(yield readLongPtr(data, 1).get(), 42);
         });
 
         var testWriteStringAsync = async(function *(declaration) {
-            throw new Error('TODO');
             const writeString = lib.interface.writeString;
             assert(_.isFunction(writeString));
             assert.equal(writeString.declaration, declaration);
             const string = ref.allocCString('          ');
             writeString(string);
+            yield lib.synchronize();
             assert.equal(ref.readCString(string), 'hello');
         });
 
         var testGetStringAsync = async(function *(declaration) {
-            throw new Error('TODO');
             const getString = lib.interface.getString;
             assert(_.isFunction(getString));
             assert.equal(getString.declaration, declaration);
-            const string = getString();
+            const string = yield getString().get();
             assert(_.isBuffer(string));
             assert(_.isObject(string.type));
             assert.equal(string.type.name, 'char');
             assert.equal(string.type.indirection, 1);
-            assert.equal(string.length, 0);
             assert.equal(ref.readCString(string), 'world');
         });
 
         // void getNumbers(double** nums, size_t* size)
         var testGetNumbersAsync = async(function *(declaration) {
-            throw new Error('TODO');
             const getNumbers = lib.interface.getNumbers;
             assert(_.isFunction(getNumbers));
             assert.equal(getNumbers.declaration, declaration);
@@ -384,7 +380,7 @@ describe('Library', function () {
             const doublePtrType = ref.refType(double);
             const doublePtrPtr = ref.alloc(doublePtrType);
             const sizeTPtr = ref.alloc('size_t');
-            getNumbers(doublePtrPtr, sizeTPtr);
+            yield getNumbers(doublePtrPtr, sizeTPtr).get();
 
             const size = ref.deref(sizeTPtr);
             assert.equal(size, 3);

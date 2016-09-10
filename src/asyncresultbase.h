@@ -37,6 +37,6 @@ private:
 template <typename T>
 inline T* AsyncResultBase::GetPtr()
 {
-    return reinterpret_cast<T*>(ptr);
+    return static_cast<T*>(ptr);
 }
 }

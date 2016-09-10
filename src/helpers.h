@@ -70,7 +70,13 @@ T* UnwrapPointer(const v8::Local<v8::Value>& value)
     return reinterpret_cast<T*>(UnwrapPointer(value));
 }
 
-inline v8::Local<v8::Object> GetGlobal() {
+inline v8::Local<v8::Object> GetGlobal()
+{
     return Nan::GetCurrentContext()->Global();
+}
+
+inline void DeleteUVAsyncHandle(uv_handle_t* handle)
+{
+    delete (uv_async_t*)handle;
 }
 }

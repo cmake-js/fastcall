@@ -16,7 +16,6 @@ struct AsyncResultBase;
 typedef std::pair<AsyncResultBase*, TAsyncInvoker> TCallable;
 typedef std::queue<TCallable> TCallQueue;
 typedef std::queue<AsyncResultBase*> TReleaseQueue;
-typedef std::queue<std::shared_ptr<Nan::Callback>> TSyncQueue;
 
 struct Loop : LibraryFeature
 {
@@ -35,11 +34,9 @@ private:
     uv_async_t* shutdownHandle;
     uv_async_t* processCallQueueHandle;
     uv_async_t* processReleaseQueueHandle;
-    uv_async_t* processSyncCallbackQueueHandle;
     DCCallVM* vm;
     TCallQueue callQueue;
     TReleaseQueue releaseQueue;
-    TSyncQueue syncQueue;
     unsigned counter = 0;
     unsigned lastSyncOn = 0;
     std::mutex destroyLock;
@@ -49,6 +46,6 @@ private:
     static void Shutdown(uv_async_t* handle);
     static void ProcessCallQueue(uv_async_t* handle);
     static void ProcessReleaseQueue(uv_async_t* handle);
-    static void ProcessSyncQueue(uv_async_t* handle);
+    static void ProcessSyncHandle(uv_async_t* handle);
 };
 }
