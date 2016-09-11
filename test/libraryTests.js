@@ -162,6 +162,7 @@ describe('Library', function () {
             assert.equal(mul(10, 2), 20);
             assert.equal(mul(10, "3"), 30);
             assert.equal(mul(10.1, 2.1), 20);
+            assert.equal(mul(mul(4, 4), 2), 32);
 
             // Zero is the default:
             assert.equal(mul(10), 0);
@@ -329,6 +330,8 @@ describe('Library', function () {
             assert.equal(yield mul(10, 2).get(), 20);
             assert.equal(yield mul(10, "3").get(), 30);
             assert.equal(yield mul(10.1, 2.1).get(), 20);
+            // Notice: async methods are chainable without getting their result to Node.js side!
+            assert.equal(yield mul(mul(4, 4), 2).get(), 32);
 
             // Zero is the default:
             assert.equal(yield mul(10).get(), 0);
