@@ -3,7 +3,7 @@
 #include <dyncall.h>
 #include <memory>
 #include <utility>
-#include <queue>
+#include "queue.h"
 #include <mutex>
 #include <condition_variable>
 #include "invokers.h"
@@ -14,9 +14,9 @@ struct LibraryBase;
 struct AsyncResultBase;
 
 typedef std::pair<AsyncResultBase*, TAsyncInvoker> TCallable;
-typedef std::queue<TCallable> TCallQueue;
-typedef std::queue<AsyncResultBase*> TReleaseQueue;
-typedef std::queue<std::shared_ptr<Nan::Callback>> TSyncQueue;
+typedef Queue<TCallable> TCallQueue;
+typedef Queue<AsyncResultBase*> TReleaseQueue;
+typedef Queue<std::shared_ptr<Nan::Callback>> TSyncQueue;
 
 struct Loop : LibraryFeature
 {
@@ -33,13 +33,10 @@ private:
     uv_thread_t* loopThread;
     uv_loop_t* loop;
     uv_async_t* shutdownHandle;
-    uv_async_t* processCallQueueHandle;
-    uv_async_t* processReleaseQueueHandle;
-    uv_async_t* processSyncCallbackQueueHandle;
     DCCallVM* vm;
-    TCallQueue callQueue;
-    TReleaseQueue releaseQueue;
-    TSyncQueue syncQueue;
+    std::unique_ptr<TCallQueue> callQueue;
+    std::unique_ptr<TReleaseQueue> releaseQueue;
+    std::unique_ptr<TSyncQueue> syncQueue;
     unsigned counter = 0;
     unsigned lastSyncOn = 0;
     std::mutex destroyLock;
@@ -47,8 +44,8 @@ private:
     
     static void LoopMain(void* threadArg);
     static void Shutdown(uv_async_t* handle);
-    static void ProcessCallQueue(uv_async_t* handle);
-    static void ProcessReleaseQueue(uv_async_t* handle);
-    static void ProcessSyncQueue(uv_async_t* handle);
+    void ProcessCallQueueItem(TCallable& item);
+    void ProcessReleaseQueueItem(AsyncResultBase* item);
+    void ProcessSyncQueueItem(std::shared_ptr<Nan::Callback>& item);
 };
 }

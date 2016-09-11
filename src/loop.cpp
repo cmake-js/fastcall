@@ -15,9 +15,6 @@ Loop::Loop(LibraryBase* library, size_t vmSize)
     , loopThread(new uv_thread_t)
     , loop(new uv_loop_t)
     , shutdownHandle(new uv_async_t)
-    , processCallQueueHandle(new uv_async_t)
-    , processReleaseQueueHandle(new uv_async_t)
-    , processSyncCallbackQueueHandle(new uv_async_t)
     , vm(dcNewCallVM(vmSize))
 {
     int result;
@@ -29,17 +26,10 @@ Loop::Loop(LibraryBase* library, size_t vmSize)
     shutdownHandle->data = reinterpret_cast<void*>(this);
     assert(!result);
 
-    result = uv_async_init(loop, processCallQueueHandle, ProcessCallQueue);
-    processCallQueueHandle->data = reinterpret_cast<void*>(this);
-    assert(!result);
-
-    result = uv_async_init(loop, processReleaseQueueHandle, ProcessReleaseQueue);
-    processReleaseQueueHandle->data = reinterpret_cast<void*>(this);
-    assert(!result);
-
-    result = uv_async_init(uv_default_loop(), processSyncCallbackQueueHandle, ProcessSyncQueue);
-    processSyncCallbackQueueHandle->data = reinterpret_cast<void*>(this);
-    assert(!result);
+    using namespace std::placeholders;
+    callQueue = std::unique_ptr<TCallQueue>(new TCallQueue(this, loop, bind(&Loop::ProcessCallQueueItem, this, _1)));
+    releaseQueue = std::unique_ptr<TReleaseQueue>(new TReleaseQueue(this, loop, bind(&Loop::ProcessReleaseQueueItem, this, _1)));
+    syncQueue = std::unique_ptr<TSyncQueue>(new TSyncQueue(this, uv_default_loop(), bind(&Loop::ProcessSyncQueueItem, this, _1)));
 
     uv_thread_create(loopThread, LoopMain, this);
 }
@@ -48,7 +38,7 @@ Loop::~Loop()
 {
     std::unique_lock<std::mutex> ulock(destroyLock);
 
-    uv_close((uv_handle_t*)(processSyncCallbackQueueHandle), DeleteUVAsyncHandle);
+    syncQueue->Close();
     uv_async_send(shutdownHandle);
 
     destroyCond.wait(ulock);
@@ -64,8 +54,8 @@ void Loop::Shutdown(uv_async_t* handle)
     auto self = reinterpret_cast<Loop*>(handle->data);
 
     uv_close((uv_handle_t*)(self->shutdownHandle), DeleteUVAsyncHandle);
-    uv_close((uv_handle_t*)(self->processCallQueueHandle), DeleteUVAsyncHandle);
-    uv_close((uv_handle_t*)(self->processReleaseQueueHandle), DeleteUVAsyncHandle);
+    self->callQueue->Close();
+    self->releaseQueue->Close();
     uv_stop(self->loop);
 }
 
@@ -89,9 +79,7 @@ void Loop::Push(const TCallable& callable)
 {
     auto lock(AcquireLock());
     counter++;
-    callQueue.emplace(callable);
-    int result = uv_async_send(processCallQueueHandle);
-    assert(!result);
+    callQueue->Push(callable);
 }
 
 void Loop::Synchronize(const v8::Local<v8::Function>& callback)
@@ -102,93 +90,29 @@ void Loop::Synchronize(const v8::Local<v8::Function>& callback)
         callback->Call(Nan::Null(), 0, {});
     } else {
         auto cb = make_shared<Nan::Callback>(callback);
-        auto handle = processSyncCallbackQueueHandle;
         Push(make_pair(nullptr, [=](DCCallVM*) {
-            {
-                auto lock(this->AcquireLock());
-                this->syncQueue.emplace(cb);
-            }
-            int result = uv_async_send(handle);
-            assert(!result);
+            this->syncQueue->Push(cb);
         }));
         lastSyncOn = counter;
     }
 }
 
-void Loop::ProcessCallQueue(uv_async_t* handle)
+void Loop::ProcessCallQueueItem(TCallable& item)
 {
-    assert(handle);
-    auto self = reinterpret_cast<Loop*>(handle->data);
+    item.second(vm);
 
-    TCallable callable;
-    DCCallVM* vm;
-    for (;;) {
-        {
-            auto lock(self->AcquireLock());
-
-            if (self->callQueue.empty()) {
-                return;
-            }
-            callable = self->callQueue.front();
-            vm = self->vm;
-            self->callQueue.pop();
-        }
-
-        callable.second(vm);
-
-        {
-            auto lock(self->AcquireLock());
-
-            if (callable.first) {
-                self->releaseQueue.emplace(callable.first);
-                int result = uv_async_send(self->processReleaseQueueHandle);
-                assert(!result);
-            }
-        }
-    };
-}
-
-void Loop::ProcessReleaseQueue(uv_async_t* handle)
-{
-    assert(handle);
-    auto self = reinterpret_cast<Loop*>(handle->data);
-
-    AsyncResultBase* ar;
-    for (;;) {
-        {
-            auto lock(self->AcquireLock());
-
-            if (self->releaseQueue.empty()) {
-                return;
-            }
-            ar = self->releaseQueue.front();
-            self->releaseQueue.pop();
-        }
-
-        ar->Release();
-    };
-}
-
-void Loop::ProcessSyncQueue(uv_async_t* handle)
-{
-    assert(handle);
-    auto self = reinterpret_cast<Loop*>(handle->data);
-
-    std::shared_ptr<Nan::Callback> cb;
-    for (;;) {
-        {
-            auto lock(self->AcquireLock());
-
-            if (self->syncQueue.empty()) {
-                return;
-            }
-            cb = self->syncQueue.front();
-            self->syncQueue.pop();
-        }
-
-        {
-            Nan::HandleScope scope;
-            cb->Call(0, {});
-        }
+    if (item.first) {
+        releaseQueue->Push(item.first);
     }
+}
+
+void Loop::ProcessReleaseQueueItem(AsyncResultBase* item)
+{
+    item->Release();
+}
+
+void Loop::ProcessSyncQueueItem(std::shared_ptr<Nan::Callback>& item)
+{
+    Nan::HandleScope scope;
+    item->Call(0, {});
 }
