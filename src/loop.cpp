@@ -77,7 +77,6 @@ void Loop::LoopMain(void* threadArg)
 
 void Loop::Push(const TCallable& callable)
 {
-    auto lock(AcquireLock());
     counter++;
     callQueue->Push(callable);
 }
@@ -85,7 +84,6 @@ void Loop::Push(const TCallable& callable)
 void Loop::Synchronize(const v8::Local<v8::Function>& callback)
 {
     Nan::HandleScope scope;
-    auto lock(AcquireLock());
     if (counter == lastSyncOn) {
         callback->Call(Nan::Null(), 0, {});
     } else {
