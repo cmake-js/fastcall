@@ -101,9 +101,13 @@ void Loop::Synchronize(const v8::Local<v8::Function>& callback)
     if (counter == lastSyncOn) {
         callback->Call(Nan::Null(), 0, {});
     } else {
-        syncQueue.emplace(make_shared<Nan::Callback>(callback));
+        auto cb = make_shared<Nan::Callback>(callback);
         auto handle = processSyncCallbackQueueHandle;
         Push(make_pair(nullptr, [=](DCCallVM*) {
+            {
+                auto lock(this->AcquireLock());
+                this->syncQueue.emplace(cb);
+            }
             int result = uv_async_send(handle);
             assert(!result);
         }));
@@ -171,18 +175,20 @@ void Loop::ProcessSyncQueue(uv_async_t* handle)
     auto self = reinterpret_cast<Loop*>(handle->data);
 
     std::shared_ptr<Nan::Callback> cb;
-    {
-        auto lock(self->AcquireLock());
+    for (;;) {
+        {
+            auto lock(self->AcquireLock());
 
-        if (self->syncQueue.empty()) {
-            return;
+            if (self->syncQueue.empty()) {
+                return;
+            }
+            cb = self->syncQueue.front();
+            self->syncQueue.pop();
         }
-        cb = self->syncQueue.front();
-        self->syncQueue.pop();
-    }
 
-    {
-        Nan::HandleScope scope;
-        cb->Call(0, {});
+        {
+            Nan::HandleScope scope;
+            cb->Call(0, {});
+        }
     }
 }
