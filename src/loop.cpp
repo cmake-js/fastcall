@@ -75,10 +75,10 @@ void Loop::LoopMain(void* threadArg)
     }
 }
 
-void Loop::Push(const TCallable& callable)
+void Loop::Push(TCallable&& callable)
 {
     counter++;
-    callQueue->Push(callable);
+    callQueue->Push(std::move(callable));
 }
 
 void Loop::Synchronize(const v8::Local<v8::Function>& callback)
@@ -88,7 +88,7 @@ void Loop::Synchronize(const v8::Local<v8::Function>& callback)
         callback->Call(Nan::Null(), 0, {});
     } else {
         auto cb = make_shared<Nan::Callback>(callback);
-        Push(make_pair(nullptr, [=](DCCallVM*) {
+        Push(make_pair(TOptionalAsyncResults(), [=](DCCallVM*) {
             this->syncQueue->Push(cb);
         }));
         lastSyncOn = counter;
@@ -100,13 +100,16 @@ void Loop::ProcessCallQueueItem(TCallable& item)
     item.second(vm);
 
     if (item.first) {
-        releaseQueue->Push(item.first);
+        releaseQueue->Push(std::move(item.first));
     }
 }
 
-void Loop::ProcessReleaseQueueItem(AsyncResultBase* item)
+void Loop::ProcessReleaseQueueItem(TOptionalAsyncResults& item)
 {
-    item->Release();
+    assert(item);
+    for (auto ar : *item) {
+        ar->Release();
+    }
 }
 
 void Loop::ProcessSyncQueueItem(std::shared_ptr<Nan::Callback>& item)

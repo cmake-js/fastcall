@@ -8,14 +8,16 @@
 #include <condition_variable>
 #include "invokers.h"
 #include "libraryfeature.h"
+#include "optional.h"
 
 namespace fastcall {
 struct LibraryBase;
 struct AsyncResultBase;
 
-typedef std::pair<AsyncResultBase*, TAsyncInvoker> TCallable;
+typedef OPTIONAL_NS::optional<TAsyncResults> TOptionalAsyncResults;
+typedef std::pair<TOptionalAsyncResults, TAsyncFunctionInvoker> TCallable;
 typedef Queue<TCallable> TCallQueue;
-typedef Queue<AsyncResultBase*> TReleaseQueue;
+typedef Queue<TOptionalAsyncResults> TReleaseQueue;
 typedef Queue<std::shared_ptr<Nan::Callback>> TSyncQueue;
 
 struct Loop : LibraryFeature
@@ -26,7 +28,7 @@ struct Loop : LibraryFeature
     Loop(LibraryBase* library, size_t vmSize);
     ~Loop();
     
-    void Push(const TCallable& callable);
+    void Push(TCallable&& callable);
     void Synchronize(const v8::Local<v8::Function>& callback);
     
 private:
@@ -45,7 +47,7 @@ private:
     static void LoopMain(void* threadArg);
     static void Shutdown(uv_async_t* handle);
     void ProcessCallQueueItem(TCallable& item);
-    void ProcessReleaseQueueItem(AsyncResultBase* item);
+    void ProcessReleaseQueueItem(TOptionalAsyncResults& item);
     void ProcessSyncQueueItem(std::shared_ptr<Nan::Callback>& item);
 };
 }

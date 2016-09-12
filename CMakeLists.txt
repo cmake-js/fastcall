@@ -8,6 +8,8 @@ if(CCACHE_FOUND)
     message(STATUS "Using ccache.")
 endif(CCACHE_FOUND)
 
+add_subdirectory(deps/optional)
+
 add_subdirectory(deps/dyncall)
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/deps/dyncall/dyncall")
 include(DynCallConfig)
@@ -22,7 +24,8 @@ include_directories(
     ${DYNCALL_INCLUDE_DIRS}
     ${DYNCALLBACK_INCLUDE_DIRS}
     ${DYNLOAD_INCLUDE_DIRS}
-    ${CMAKE_JS_INC})
+    ${CMAKE_JS_INC}
+    "${CMAKE_SOURCE_DIR}/deps/optional")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 

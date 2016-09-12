@@ -47,13 +47,14 @@ NAN_METHOD(AsyncResultBase::New)
 
     // We gotta prevent GC to collect AsyncResult
     // until it's natice part gets deleted.
-    asyncResultBase->me.Reset(self);
+    asyncResultBase->AddRef(self);
 
     info.GetReturnValue().Set(self);
 }
 
 AsyncResultBase::AsyncResultBase(FunctionBase* func, void* ptr)
-    : func(func)
+    : RefCountedObjecWrap()
+    , func(func)
     , ptr(ptr)
 {
     assert(func);
@@ -83,9 +84,4 @@ AsyncResultBase* AsyncResultBase::GetAsyncResultBase(const v8::Local<v8::Object>
     auto obj = Nan::ObjectWrap::Unwrap<AsyncResultBase>(self);
     assert(obj);
     return obj;
-}
-
-void AsyncResultBase::Release()
-{
-    me.Reset();
 }

@@ -26,7 +26,7 @@ private:
 
     bool initialized = false;
     LibraryBase* library = nullptr;
-    TInvoker invoker;
+    TFunctionInvoker invoker;
     std::shared_ptr<DCCallVM> vm;
 
     static NAN_METHOD(New);

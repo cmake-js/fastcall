@@ -23,8 +23,8 @@ typedef Nan::Persistent<Object, CopyablePersistentTraits<Object> > TCopyablePers
 typedef std::function<void(DCCallVM*, const Nan::FunctionCallbackInfo<v8::Value>&)> TSyncVMInitialzer;
 typedef std::function<v8::Local<v8::Value>(DCCallVM*)> TSyncVMInvoker;
 
-typedef std::function<TAsyncInvoker(const Nan::FunctionCallbackInfo<v8::Value>&)> TAsyncVMInitialzer;
-typedef std::function<TAsyncInvoker(const v8::Local<Object>& asyncResult)> TAsyncVMInvoker;
+typedef std::function<TAsyncFunctionInvoker(const Nan::FunctionCallbackInfo<v8::Value>&, TAsyncResults&)> TAsyncVMInitialzer;
+typedef std::function<TAsyncFunctionInvoker(const v8::Local<Object>& asyncResult)> TAsyncVMInvoker;
 
 #define dcArgInt8 dcArgChar
 
@@ -459,10 +459,12 @@ TSyncVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
 template <typename T, typename F, typename G>
 TAsyncVMInitialzer MakeAsyncArgProcessor(unsigned i, F f, const G& g)
 {
-    return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+    return [=](const Nan::FunctionCallbackInfo<v8::Value>& info, TAsyncResults& asyncResults) {
         auto ar = AsAsyncResultBase(info, i);
-        TAsyncInvoker result;
+        TAsyncFunctionInvoker result;
         if (ar) {
+            ar->AddRef(info[i].As<Object>());
+            asyncResults.push_back(ar);
             T* valPtr = ar->GetPtr<T>();
             result = [=](DCCallVM* vm) {
                 f(vm, *valPtr);
@@ -572,12 +574,10 @@ TAsyncVMInitialzer MakeAsyncVMInitializer(const v8::Local<Object>& func)
                 list.emplace_back(MakeAsyncArgProcessor<unsigned long>(i, dcArgULong, GetULongAt));
                 continue;
             }
-            // TODO: proper 64 bit support, like node-ffi
             if (!strcmp(typeName, "longlong")) {
                 list.emplace_back(MakeAsyncArgProcessor<long long>(i, dcArgLongLong, GetLongLongAt));
                 continue;
             }
-            // TODO: proper 64 bit support, like node-ffi
             if (!strcmp(typeName, "ulonglong")) {
                 list.emplace_back(MakeAsyncArgProcessor<unsigned long long>(i, dcArgULongLong, GetULongLongAt));
                 continue;
@@ -586,7 +586,6 @@ TAsyncVMInitialzer MakeAsyncVMInitializer(const v8::Local<Object>& func)
                 list.emplace_back(MakeAsyncArgProcessor<bool>(i, dcArgBool, GetBoolAt));
                 continue;
             }
-            // TODO: proper 64 bit support, like node-ffi
             if (!strcmp(typeName, "size_t")) {
                 list.emplace_back(MakeAsyncArgProcessor<size_t>(i, dcArgSizeT, GetSizeTAt));
                 continue;
@@ -596,15 +595,15 @@ TAsyncVMInitialzer MakeAsyncVMInitializer(const v8::Local<Object>& func)
         throw logic_error(string("Invalid argument type definition at: ") + to_string(i) + ".");
     }
 
-    return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-        std::vector<TAsyncInvoker> invokers;
+    return [=](const Nan::FunctionCallbackInfo<v8::Value>& info, TAsyncResults& asyncResults) {
+        std::vector<TAsyncFunctionInvoker> invokers;
         invokers.reserve(list.size());
         for (auto& f : list) {
-            invokers.emplace_back(f(info));
+            invokers.emplace_back(f(info, asyncResults));
         }
 
         return bind(
-            [=](const std::vector<TAsyncInvoker>& invokers, DCCallVM* vm) {
+            [=](const std::vector<TAsyncFunctionInvoker>& invokers, DCCallVM* vm) {
                 dcReset(vm);
                 for (auto& f : invokers) {
                     f(vm);
@@ -876,7 +875,7 @@ TAsyncVMInvoker MakeAsyncVMInvoker(const v8::Local<Object>& func)
 }
 }
 
-TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
+TFunctionInvoker fastcall::MakeFunctionInvoker(const v8::Local<Object>& func)
 {
     unsigned callMode = GetValue(func, "callMode")->Uint32Value();
     auto funcBase = FunctionBase::GetFunctionBase(func);
@@ -897,13 +896,17 @@ TInvoker fastcall::MakeInvoker(const v8::Local<Object>& func)
         return [funcBase, initializer, invoker](const Nan::FunctionCallbackInfo<v8::Value>& info) {
             Nan::EscapableHandleScope scope;
 
+            TAsyncResults asyncResults;
+            asyncResults.reserve(info.Length() + 1);
             auto resultType = GetValue<Object>(info.This(), "resultType");
             auto asyncResult = MakeAsyncResult(info.This(), resultType);
-            auto currentInitializer = initializer(info);
+            auto ar = AsyncResultBase::GetAsyncResultBase(asyncResult);
+            asyncResults.push_back(ar);
+            auto currentInitializer = initializer(info, asyncResults);
             auto currentInvoker = invoker(asyncResult);
             funcBase->GetLibrary()->GetLoop()->Push(
                 make_pair(
-                    AsyncResultBase::GetAsyncResultBase(asyncResult),
+                    TOptionalAsyncResults(std::move(asyncResults)),
                     [=](DCCallVM* vm) {
                         currentInitializer(vm);
                         currentInvoker(vm);
