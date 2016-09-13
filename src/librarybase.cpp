@@ -34,15 +34,6 @@ NAN_METHOD(LibraryBase::New)
     info.GetReturnValue().Set(info.This());
 }
 
-LibraryBase::LibraryBase()
-{
-
-}
-
-LibraryBase::~LibraryBase()
-{
-}
-
 NAN_METHOD(LibraryBase::initialize)
 {
     auto self = info.This().As<Object>();

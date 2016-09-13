@@ -1,10 +1,11 @@
 #pragma once
 #include "locker.h"
+#include "instance.h"
 
 namespace fastcall {
 struct LibraryBase;
 
-struct LibraryFeature {
+struct LibraryFeature : Instance {
     explicit LibraryFeature(LibraryBase* library);
 
     LibraryBase* GetLibrary();

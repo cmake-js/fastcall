@@ -3,15 +3,12 @@
 #include "invokers.h"
 #include <dyncall.h>
 #include <memory>
+#include "instance.h"
 
 namespace fastcall {
 struct LibraryBase;
 
-struct FunctionBase : public Nan::ObjectWrap {
-    FunctionBase(const FunctionBase&) = delete;
-    FunctionBase(FunctionBase&&) = delete;
-    ~FunctionBase();
-
+struct FunctionBase : public Nan::ObjectWrap, Instance {
     static NAN_MODULE_INIT(Init);
 
     static FunctionBase* GetFunctionBase(const v8::Local<v8::Object>& self);
@@ -20,8 +17,6 @@ struct FunctionBase : public Nan::ObjectWrap {
     DCCallVM* GetVM();
 
 private:
-    FunctionBase();
-
     static Nan::Persistent<v8::Function> constructor;
 
     bool initialized = false;

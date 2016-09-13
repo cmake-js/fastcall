@@ -1,19 +1,15 @@
 #pragma once
 #include <nan.h>
 #include "refcountedobjectwrap.h"
+#include "instance.h"
 
 namespace fastcall
 {
 struct LibraryBase;
 struct FunctionBase;
 
-struct AsyncResultBase : public Nan::ObjectWrap, RefCountedObjecWrap
+struct AsyncResultBase : public Nan::ObjectWrap, RefCountedObjecWrap, Instance
 {
-    AsyncResultBase() = delete;
-    AsyncResultBase(const AsyncResultBase&) = delete;
-    AsyncResultBase(AsyncResultBase&&) = delete;
-    ~AsyncResultBase();
-    
     static NAN_MODULE_INIT(Init);
     
     static AsyncResultBase* AsAsyncResultBase(const v8::Local<v8::Object>& self);

@@ -22,9 +22,6 @@ typedef Queue<std::shared_ptr<Nan::Callback>> TSyncQueue;
 
 struct Loop : LibraryFeature
 {
-    Loop() = delete;
-    Loop(const Loop&) = delete;
-    Loop(Loop&&) = delete;
     Loop(LibraryBase* library, size_t vmSize);
     ~Loop();
     

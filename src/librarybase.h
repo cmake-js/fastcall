@@ -3,15 +3,12 @@
 #include <dynload.h>
 #include <memory>
 #include "locker.h"
+#include "instance.h"
 
 namespace fastcall {
 struct Loop;
 
-struct LibraryBase : public Nan::ObjectWrap {
-    LibraryBase(const LibraryBase&) = delete;
-    LibraryBase(LibraryBase&&) = delete;
-    ~LibraryBase();
-
+struct LibraryBase : public Nan::ObjectWrap, Instance {
     static NAN_MODULE_INIT(Init);
     
     Lock AcquireLock();
@@ -19,8 +16,6 @@ struct LibraryBase : public Nan::ObjectWrap {
     Loop* GetLoop();
 
 private:
-    LibraryBase();
-
     static Nan::Persistent<v8::Function> constructor;
 
     DLLib* pLib = nullptr;

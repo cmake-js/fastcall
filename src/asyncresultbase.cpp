@@ -61,10 +61,6 @@ AsyncResultBase::AsyncResultBase(FunctionBase* func, void* ptr)
     assert(ptr);
 }
 
-AsyncResultBase::~AsyncResultBase()
-{
-}
-
 AsyncResultBase* AsyncResultBase::AsAsyncResultBase(const v8::Local<v8::Object>& self)
 {
     Nan::HandleScope scope;

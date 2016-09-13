@@ -33,14 +33,6 @@ NAN_METHOD(FunctionBase::New)
     info.GetReturnValue().Set(info.This());
 }
 
-FunctionBase::FunctionBase()
-{
-}
-
-FunctionBase::~FunctionBase()
-{
-}
-
 void* FunctionBase::GetFuncPtr(const v8::Local<v8::Object>& self)
 {
     Nan::HandleScope scope;
