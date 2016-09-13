@@ -1,6 +1,6 @@
 #pragma once
 #include <nan.h>
-#include "invokers.h"
+#include "functioninvokers.h"
 #include <dyncall.h>
 #include <memory>
 #include "instance.h"

@@ -76,32 +76,32 @@ describe('Library', function () {
 
         describe('node-ffi style declaration', function () {
             it('should invoke "mul" with "declare"', function () {
-                lib.declare({ mul: ['int', [ref.types.int, 'int']] });
+                lib.function({ mul: ['int', [ref.types.int, 'int']] });
                 testMulSync('int mul(int arg0, int arg1)');
             });
 
             it('should invoke "mul" with "declareSync"', function () {
-                lib.declareSync({ mul: ['int', [ref.types.int, 'int']] });
+                lib.syncFunction({ mul: ['int', [ref.types.int, 'int']] });
                 testMulSync('int mul(int arg0, int arg1)');
             });
 
             it("should send Node.js Buffer's memory content to native code", function () {
-                lib.declare({ readLongPtr: ['long', [ref.refType('long'), 'uint']] });
+                lib.function({ readLongPtr: ['long', [ref.refType('long'), 'uint']] });
                 testReadLongPtrSync('long readLongPtr(long* arg0, uint arg1)');
             });
 
             it("should allow to write Node.js's string content in native code", function () {
-                lib.declare({ writeString: ['void', ['char*']] });
+                lib.function({ writeString: ['void', ['char*']] });
                 testWriteStringSync('void writeString(char* arg0)');
             });
 
             it('should read natvie memory', function () {
-                lib.declare({ getString: ['char*', []] });
+                lib.function({ getString: ['char*', []] });
                 testGetStringSync('char* getString()');
             });
 
             it('should handle out arguments', function () {
-                lib.declare({ getNumbers: ['void', ['double**', ref.refType('size_t')]] });
+                lib.function({ getNumbers: ['void', ['double**', ref.refType('size_t')]] });
                 testGetNumbersSync('void getNumbers(double** arg0, size_t* arg1)');
             });
         });
@@ -109,40 +109,40 @@ describe('Library', function () {
         describe('string declaration', function () {
             it('should invoke "mul" with "declare"', function () {
                 // Argument name is optional:
-                lib.declare('int mul(int value, int)');
+                lib.function('int mul(int value, int)');
                 testMulSync('int mul(int value, int arg1)');
             });
 
             it('should invoke "mul" with "declareSync"', function () {
                 // Argument name is optional:
-                lib.declare('int mul(int, int by)');
+                lib.function('int mul(int, int by)');
                 testMulSync('int mul(int arg0, int by)');
             });
 
             it("should send Node.js Buffer's memory content to native code", function () {
-                lib.declare('long readLongPtr(long* ptr, uint offset)');
+                lib.function('long readLongPtr(long* ptr, uint offset)');
                 testReadLongPtrSync('long readLongPtr(long* ptr, uint offset)');
             });
 
             it("should allow to write Node.js's string content in native code", function () {
-                lib.declare('void writeString(char* )');
+                lib.function('void writeString(char* )');
                 testWriteStringSync('void writeString(char* arg0)');
             });
 
             it('should read natvie memory', function () {
-                lib.declare('char *getString()');
+                lib.function('char *getString()');
                 testGetStringSync('char* getString()');
             });
 
             it('should handle out arguments', function () {
-                lib.declare('  void   getNumbers ( double *  * nums , size_t*count) ');
+                lib.function('  void   getNumbers ( double *  * nums , size_t*count) ');
                 testGetNumbersSync('void getNumbers(double** nums, size_t* count)');
             });
         });
 
         function testMulSync(declaration) {
-            assert(lib._funcs);
-            assert(lib._funcs.mul);
+            assert(lib._functions);
+            assert(lib._functions.mul);
             assert(lib.interface);
             assert(_.isFunction(lib.interface.mul));
             const mul = lib.interface.mul;
@@ -244,32 +244,32 @@ describe('Library', function () {
 
         describe('node-ffi style declaration', function () {
             it('should invoke "mul" with "declare"', function () {
-                lib.declare({ mul: ['int', [ref.types.int, 'int']] });
+                lib.function({ mul: ['int', [ref.types.int, 'int']] });
                 return testMulAsync('int mul(int arg0, int arg1)');
             });
 
             it('should invoke "mul" with "declareAsync"', function () {
-                lib.declareAsync({ mul: ['int', [ref.types.int, 'int']] });
+                lib.asyncFunction({ mul: ['int', [ref.types.int, 'int']] });
                 return testMulAsync('int mul(int arg0, int arg1)');
             });
 
             it("should send Node.js Buffer's memory content to native code", function () {
-                lib.declare({ readLongPtr: ['long', [ref.refType('long'), 'uint']] });
+                lib.function({ readLongPtr: ['long', [ref.refType('long'), 'uint']] });
                 return testReadLongPtrAsync('long readLongPtr(long* arg0, uint arg1)');
             });
 
             it("should allow to write Node.js's string content in native code", function () {
-                lib.declare({ writeString: ['void', ['char*']] });
+                lib.function({ writeString: ['void', ['char*']] });
                 return testWriteStringAsync('void writeString(char* arg0)');
             });
 
             it('should read natvie memory', function () {
-                lib.declare({ getString: ['char*', []] });
+                lib.function({ getString: ['char*', []] });
                 return testGetStringAsync('char* getString()');
             });
 
             it('should handle out arguments', function () {
-                lib.declare({ getNumbers: ['void', ['double**', ref.refType('size_t')]] });
+                lib.function({ getNumbers: ['void', ['double**', ref.refType('size_t')]] });
                 return testGetNumbersAsync('void getNumbers(double** arg0, size_t* arg1)');
             });
         });
@@ -277,40 +277,40 @@ describe('Library', function () {
         describe('string declaration', function () {
             it('should invoke "mul" with "declare"', function () {
                 // Argument name is optional:
-                lib.declare('int mul(int value, int)');
+                lib.function('int mul(int value, int)');
                 return testMulAsync('int mul(int value, int arg1)');
             });
 
             it('should invoke "mul" with "declareAsync"', function () {
                 // Argument name is optional:
-                lib.declare('int mul(int, int by)');
+                lib.function('int mul(int, int by)');
                 return testMulAsync('int mul(int arg0, int by)');
             });
 
             it("should send Node.js Buffer's memory content to native code", function () {
-                lib.declare('long readLongPtr(long* ptr, uint offset)');
+                lib.function('long readLongPtr(long* ptr, uint offset)');
                 return testReadLongPtrAsync('long readLongPtr(long* ptr, uint offset)');
             });
 
             it("should allow to write Node.js's string content in native code", function () {
-                lib.declare('void writeString(char* )');
+                lib.function('void writeString(char* )');
                 return testWriteStringAsync('void writeString(char* arg0)');
             });
 
             it('should read natvie memory', function () {
-                lib.declare('char *getString()');
+                lib.function('char *getString()');
                 return testGetStringAsync('char* getString()');
             });
 
             it('should handle out arguments', function () {
-                lib.declare('  void   getNumbers ( double *  * nums , size_t*count) ');
+                lib.function('  void   getNumbers ( double *  * nums , size_t*count) ');
                 return testGetNumbersAsync('void getNumbers(double** nums, size_t* count)');
             });
         });
 
         var testMulAsync = async(function *(declaration) {
-            assert(lib._funcs);
-            assert(lib._funcs.mul);
+            assert(lib._functions);
+            assert(lib._functions.mul);
             assert(lib.interface);
             assert(_.isFunction(lib.interface.mul));
             const mul = lib.interface.mul;

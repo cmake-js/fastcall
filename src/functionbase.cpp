@@ -69,6 +69,7 @@ NAN_METHOD(FunctionBase::initialize)
     catch(exception& ex) {
         Nan::ThrowError(ex.what());
     }
+
     obj->initialized = true;
 }
 
