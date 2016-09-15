@@ -4,7 +4,7 @@ const Library = fastcall.Library;
 const helpers = require('./helpers');
 const assert = require('assert');
 const _ = require('lodash');
-const ref = require('ref');
+const ref = fastcall.ref;
 const Promise = require('bluebird');
 const async = Promise.coroutine;
 

@@ -53,5 +53,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message(STATUS "Clang configured.")
 endif()
 
+add_subdirectory(deps/ref-build)
 add_subdirectory(src)
 add_subdirectory(test/testlib)

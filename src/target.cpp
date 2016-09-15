@@ -34,7 +34,7 @@ v8::Local<Object> fastcall::RequireRef()
 {
     Nan::EscapableHandleScope scope;
 
-    auto ref = Require("ref").As<v8::Object>();
+    auto ref = Require("./ref").As<v8::Object>();
     assert(!ref.IsEmpty());
     return scope.Escape(ref);
 }
