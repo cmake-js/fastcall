@@ -1,0 +1,9 @@
+[submodule "deps/ref"]
+	path = deps/ref
+	url = https://github.com/cmake-js/ref.git
+[submodule "deps/ref-struct"]
+	path = deps/ref-struct
+	url = https://github.com/cmake-js/ref-struct.git
+[submodule "deps/ref-union"]
+	path = deps/ref-union
+	url = https://github.com/cmake-js/ref-union.git
