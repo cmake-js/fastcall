@@ -9,7 +9,7 @@ const Promise = require('bluebird');
 const async = Promise.coroutine;
 
 describe('Library', function () {
-    describe("initialize", function () {
+    describe('initialize', function () {
         describe('without options', function () {
             it('should init in sync mode as default', function () {
                 const libPath = helpers.findTestlib();
@@ -104,6 +104,16 @@ describe('Library', function () {
                 lib.function({ getNumbers: ['void', ['double**', ref.refType('size_t')]] });
                 testGetNumbersSync('void getNumbers(double** arg0, size_t* arg1)');
             });
+
+            it('should support callbacks', function () {
+                lib
+                .callback({ TMakeIntFunc: ['int', [ref.types.float, 'double']] })
+                .function({ makeInt: ['int', ['float', 'double', 'TMakeIntFunc']] });
+
+                testMakeIntSync(
+                    'int TMakeIntFunc(float arg0, double arg1)', 
+                    'int makeInt(float arg0, double arg1, TMakeIntFunc arg2)');
+            });
         });
 
         describe('string declaration', function () {
@@ -137,6 +147,16 @@ describe('Library', function () {
             it('should handle out arguments', function () {
                 lib.function('  void   getNumbers ( double *  * nums , size_t*count) ');
                 testGetNumbersSync('void getNumbers(double** nums, size_t* count)');
+            });
+
+            it('should support callbacks', function () {
+                lib
+                .callback('int TMakeIntFunc(float fv, double)')
+                .function('int makeInt(float , double dv, TMakeIntFunc func)');
+
+                testMakeIntSync(
+                    'int TMakeIntFunc(float fv, double arg1)', 
+                    'int makeInt(float arg0, double dv, TMakeIntFunc func)');
             });
         });
 
@@ -226,6 +246,19 @@ describe('Library', function () {
             doublePtr = ref.reinterpret(doublePtr, size * double.size);
             assert.equal(double.get(doublePtr, 1 * double.size), 2.2);
             assert.equal(double.get(doublePtr, 2 * double.size), 3.3);
+        }
+
+        function testMakeIntSync(callbackDecl, funcDecl) {
+            const TMakeIntFunc = lib.interface.TMakeIntFunc;
+            assert(_.isFunction(TMakeIntFunc));
+            assert.equal(TMakeIntFunc.declaration, callbackDecl);
+
+            const makeInt = lib.interface.makeInt;
+            assert(_.isFunction(makeInt));
+            assert.equal(makeInt.declaration, funcDecl);
+
+            let result = makeInt(1.1, 2.2, (fv, dv) => fv + dv);
+            assert.equal(result, (1.1 + 2.2) * 2);
         }
     });
 

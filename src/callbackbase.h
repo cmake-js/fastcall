@@ -1,6 +1,7 @@
 #pragma once
 #include <nan.h>
 #include "instance.h"
+#include "callbackfactories.h"
 
 namespace fastcall {
 struct LibraryBase;
@@ -16,6 +17,8 @@ private:
 
     bool initialized = false;
     LibraryBase* library = nullptr;
+    TCallbackFactory syncCallbackFactory;
+    TCallbackFactory asyncCallbackFactory;
 
     static NAN_METHOD(New);
 

@@ -8,6 +8,7 @@
 #include "locker.h"
 #include "loop.h"
 #include "target.h"
+#include "defs.h"
 
 using namespace v8;
 using namespace node;
@@ -15,9 +16,6 @@ using namespace std;
 using namespace fastcall;
 
 namespace {
-const unsigned SYNC_CALL_MODE = 1;
-const unsigned ASYNC_CALL_MODE = 2;
-
 typedef Nan::Persistent<Object, CopyablePersistentTraits<Object> > TCopyablePersistent;
 
 typedef std::function<void(DCCallVM*, const Nan::FunctionCallbackInfo<v8::Value>&)> TSyncVMInitialzer;
