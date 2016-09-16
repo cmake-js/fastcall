@@ -161,8 +161,8 @@ describe('Library', function () {
         });
 
         function testMulSync(declaration) {
-            assert(lib._functions);
-            assert(lib._functions.mul);
+            assert(lib.functions);
+            assert(lib.functions.mul);
             assert(lib.interface);
             assert(_.isFunction(lib.interface.mul));
             const mul = lib.interface.mul;
@@ -342,8 +342,8 @@ describe('Library', function () {
         });
 
         var testMulAsync = async(function *(declaration) {
-            assert(lib._functions);
-            assert(lib._functions.mul);
+            assert(lib.functions);
+            assert(lib.functions.mul);
             assert(lib.interface);
             assert(_.isFunction(lib.interface.mul));
             const mul = lib.interface.mul;

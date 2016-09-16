@@ -1,7 +1,7 @@
 #pragma once
 #include <nan.h>
+#include <dyncall_callback.h>
 #include "instance.h"
-#include "callbackfactories.h"
 
 namespace fastcall {
 struct LibraryBase;
@@ -9,16 +9,17 @@ struct LibraryBase;
 struct CallbackBase : public Nan::ObjectWrap, Instance {
     static NAN_MODULE_INIT(Init);
 
+    static bool IsCallbackBase(const v8::Local<v8::Object>& self);
+    static CallbackBase* AsCallbackBase(const v8::Local<v8::Object>& self);
     static CallbackBase* GetCallbackBase(const v8::Local<v8::Object>& self);
     LibraryBase* GetLibrary();
+    DCCallback* MakeCallback(const v8::Local<v8::Object>& self);
 
 private:
     static Nan::Persistent<v8::Function> constructor;
 
     bool initialized = false;
     LibraryBase* library = nullptr;
-    TCallbackFactory syncCallbackFactory;
-    TCallbackFactory asyncCallbackFactory;
 
     static NAN_METHOD(New);
 

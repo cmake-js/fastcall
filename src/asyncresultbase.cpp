@@ -43,8 +43,6 @@ NAN_METHOD(AsyncResultBase::New)
     auto asyncResultBase = new AsyncResultBase(func, ptr);
     asyncResultBase->Wrap(self);
 
-    SetValue(self, "__typeId", Nan::New(AsyncResultBase::typeId));
-
     // We gotta prevent GC to collect AsyncResult
     // until it's natice part gets deleted.
     asyncResultBase->AddRef(self);
@@ -61,15 +59,16 @@ AsyncResultBase::AsyncResultBase(FunctionBase* func, void* ptr)
     assert(ptr);
 }
 
-AsyncResultBase* AsyncResultBase::AsAsyncResultBase(const v8::Local<v8::Object>& self)
+bool AsyncResultBase::IsAsyncResultBase(const v8::Local<Object>& self)
 {
     Nan::HandleScope scope;
 
-    if (self.IsEmpty() || !self->IsObject()) {
-        return nullptr;
-    }
-    auto typeId = GetValue(self, "__typeId");
-    if (typeId->IsNumber() && typeId->Uint32Value() == AsyncResultBase::typeId) {
+    return InstanceOf(self, Nan::New<Function>(constructor));
+}
+
+AsyncResultBase* AsyncResultBase::AsAsyncResultBase(const v8::Local<v8::Object>& self)
+{
+    if (IsAsyncResultBase(self)) {
         return GetAsyncResultBase(self);
     }
     return nullptr;

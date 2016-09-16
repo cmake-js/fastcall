@@ -9,6 +9,11 @@
 #include "loop.h"
 #include "target.h"
 #include "defs.h"
+#include "dcarg.h"
+#include "dccall.h"
+#include "getargvalue.h"
+#include "callbackbase.h"
+#include "callbackfactories.h"
 
 using namespace v8;
 using namespace node;
@@ -23,286 +28,6 @@ typedef std::function<v8::Local<v8::Value>(DCCallVM*)> TSyncVMInvoker;
 
 typedef std::function<TAsyncFunctionInvoker(const Nan::FunctionCallbackInfo<v8::Value>&, TAsyncResults&)> TAsyncVMInitialzer;
 typedef std::function<TAsyncFunctionInvoker(const v8::Local<Object>& asyncResult)> TAsyncVMInvoker;
-
-#define dcArgInt8 dcArgChar
-
-inline void dcArgUInt8(DCCallVM* vm, unsigned char p)
-{
-    dcArgChar(vm, reinterpret_cast<char&>(p));
-}
-
-#define dcCallInt8 dcCallChar
-
-#define dcArgInt16 dcArgShort
-
-inline void dcArgUInt16(DCCallVM* vm, unsigned short p)
-{
-    dcArgShort(vm, reinterpret_cast<short&>(p));
-}
-
-#define dcCallInt16 dcCallShort
-
-#define dcArgInt32 dcArgInt
-
-inline void dcArgUInt32(DCCallVM* vm, unsigned int p)
-{
-    dcArgInt(vm, reinterpret_cast<int&>(p));
-}
-
-#define dcCallInt32 dcCallInt
-
-#define dcArgInt64 dcArgLongLong
-
-inline void dcArgUInt64(DCCallVM* vm, unsigned long long p)
-{
-    dcArgLongLong(vm, reinterpret_cast<long long&>(p));
-}
-
-#define dcCallInt64 dcCallLongLong
-
-#define dcArgByte dcArgUInt8
-
-inline void dcArgUChar(DCCallVM* vm, unsigned char p)
-{
-    dcArgChar(vm, reinterpret_cast<char&>(p));
-}
-
-inline void dcArgUShort(DCCallVM* vm, unsigned short p)
-{
-    dcArgShort(vm, reinterpret_cast<short&>(p));
-}
-
-inline void dcArgUInt(DCCallVM* vm, unsigned int p)
-{
-    dcArgInt(vm, reinterpret_cast<int&>(p));
-}
-
-inline void dcArgULong(DCCallVM* vm, unsigned long p)
-{
-    dcArgLong(vm, reinterpret_cast<long&>(p));
-}
-
-inline void dcArgULongLong(DCCallVM* vm, unsigned long long p)
-{
-    dcArgLong(vm, reinterpret_cast<long long&>(p));
-}
-
-inline void dcArgSizeT(DCCallVM* vm, size_t p)
-{
-    auto tmp = static_cast<unsigned long long>(p);
-    dcArgLongLong(vm, reinterpret_cast<long long&>(tmp));
-}
-
-#define dcArgBool dcArgUInt8
-
-inline uint8_t dcCallUInt8(DCCallVM* vm, void* f)
-{
-    int8_t tmp = dcCallInt8(vm, f);
-    return reinterpret_cast<uint8_t&>(tmp);
-}
-
-inline uint16_t dcCallUInt16(DCCallVM* vm, void* f)
-{
-    int16_t tmp = dcCallInt16(vm, f);
-    return reinterpret_cast<uint16_t&>(tmp);
-}
-
-inline uint32_t dcCallUInt32(DCCallVM* vm, void* f)
-{
-    int32_t tmp = dcCallInt32(vm, f);
-    return reinterpret_cast<uint32_t&>(tmp);
-}
-
-inline uint64_t dcCallUInt64(DCCallVM* vm, void* f)
-{
-    int64_t tmp = dcCallInt64(vm, f);
-    return reinterpret_cast<uint64_t&>(tmp);
-}
-
-#define dcCallByte dcCallUInt8
-
-inline unsigned char dcCallUChar(DCCallVM* vm, void* f)
-{
-    char tmp = dcCallChar(vm, f);
-    return reinterpret_cast<unsigned char&>(tmp);
-}
-
-inline unsigned short dcCallUShort(DCCallVM* vm, void* f)
-{
-    short tmp = dcCallShort(vm, f);
-    return reinterpret_cast<unsigned short&>(tmp);
-}
-
-inline unsigned int dcCallUInt(DCCallVM* vm, void* f)
-{
-    int tmp = dcCallInt(vm, f);
-    return reinterpret_cast<unsigned int&>(tmp);
-}
-
-inline unsigned long dcCallULong(DCCallVM* vm, void* f)
-{
-    long tmp = dcCallLong(vm, f);
-    return reinterpret_cast<unsigned long&>(tmp);
-}
-
-inline unsigned long long dcCallULongLong(DCCallVM* vm, void* f)
-{
-    long long tmp = dcCallLongLong(vm, f);
-    return reinterpret_cast<unsigned long long&>(tmp);
-}
-
-inline size_t dcCallSizeT(DCCallVM* vm, void* f)
-{
-    long long tmp = dcCallLongLong(vm, f);
-    return reinterpret_cast<size_t&>(tmp);
-}
-
-inline void* GetPointerAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    Nan::HandleScope scope;
-
-    auto val = info[index];
-    if (val->IsNull() || val->IsUndefined()) {
-        return nullptr;
-    }
-    auto obj = val.As<Object>();
-    if (!Buffer::HasInstance(obj)) {
-        throw logic_error(string("Argument at index ") + to_string(index) + " is not a pointer.");
-    }
-    return reinterpret_cast<void*>(Buffer::Data(obj));
-}
-
-inline int8_t GetInt8At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<int8_t>(info[index]->Int32Value());
-}
-
-inline uint8_t GetUInt8At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<uint8_t>(info[index]->Uint32Value());
-}
-
-inline int16_t GetInt16At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<int16_t>(info[index]->Int32Value());
-}
-
-inline uint16_t GetUInt16At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<uint16_t>(info[index]->Uint32Value());
-}
-
-inline int32_t GetInt32At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<int32_t>(info[index]->Int32Value());
-}
-
-inline uint32_t GetUInt32At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<uint32_t>(info[index]->Uint32Value());
-}
-
-inline int64_t GetInt64At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return GetInt64(info[index]);
-}
-
-inline uint64_t GetUInt64At(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return GetUint64(info[index]);
-}
-
-inline float GetFloatAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<float>(info[index]->NumberValue());
-}
-
-inline double GetDoubleAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return info[index]->NumberValue();
-}
-
-inline char GetCharAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<char>(GetInt16At(info, index));
-}
-
-inline unsigned char GetUCharAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<unsigned char>(GetUInt16At(info, index));
-}
-
-inline uint8_t GetByteAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return GetUInt8At(info, index);
-}
-
-inline short GetShortAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<short>(GetInt16At(info, index));
-}
-
-inline unsigned short GetUShortAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<unsigned short>(GetUInt16At(info, index));
-}
-
-inline int GetIntAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<int>(GetInt32At(info, index));
-}
-
-inline unsigned int GetUIntAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<unsigned int>(GetUInt32At(info, index));
-}
-
-inline long GetLongAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<long>(GetInt64At(info, index));
-}
-
-inline unsigned long GetULongAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<unsigned long>(GetUInt64At(info, index));
-}
-
-inline long long GetLongLongAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<long long>(GetInt64At(info, index));
-}
-
-inline unsigned long long GetULongLongAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<unsigned long long>(GetUInt64At(info, index));
-}
-
-inline size_t GetSizeTAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return static_cast<size_t>(GetUInt64At(info, index));
-}
-
-inline bool GetBoolAt(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    return info[index]->BooleanValue();
-}
-
-inline AsyncResultBase* AsAsyncResultBase(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    Nan::HandleScope scope;
-
-    return AsyncResultBase::AsAsyncResultBase(info[index].As<Object>());
-}
-
-template <typename T>
-inline T* AsAsyncResultPtr(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
-{
-    auto basePtr = AsAsyncResultBase(info, index);
-    if (!basePtr) {
-        return nullptr;
-    }
-    return basePtr->GetPtr<T>();
-}
 
 inline v8::Local<v8::Object> GetResultPointerType(v8::Local<v8::Object> refType)
 {
@@ -330,6 +55,24 @@ TSyncVMInitialzer MakeSyncArgProcessor(unsigned i, const F& f, const G& g)
     };
 }
 
+inline TSyncVMInitialzer MakeSyncCallbackArgProcessor(unsigned i, const v8::Local<Object>& callback, CallbackBase* callbackBase)
+{
+    return [=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
+        Nan::HandleScope scope;
+
+        // function -> adhoc
+        // buffer -> ptr
+
+//        if (!info[i]->IsFunction()) {
+//            throw logic_error(string("Function argument expected at position: ") + to_string(i) + ".");
+//        }
+
+//        auto f = info[i].As<Function>();
+//        DCCallback* cb;
+//        cb = callbackBase->MakeCallback(f);
+    };
+}
+
 TSyncVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
 {
     Nan::HandleScope scope;
@@ -342,6 +85,14 @@ TSyncVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
     for (unsigned i = 0; i < length; i++) {
         auto arg = args->Get(i).As<Object>();
         auto type = GetValue<Object>(arg, "type");
+
+        auto callback = GetValue<Object>(type, "callback");
+        auto callbackBase = CallbackBase::AsCallbackBase(callback);
+        if (callbackBase) {
+            list.emplace_back(MakeSyncCallbackArgProcessor(i, callback, callbackBase));
+            continue;
+        }
+
         auto typeName = *Nan::Utf8String(GetValue<String>(type, "name"));
         auto indirection = GetValue(type, "indirection")->Uint32Value();
         if (indirection > 1) {

@@ -79,4 +79,6 @@ inline void DeleteUVAsyncHandle(uv_handle_t* handle)
 {
     delete (uv_async_t*)handle;
 }
+
+bool InstanceOf(const v8::Local<v8::Object>& obj, v8::Local<v8::Function> ctor);
 }

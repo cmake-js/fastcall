@@ -2,7 +2,9 @@
 #include <nan.h>
 #include <functional>
 #include <dyncall.h>
+#include <dyncall_callback.h>
 #include <vector>
+#include <memory>
 
 namespace fastcall {
 struct AsyncResultBase;

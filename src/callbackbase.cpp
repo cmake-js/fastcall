@@ -33,6 +33,21 @@ NAN_METHOD(CallbackBase::New)
     info.GetReturnValue().Set(info.This());
 }
 
+bool CallbackBase::IsCallbackBase(const v8::Local<Object>& self)
+{
+    Nan::HandleScope scope;
+
+    return InstanceOf(self, Nan::New(constructor));
+}
+
+CallbackBase* CallbackBase::AsCallbackBase(const v8::Local<Object>& self)
+{
+    if (IsCallbackBase(self)) {
+        return GetCallbackBase(self);
+    }
+    return nullptr;
+}
+
 CallbackBase* CallbackBase::GetCallbackBase(const v8::Local<v8::Object>& self)
 {
     auto obj = Nan::ObjectWrap::Unwrap<CallbackBase>(self);

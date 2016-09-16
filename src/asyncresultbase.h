@@ -12,14 +12,13 @@ struct AsyncResultBase : public Nan::ObjectWrap, RefCountedObjecWrap, Instance
 {
     static NAN_MODULE_INIT(Init);
     
+    static bool IsAsyncResultBase(const v8::Local<v8::Object>& self);
     static AsyncResultBase* AsAsyncResultBase(const v8::Local<v8::Object>& self);
     static AsyncResultBase* GetAsyncResultBase(const v8::Local<v8::Object>& self);
     template <typename T>
     T* GetPtr();
     
 private:
-    static const unsigned typeId = 354366471;
-
     explicit AsyncResultBase(FunctionBase* func, void* ptr);
 
     static Nan::Persistent<v8::Function> constructor;
