@@ -14,6 +14,7 @@
 #include "getargvalue.h"
 #include "callbackbase.h"
 #include "callbackfactories.h"
+#include "callbackdata.h"
 
 using namespace v8;
 using namespace node;
@@ -58,18 +59,35 @@ TSyncVMInitialzer MakeSyncArgProcessor(unsigned i, const F& f, const G& g)
 inline TSyncVMInitialzer MakeSyncCallbackArgProcessor(unsigned i, const v8::Local<Object>& callback, CallbackBase* callbackBase)
 {
     return [=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
-        Nan::HandleScope scope;
+        // No new handle scope here!
+        // Temporary ptr should live until the function call completes.
 
-        // function -> adhoc
-        // buffer -> ptr
+        DCCallback* cb = nullptr;
 
-//        if (!info[i]->IsFunction()) {
-//            throw logic_error(string("Function argument expected at position: ") + to_string(i) + ".");
-//        }
+        Local<Object> ptr;
+        if (Buffer::HasInstance(info[i])) {
+            ptr = info[i].As<Object>();
+        }
+        else if (info[i]->IsFunction()) {
+            Nan::HandleScope scope;
 
-//        auto f = info[i].As<Function>();
-//        DCCallback* cb;
-//        cb = callbackBase->MakeCallback(f);
+            Local<Value> args[] = { info[i] };
+            auto factory = GetValue<Function>(callback, "factory");
+            ptr = factory->Call(callback, 1, args).As<Object>();
+            assert(!ptr.IsEmpty() && ptr->IsObject());
+        }
+        else {
+            throw logic_error("Unknown argument.");
+        }
+
+        cb = callbackBase->GetPtr(info[i].As<Object>());
+        assert(cb);
+
+        auto data = (CallbackData*)dcbGetUserData(cb);
+        assert(data);
+
+        data->SetCallMode(SYNC_CALL_MODE);
+        dcCallPointer(vm, cb);
     };
 }
 
@@ -199,8 +217,14 @@ TSyncVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
 
     return [=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
         dcReset(vm);
-        for (auto& f : list) {
-            f(vm, info);
+        for (unsigned i = 0; i < list.size(); i++) {
+            auto& f = list[i];
+            try {
+                f(vm, info);
+            }
+            catch (std::exception& ex) {
+                throw logic_error(string("Argument error at position ") + to_string(i) + ": " + ex.what());
+            }
         }
     };
 }

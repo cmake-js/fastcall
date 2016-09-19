@@ -2,6 +2,7 @@
 #include "deps.h"
 #include "librarybase.h"
 #include "helpers.h"
+#include "defs.h"
 
 using namespace v8;
 using namespace node;
@@ -19,7 +20,7 @@ NAN_MODULE_INIT(CallbackBase::Init)
     tmpl->InstanceTemplate()->SetInternalFieldCount(1);
 
     Nan::SetPrototypeTemplate(tmpl, Nan::New("initialize").ToLocalChecked(), Nan::New<FunctionTemplate>(initialize), v8::ReadOnly);
-    Nan::SetPrototypeTemplate(tmpl, Nan::New("makeCallback").ToLocalChecked(), Nan::New<FunctionTemplate>(makeCallback), v8::ReadOnly);
+    Nan::SetPrototypeTemplate(tmpl, Nan::New("factory").ToLocalChecked(), Nan::New<FunctionTemplate>(factory), v8::ReadOnly);
 
     auto f = tmpl->GetFunction();
     constructor.Reset(f);
@@ -64,27 +65,9 @@ NAN_METHOD(CallbackBase::initialize)
         return;
     }
 
-    // Init here ...
+    obj->callbackFactory = MakeCallbackFactory(self);
 
     obj->initialized = true;
-}
-
-NAN_METHOD(CallbackBase::makeCallback)
-{
-    auto self = info.This().As<Object>();
-    auto obj = GetCallbackBase(self);
-
-    if (!obj->initialized) {
-        return Nan::ThrowError("Callback is not initialized.");
-    }
-
-    if (!info[0]->IsFunction()) {
-        return Nan::ThrowTypeError("Argument is not a function.");
-    }
-
-    auto jsFunc = info[0].As<Function>();
-
-    info.GetReturnValue().Set(Nan::Undefined());
 }
 
 Local<Object> CallbackBase::FindLibrary(const Local<Object>& self)
@@ -103,4 +86,53 @@ LibraryBase* CallbackBase::FindLibraryBase(const Local<Object>& self)
     auto ptr = Nan::ObjectWrap::Unwrap<LibraryBase>(library);
     assert(ptr);
     return ptr;
+}
+
+NAN_METHOD(CallbackBase::factory)
+{
+    auto self = info.This().As<Object>();
+    auto obj = GetCallbackBase(self);
+
+    if (!obj->initialized) {
+        return Nan::ThrowError("Callback is not initialized.");
+    }
+
+    if (!info[0]->IsFunction()) {
+        return Nan::ThrowTypeError("1st argument is not a function.");
+    }
+
+    auto jsFunc = info[0].As<Function>();
+
+    Local<Object> ptr = obj->callbackFactory(info);
+
+    info.GetReturnValue().Set(ptr);
+}
+
+DCCallback* CallbackBase::GetPtr(const v8::Local<Object>& ptrBuffer)
+{
+    Nan::HandleScope scope;
+
+    auto type = GetValue(ptrBuffer, "type").As<Object>();
+
+    if (!type.IsEmpty() && type->IsObject() && Buffer::HasInstance(ptrBuffer)) {
+        auto typeName = string(*Nan::Utf8String(GetValue(type, "name")));
+        auto indirection = GetValue(ptrBuffer, "indirection")->Uint32Value();
+
+        if (typeName == "void" && indirection == 2) {
+            auto callbackObj = GetValue(ptrBuffer, "callback");
+            if (callbackObj->IsObject()) {
+                auto cb = AsCallbackBase(callbackObj.As<Object>());
+                if (cb == this) {
+                    return reinterpret_cast<DCCallback*>(Buffer::Data(ptrBuffer));
+                }
+            }
+            throw logic_error("Argument is not a valid function pointer.");
+        }
+        else {
+            throw logic_error("Argument is not a valid pointer.");
+        }
+    }
+    else {
+        throw logic_error("Argument is not a pointer.");
+    }
 }

@@ -10,7 +10,9 @@ namespace {
 
 }
 
-TCallbackFactory MakeCallbackFactory(const v8::Local<Object>& cb)
+TCallbackFactory fastcall::MakeCallbackFactory(const v8::Local<Object>& cb)
 {
-
+    // info[0] = function
+    // result: ptr (ref)
+    // - data: Buffer(CallbackData) -> custom GC delete handler
 }
