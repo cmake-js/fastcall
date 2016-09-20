@@ -56,20 +56,6 @@ CallbackBase* CallbackBase::GetCallbackBase(const v8::Local<v8::Object>& self)
     return obj;
 }
 
-NAN_METHOD(CallbackBase::initialize)
-{
-    auto self = info.This().As<Object>();
-    auto obj = GetCallbackBase(self);
-
-    if (obj->initialized) {
-        return;
-    }
-
-    obj->callbackFactory = MakeCallbackFactory(self);
-
-    obj->initialized = true;
-}
-
 Local<Object> CallbackBase::FindLibrary(const Local<Object>& self)
 {
     Nan::EscapableHandleScope scope;
@@ -88,6 +74,20 @@ LibraryBase* CallbackBase::FindLibraryBase(const Local<Object>& self)
     return ptr;
 }
 
+NAN_METHOD(CallbackBase::initialize)
+{
+    auto self = info.This().As<Object>();
+    auto obj = GetCallbackBase(self);
+
+    if (obj->initialized) {
+        return;
+    }
+
+    obj->callbackFactory = MakeCallbackFactory(self);
+
+    obj->initialized = true;
+}
+
 NAN_METHOD(CallbackBase::factory)
 {
     auto self = info.This().As<Object>();
@@ -103,7 +103,7 @@ NAN_METHOD(CallbackBase::factory)
 
     auto jsFunc = info[0].As<Function>();
 
-    Local<Object> ptr = obj->callbackFactory(info);
+    Local<Object> ptr = obj->callbackFactory(jsFunc);
 
     info.GetReturnValue().Set(ptr);
 }

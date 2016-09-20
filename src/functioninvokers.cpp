@@ -14,7 +14,6 @@
 #include "getargvalue.h"
 #include "callbackbase.h"
 #include "callbackfactories.h"
-#include "callbackdata.h"
 
 using namespace v8;
 using namespace node;
@@ -22,8 +21,6 @@ using namespace std;
 using namespace fastcall;
 
 namespace {
-typedef Nan::Persistent<Object, CopyablePersistentTraits<Object> > TCopyablePersistent;
-
 typedef std::function<void(DCCallVM*, const Nan::FunctionCallbackInfo<v8::Value>&)> TSyncVMInitialzer;
 typedef std::function<v8::Local<v8::Value>(DCCallVM*)> TSyncVMInvoker;
 
@@ -83,10 +80,6 @@ inline TSyncVMInitialzer MakeSyncCallbackArgProcessor(unsigned i, const v8::Loca
         cb = callbackBase->GetPtr(info[i].As<Object>());
         assert(cb);
 
-        auto data = (CallbackData*)dcbGetUserData(cb);
-        assert(data);
-
-        data->SetCallMode(SYNC_CALL_MODE);
         dcCallPointer(vm, cb);
     };
 }

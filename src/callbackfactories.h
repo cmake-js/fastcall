@@ -3,7 +3,7 @@
 #include <nan.h>
 
 namespace fastcall {
-typedef std::function<v8::Local<v8::Object>(const Nan::FunctionCallbackInfo<v8::Value>&)> TCallbackFactory;
+typedef std::function<v8::Local<v8::Object>(const v8::Local<v8::Function>&)> TCallbackFactory;
 
 TCallbackFactory MakeCallbackFactory(const v8::Local<v8::Object>& cb);
 }
