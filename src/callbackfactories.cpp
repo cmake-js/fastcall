@@ -35,8 +35,18 @@ TSetDCValue MakeSetDCValueFunction(const v8::Local<Object>& cb)
 {
 }
 
-std::string MakeSignature(const v8::Local<Object>& cb)
+std::string GetSignature(const v8::Local<Object>& cb)
 {
+    // http://www.dyncall.org/docs/manual/manualse4.html#x5-190004.1.3
+    Nan::HandleScope scope;
+
+    auto sig = GetValue<String>(cb, "signature");
+    assert(!sig.IsEmpty());
+
+    auto result = string(*Nan::Utf8String(sig));
+    assert(result.size() >= 2);
+
+    return result;
 }
 
 char V8CallbackHandler(DCArgs* args, DCValue* result, CallbackUserData* cbUserData)
@@ -72,7 +82,7 @@ TCallbackFactory fastcall::MakeCallbackFactory(const v8::Local<Object>& cb)
 
     auto dcArgsToCallbackArgs = MakeDCArgsToCallbackArgsFunction(cb);
     auto setDCValue = MakeSetDCValueFunction(cb);
-    auto signature = MakeSignature(cb);
+    auto signature = GetSignature(cb);
     auto voidPtrType = GetValue<Object>(cb, "_ptrType");
     TCopyablePersistent pVoidPtrType;
     pVoidPtrType.Reset(voidPtrType);
