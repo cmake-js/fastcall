@@ -29,10 +29,12 @@ struct CallbackUserData {
 
 TDCArgsToCallbackArgs MakeDCArgsToCallbackArgsFunction(const v8::Local<Object>& cb)
 {
+    throw logic_error("no implemented");
 }
 
 TSetDCValue MakeSetDCValueFunction(const v8::Local<Object>& cb)
 {
+    throw logic_error("no implemented");
 }
 
 std::string GetSignature(const v8::Local<Object>& cb)

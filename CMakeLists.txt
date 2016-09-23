@@ -8,8 +8,6 @@ if(CCACHE_FOUND)
     message(STATUS "Using ccache.")
 endif(CCACHE_FOUND)
 
-add_subdirectory(deps/optional)
-
 add_subdirectory(deps/dyncall)
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/deps/dyncall/dyncall")
 include(DynCallConfig)

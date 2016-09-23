@@ -105,13 +105,13 @@ describe('Library', function () {
                 testGetNumbersSync('void getNumbers(double** arg0, size_t* arg1)');
             });
 
-            it('should support callbacks', function () {
+            it.skip('should support callbacks', function () {
                 lib
                 .callback({ TMakeIntFunc: ['int', [ref.types.float, 'double']] })
                 .function({ makeInt: ['int', ['float', 'double', 'TMakeIntFunc']] });
 
                 testMakeIntSync(
-                    'int TMakeIntFunc(float arg0, double arg1)', 
+                    'int TMakeIntFunc(float arg0, double arg1)',
                     'int makeInt(float arg0, double arg1, TMakeIntFunc arg2)');
             });
         });
@@ -149,13 +149,13 @@ describe('Library', function () {
                 testGetNumbersSync('void getNumbers(double** nums, size_t* count)');
             });
 
-            it('should support callbacks', function () {
+            it.skip('should support callbacks', function () {
                 lib
                 .callback('int TMakeIntFunc(float fv, double)')
                 .function('int makeInt(float , double dv, TMakeIntFunc func)');
 
                 testMakeIntSync(
-                    'int TMakeIntFunc(float fv, double arg1)', 
+                    'int TMakeIntFunc(float fv, double arg1)',
                     'int makeInt(float arg0, double dv, TMakeIntFunc func)');
             });
         });
@@ -229,7 +229,7 @@ describe('Library', function () {
             const getNumbers = lib.interface.getNumbers;
             assert(_.isFunction(getNumbers));
             assert.equal(getNumbers.declaration, declaration);
-            
+
             const double = ref.types.double;
             const doublePtrType = ref.refType(double);
             const doublePtrPtr = ref.alloc(doublePtrType);
@@ -411,7 +411,7 @@ describe('Library', function () {
             const getNumbers = lib.interface.getNumbers;
             assert(_.isFunction(getNumbers));
             assert.equal(getNumbers.declaration, declaration);
-            
+
             const double = ref.types.double;
             const doublePtrType = ref.refType(double);
             const doublePtrPtr = ref.alloc(doublePtrType);

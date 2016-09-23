@@ -14,7 +14,7 @@ namespace fastcall {
 struct LibraryBase;
 struct AsyncResultBase;
 
-typedef OPTIONAL_NS::optional<TAsyncResults> TOptionalAsyncResults;
+typedef nonstd::optional<TAsyncResults> TOptionalAsyncResults;
 typedef std::pair<TOptionalAsyncResults, TAsyncFunctionInvoker> TCallable;
 typedef Queue<TCallable> TCallQueue;
 typedef Queue<TOptionalAsyncResults> TReleaseQueue;
