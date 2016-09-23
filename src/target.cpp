@@ -39,6 +39,19 @@ v8::Local<Object> fastcall::RequireRef()
     return scope.Escape(ref);
 }
 
+v8::Local<v8::Object> fastcall::DerefType(v8::Local<v8::Object> refType)
+{
+    Nan::EscapableHandleScope scope;
+
+    auto ref = RequireRef();
+    auto derefType = GetValue<Function>(ref, "derefType");
+    assert(!derefType.IsEmpty());
+    v8::Local<v8::Value> args[] = { refType };
+    auto result = Nan::Call(derefType, ref, 1, args).ToLocalChecked().As<Object>();
+    assert(!result.IsEmpty());
+    return scope.Escape(result);
+}
+
 v8::Local<Object> fastcall::MakeAsyncResult(const v8::Local<Object>& func, const v8::Local<Object>& type)
 {
     Nan::EscapableHandleScope scope;

@@ -27,19 +27,6 @@ typedef std::function<v8::Local<v8::Value>(DCCallVM*)> TSyncVMInvoker;
 typedef std::function<TAsyncFunctionInvoker(const Nan::FunctionCallbackInfo<v8::Value>&, TAsyncResults&)> TAsyncVMInitialzer;
 typedef std::function<TAsyncFunctionInvoker(const v8::Local<Object>& asyncResult)> TAsyncVMInvoker;
 
-inline v8::Local<v8::Object> GetResultPointerType(v8::Local<v8::Object> refType)
-{
-    Nan::EscapableHandleScope scope;
-
-    auto ref = RequireRef();
-    auto derefType = GetValue<Function>(ref, "derefType");
-    assert(!derefType.IsEmpty());
-    v8::Local<v8::Value> args[] = { refType };
-    auto result = Nan::Call(derefType, ref, 1, args).ToLocalChecked().As<Object>();
-    assert(!result.IsEmpty());
-    return scope.Escape(result);
-}
-
 template <typename T, typename F, typename G>
 TSyncVMInitialzer MakeSyncArgProcessor(unsigned i, const F& f, const G& g)
 {
@@ -416,7 +403,7 @@ TSyncVMInvoker MakeSyncVoidVMInvoker(const F& f, void* funcPtr)
     };
 }
 
-TSyncVMInvoker MakeSyncVMInvoker(void* funcPtr, const TCopyablePersistent& resultPointerTypeHolder)
+TSyncVMInvoker MakeSyncPtrVMInvoker(void* funcPtr, const TCopyablePersistent& resultPointerTypeHolder)
 {
     return [=](DCCallVM* vm) {
         Nan::EscapableHandleScope scope;
@@ -440,10 +427,10 @@ TSyncVMInvoker MakeSyncVMInvoker(const v8::Local<Object>& func)
     assert(GetValue(func, "callMode")->Uint32Value() == SYNC_CALL_MODE);
 
     if (indirection > 1) {
-        auto resultPointerType = GetResultPointerType(resultType);
+        auto resultPointerType = DerefType(resultType);
         auto resultPointerTypeHolder = TCopyablePersistent();
         resultPointerTypeHolder.Reset(resultPointerType);
-        return MakeSyncVMInvoker(funcPtr, resultPointerTypeHolder);
+        return MakeSyncPtrVMInvoker(funcPtr, resultPointerTypeHolder);
     } else if (indirection == 1) {
         auto typeName = resultTypeName.c_str();
 

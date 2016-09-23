@@ -103,9 +103,13 @@ NAN_METHOD(CallbackBase::factory)
 
     auto jsFunc = info[0].As<Function>();
 
-    Local<Object> ptr = obj->callbackFactory(jsFunc);
-
-    info.GetReturnValue().Set(ptr);
+    try {
+        Local<Object> ptr = obj->callbackFactory(jsFunc);
+        info.GetReturnValue().Set(ptr);
+    }
+    catch (exception& ex) {
+        return Nan::ThrowError(ex.what());
+    }
 }
 
 DCCallback* CallbackBase::GetPtr(const v8::Local<Object>& ptrBuffer)
