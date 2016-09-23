@@ -12,7 +12,7 @@
     "bluebird": "3",
     "cmake-js": "3",
     "lodash": "4",
-    "nan": "^2.1.0"
+    "nan": "^2.4.0"
   },
   "scripts": {
     "install": "cmake-js compile",
