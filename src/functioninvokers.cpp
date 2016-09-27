@@ -11,7 +11,7 @@
 #include "defs.h"
 #include "dcarg.h"
 #include "dccall.h"
-#include "getargvalue.h"
+#include "getv8value.h"
 #include "callbackbase.h"
 #include "callbackfactories.h"
 
@@ -26,6 +26,26 @@ typedef std::function<v8::Local<v8::Value>(DCCallVM*)> TSyncVMInvoker;
 
 typedef std::function<TAsyncFunctionInvoker(const Nan::FunctionCallbackInfo<v8::Value>&, TAsyncResults&)> TAsyncVMInitialzer;
 typedef std::function<TAsyncFunctionInvoker(const v8::Local<Object>& asyncResult)> TAsyncVMInvoker;
+
+inline AsyncResultBase* AsAsyncResultBase(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
+{
+    using namespace v8;
+    using namespace node;
+
+    Nan::HandleScope scope;
+
+    return AsyncResultBase::AsAsyncResultBase(info[index].As<Object>());
+}
+
+template <typename T>
+inline T* AsAsyncResultPtr(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
+{
+    auto basePtr = AsAsyncResultBase(info, index);
+    if (!basePtr) {
+        return nullptr;
+    }
+    return basePtr->GetPtr<T>();
+}
 
 template <typename T, typename F, typename G>
 TSyncVMInitialzer MakeSyncArgProcessor(unsigned i, const F& f, const G& g)

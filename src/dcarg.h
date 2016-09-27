@@ -65,11 +65,7 @@ inline void dcArgULongLong(DCCallVM* vm, unsigned long long p)
     dcArgLong(vm, reinterpret_cast<long long&>(p));
 }
 
-inline void dcArgSizeT(DCCallVM* vm, size_t p)
-{
-    auto tmp = static_cast<unsigned long long>(p);
-    dcArgLongLong(vm, reinterpret_cast<long long&>(tmp));
-}
+#define dcArgSizeT dcArgULong
 
 #define dcArgBool dcArgUInt8
 }
