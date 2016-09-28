@@ -105,7 +105,7 @@ describe('Library', function () {
                 testGetNumbersSync('void getNumbers(double** arg0, size_t* arg1)');
             });
 
-            it.skip('should support callbacks', function () {
+            it('should support callbacks', function () {
                 lib
                 .callback({ TMakeIntFunc: ['int', [ref.types.float, 'double']] })
                 .function({ makeInt: ['int', ['float', 'double', 'TMakeIntFunc']] });
@@ -149,7 +149,7 @@ describe('Library', function () {
                 testGetNumbersSync('void getNumbers(double** nums, size_t* count)');
             });
 
-            it.skip('should support callbacks', function () {
+            it('should support callbacks', function () {
                 lib
                 .callback('int TMakeIntFunc(float fv, double)')
                 .function('int makeInt(float , double dv, TMakeIntFunc func)');

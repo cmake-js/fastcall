@@ -83,7 +83,12 @@ NAN_METHOD(CallbackBase::initialize)
         return;
     }
 
-    obj->callbackFactory = MakeCallbackFactory(self);
+    try {
+        obj->callbackFactory = MakeCallbackFactory(self);
+    }
+    catch (exception& ex) {
+        return Nan::ThrowError(ex.what());
+    }
 
     obj->initialized = true;
 }

@@ -193,9 +193,9 @@ TDCArgsToCallbackArgs MakeDCArgsToCallbackArgsFunction(const v8::Local<Object>& 
                 continue;
             }
         }
-    }
 
-    throw logic_error("Invalid callback result type.");
+        throw logic_error("Invalid callback result type.");
+    }
 }
 
 TSetDCValue MakeSetDCValueFunction(const v8::Local<Object>& cb)
