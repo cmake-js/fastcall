@@ -124,10 +124,10 @@ DCCallback* CallbackBase::GetPtr(const v8::Local<Object>& ptrBuffer)
     auto type = GetValue(ptrBuffer, "type").As<Object>();
 
     if (!type.IsEmpty() && type->IsObject() && Buffer::HasInstance(ptrBuffer)) {
-        auto typeName = string(*Nan::Utf8String(GetValue(type, "name")));
-        auto indirection = GetValue(ptrBuffer, "indirection")->Uint32Value();
+        auto typeName = string(*Nan::Utf8String(GetValue<String>(type, "name")));
+        auto indirection = GetValue(type, "indirection")->Uint32Value();
 
-        if (typeName == "void" && indirection == 2) {
+        if (typeName == "void*" && indirection == 2) {
             auto callbackObj = GetValue(ptrBuffer, "callback");
             if (callbackObj->IsObject()) {
                 auto cb = AsCallbackBase(callbackObj.As<Object>());

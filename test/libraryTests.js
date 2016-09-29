@@ -263,7 +263,7 @@ describe('Library', function () {
             assert.equal(makeInt.function.toString(), funcDecl);
 
             let result = makeInt(1.1, 2.2, (fv, dv) => fv + dv);
-            assert.equal(result, (1.1 + 2.2) * 2);
+            assert.equal(result, Math.floor((1.1 + 2.2) * 2));
         }
     });
 

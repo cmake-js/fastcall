@@ -75,22 +75,22 @@ inline TSyncVMInitialzer MakeSyncCallbackArgProcessor(unsigned i, const v8::Loca
             ptr = info[i].As<Object>();
         }
         else if (info[i]->IsFunction()) {
-            Nan::HandleScope scope;
+            Nan::EscapableHandleScope scope;
 
             Local<Value> args[] = { info[i] };
             auto cb = Nan::New(persistentCallback);
             auto factory = GetValue<Function>(cb, "factory");
-            ptr = factory->Call(cb, 1, args).As<Object>();
+            ptr = scope.Escape(factory->Call(cb, 1, args).As<Object>());
             assert(!ptr.IsEmpty() && ptr->IsObject());
         }
         else {
             throw logic_error("Unknown argument.");
         }
 
-        cb = callbackBase->GetPtr(info[i].As<Object>());
+        cb = callbackBase->GetPtr(ptr);
         assert(cb);
 
-        dcCallPointer(vm, cb);
+        dcArgPointer(vm, cb);
     };
 }
 

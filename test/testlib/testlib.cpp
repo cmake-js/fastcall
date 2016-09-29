@@ -2,7 +2,7 @@
 
 const char world[] = "world";
 const double numbers[] = { 1.1, 2.2, 3.3 };
-typedef int TMakeIntFunc(float, double);
+typedef int (*TMakeIntFunc)(float, double);
 
 extern "C" {
 NODE_MODULE_EXPORT int mul(int value, int by)
