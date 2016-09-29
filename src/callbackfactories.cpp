@@ -12,9 +12,14 @@ using namespace node;
 using namespace std;
 using namespace fastcall;
 
+StaticCallbackData StaticCallbackData::instance;
+StaticCallbackData::StaticCallbackData()
+{
+    args.reserve(16);
+}
+
 namespace {
-typedef std::vector<v8::Local<v8::Value> > TCallbackArgs;
-typedef std::function<TCallbackArgs(DCArgs*)> TDCArgsToCallbackArgs;
+typedef std::function<void(DCArgs*)> TDCArgsToCallbackArgs;
 typedef std::function<void(DCValue*, v8::Local<v8::Value>&)> TSetDCValue;
 typedef std::function<v8::Local<v8::Value>(DCArgs*)> TArgToValueConverter;
 
@@ -196,12 +201,18 @@ TDCArgsToCallbackArgs MakeDCArgsToCallbackArgsFunction(const v8::Local<Object>& 
 
         throw logic_error("Invalid callback result type.");
     }
+
+    auto& v8Args = StaticCallbackData::instance.args;
+    return [&v8Args, list](DCArgs* args) {
+        v8Args.clear();
+        for (auto& f : list) {
+            v8Args.emplace_back(f(args));
+        }
+    };
 }
 
 TSetDCValue MakeSetDCValueFunction(const v8::Local<Object>& cb)
 {
-    throw logic_error("not implemented");
-
     auto resultType = GetValue<Object>(cb, "resultType");
     auto resultTypeName = string(*Nan::Utf8String(GetValue<String>(resultType, "name")));
     auto indirection = GetValue(resultType, "indirection")->Uint32Value();
@@ -350,8 +361,8 @@ char V8CallbackHandler(DCArgs* args, DCValue* result, CallbackUserData* cbUserDa
 {
     Nan::HandleScope scope;
 
-    auto cbArgs = cbUserData->dcArgsToCallbackArgs(args);
-    auto value = cbUserData->jsCallback->Call(cbArgs.size(), &cbArgs[0]);
+    cbUserData->dcArgsToCallbackArgs(args);
+    auto value = cbUserData->jsCallback->Call(StaticCallbackData::instance.args.size(), &StaticCallbackData::instance.args[0]);
     cbUserData->setDCValue(result, value);
     return cbUserData->resultTypeCode;
 }

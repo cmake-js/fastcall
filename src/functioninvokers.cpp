@@ -62,6 +62,8 @@ TSyncVMInitialzer MakeSyncArgProcessor(unsigned i, const F& f, const G& g)
 
 inline TSyncVMInitialzer MakeSyncCallbackArgProcessor(unsigned i, const v8::Local<Object>& callback, CallbackBase* callbackBase)
 {
+    auto persistentCallback = TCopyablePersistent();
+    persistentCallback.Reset(callback);
     return [=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
         // No new handle scope here!
         // Temporary ptr should live until the function call completes.
@@ -76,8 +78,9 @@ inline TSyncVMInitialzer MakeSyncCallbackArgProcessor(unsigned i, const v8::Loca
             Nan::HandleScope scope;
 
             Local<Value> args[] = { info[i] };
-            auto factory = GetValue<Function>(callback, "factory");
-            ptr = factory->Call(callback, 1, args).As<Object>();
+            auto cb = Nan::New(persistentCallback);
+            auto factory = GetValue<Function>(cb, "factory");
+            ptr = factory->Call(cb, 1, args).As<Object>();
             assert(!ptr.IsEmpty() && ptr->IsObject());
         }
         else {

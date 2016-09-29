@@ -168,14 +168,15 @@ describe('Library', function () {
             const mul = lib.interface.mul;
 
             // Verify metadata:
-            assert.equal(mul.declaration, declaration);
-            assert.equal(mul.functionName, 'mul');
-            assert.equal(mul.resultType.name, 'int');
-            assert.equal(mul.args.length, 2);
-            assert(_.isString(mul.args[0].name));
-            assert.equal(mul.args[0].type.name, 'int');
-            assert(_.isString(mul.args[1].name));
-            assert.equal(mul.args[1].type.name, 'int');
+            assert(mul.function);
+            assert.equal(mul.function.toString(), declaration);
+            assert.equal(mul.function.name, 'mul');
+            assert.equal(mul.function.resultType.name, 'int');
+            assert.equal(mul.function.args.length, 2);
+            assert(_.isString(mul.function.args[0].name));
+            assert.equal(mul.function.args[0].type.name, 'int');
+            assert(_.isString(mul.function.args[1].name));
+            assert.equal(mul.function.args[1].type.name, 'int');
 
             // Call!
             assert.equal(mul(2, 2), 4);
@@ -193,7 +194,8 @@ describe('Library', function () {
         function testReadLongPtrSync(declaration) {
             const readLongPtr = lib.interface.readLongPtr;
             assert(_.isFunction(readLongPtr));
-            assert.equal(readLongPtr.declaration, declaration);
+            assert(readLongPtr.function);
+            assert.equal(readLongPtr.function.toString(), declaration);
             const long = ref.types.long;
             const data = new Buffer(long.size * 2);
             long.set(data, 0, 1);
@@ -205,7 +207,8 @@ describe('Library', function () {
         function testWriteStringSync(declaration) {
             const writeString = lib.interface.writeString;
             assert(_.isFunction(writeString));
-            assert.equal(writeString.declaration, declaration);
+            assert(writeString.function);
+            assert.equal(writeString.function.toString(), declaration);
             const string = ref.allocCString('          ');
             writeString(string);
             assert.equal(ref.readCString(string), 'hello');
@@ -214,7 +217,8 @@ describe('Library', function () {
         function testGetStringSync(declaration) {
             const getString = lib.interface.getString;
             assert(_.isFunction(getString));
-            assert.equal(getString.declaration, declaration);
+            assert(getString.function);
+            assert.equal(getString.function.toString(), declaration);
             const string = getString();
             assert(_.isBuffer(string));
             assert(_.isObject(string.type));
@@ -228,7 +232,7 @@ describe('Library', function () {
         function testGetNumbersSync(declaration) {
             const getNumbers = lib.interface.getNumbers;
             assert(_.isFunction(getNumbers));
-            assert.equal(getNumbers.declaration, declaration);
+            assert.equal(getNumbers.function.toString(), declaration);
 
             const double = ref.types.double;
             const doublePtrType = ref.refType(double);
@@ -251,11 +255,12 @@ describe('Library', function () {
         function testMakeIntSync(callbackDecl, funcDecl) {
             const TMakeIntFunc = lib.interface.TMakeIntFunc;
             assert(_.isFunction(TMakeIntFunc));
-            assert.equal(TMakeIntFunc.declaration, callbackDecl);
+            assert(TMakeIntFunc.callback);
+            assert.equal(TMakeIntFunc.callback.toString(), callbackDecl);
 
             const makeInt = lib.interface.makeInt;
             assert(_.isFunction(makeInt));
-            assert.equal(makeInt.declaration, funcDecl);
+            assert.equal(makeInt.function.toString(), funcDecl);
 
             let result = makeInt(1.1, 2.2, (fv, dv) => fv + dv);
             assert.equal(result, (1.1 + 2.2) * 2);
@@ -349,14 +354,15 @@ describe('Library', function () {
             const mul = lib.interface.mul;
 
             // Verify metadata:
-            assert.equal(mul.declaration, declaration);
-            assert.equal(mul.functionName, 'mul');
-            assert.equal(mul.resultType.name, 'int');
-            assert.equal(mul.args.length, 2);
-            assert(_.isString(mul.args[0].name));
-            assert.equal(mul.args[0].type.name, 'int');
-            assert(_.isString(mul.args[1].name));
-            assert.equal(mul.args[1].type.name, 'int');
+            assert(mul.function);
+            assert.equal(mul.function.toString(), declaration);
+            assert.equal(mul.function.name, 'mul');
+            assert.equal(mul.function.resultType.name, 'int');
+            assert.equal(mul.function.args.length, 2);
+            assert(_.isString(mul.function.args[0].name));
+            assert.equal(mul.function.args[0].type.name, 'int');
+            assert(_.isString(mul.function.args[1].name));
+            assert.equal(mul.function.args[1].type.name, 'int');
 
             // Call!
             assert.equal(yield mul(2, 2).get(), 4);
@@ -375,7 +381,7 @@ describe('Library', function () {
         var testReadLongPtrAsync = async(function *(declaration) {
             const readLongPtr = lib.interface.readLongPtr;
             assert(_.isFunction(readLongPtr));
-            assert.equal(readLongPtr.declaration, declaration);
+            assert.equal(readLongPtr.function.toString(), declaration);
             const long = ref.types.long;
             const data = new Buffer(long.size * 2);
             long.set(data, 0, 1);
@@ -387,7 +393,7 @@ describe('Library', function () {
         var testWriteStringAsync = async(function *(declaration) {
             const writeString = lib.interface.writeString;
             assert(_.isFunction(writeString));
-            assert.equal(writeString.declaration, declaration);
+            assert.equal(writeString.function.toString(), declaration);
             const string = ref.allocCString('          ');
             writeString(string);
             yield lib.synchronize();
@@ -397,7 +403,7 @@ describe('Library', function () {
         var testGetStringAsync = async(function *(declaration) {
             const getString = lib.interface.getString;
             assert(_.isFunction(getString));
-            assert.equal(getString.declaration, declaration);
+            assert.equal(getString.function.toString(), declaration);
             const string = yield getString().get();
             assert(_.isBuffer(string));
             assert(_.isObject(string.type));
@@ -410,7 +416,7 @@ describe('Library', function () {
         var testGetNumbersAsync = async(function *(declaration) {
             const getNumbers = lib.interface.getNumbers;
             assert(_.isFunction(getNumbers));
-            assert.equal(getNumbers.declaration, declaration);
+            assert.equal(getNumbers.function.toString(), declaration);
 
             const double = ref.types.double;
             const doublePtrType = ref.refType(double);
