@@ -43,10 +43,6 @@ NAN_METHOD(AsyncResultBase::New)
     auto asyncResultBase = new AsyncResultBase(func, ptr);
     asyncResultBase->Wrap(self);
 
-    // We gotta prevent GC to collect AsyncResult
-    // until it's natice part gets deleted.
-    asyncResultBase->AddRef(self);
-
     info.GetReturnValue().Set(self);
 }
 

@@ -237,7 +237,7 @@ inline void KeepObjectAlive(const v8::Local<v8::Object>& obj, TReleaseFunctions&
     auto persistent = TCopyablePersistent();
     persistent.Reset(obj);
     releaseFunctions.emplace_back(
-        std::bind([](TCopyablePersistent& p) { p.Empty(); }, std::move(persistent)));
+        std::bind([](TCopyablePersistent& p) { p.Reset(); }, std::move(persistent)));
 }
 
 template <typename T, typename F, typename G>
@@ -247,8 +247,9 @@ TAsyncVMInitialzer MakeAsyncArgProcessor(unsigned i, F f, const G& g)
         auto ar = AsAsyncResultBase(info, i);
         TAsyncFunctionInvoker result;
         if (ar) {
-            ar->AddRef(info[i].As<Object>());
-            releaseFunctions.push_back([=]() { ar->Release(); });
+            //ar->AddRef(info[i].As<Object>());
+            //releaseFunctions.push_back([=]() { ar->Release(); });
+            KeepObjectAlive(info[i].As<Object>(), releaseFunctions);
             T* valPtr = ar->GetPtr<T>();
             result = [=](DCCallVM* vm) {
                 f(vm, *valPtr);
@@ -716,11 +717,10 @@ TFunctionInvoker fastcall::MakeFunctionInvoker(const v8::Local<Object>& func)
             Nan::EscapableHandleScope scope;
 
             TReleaseFunctions releaseFunctions;
-            releaseFunctions.reserve(info.Length() + 1);
+            releaseFunctions.reserve(info.Length());
             auto resultType = GetValue<Object>(info.This(), "resultType");
             auto asyncResult = MakeAsyncResult(info.This(), resultType);
             auto ar = AsyncResultBase::GetAsyncResultBase(asyncResult);
-            releaseFunctions.push_back([=]() { ar->Release(); });
             auto currentInitializer = initializer(info, releaseFunctions);
             auto currentInvoker = invoker(asyncResult);
             funcBase->GetLibrary()->GetLoop()->Push(
