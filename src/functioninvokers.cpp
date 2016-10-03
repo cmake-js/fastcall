@@ -24,7 +24,7 @@ namespace {
 typedef std::function<void(DCCallVM*, const Nan::FunctionCallbackInfo<v8::Value>&)> TSyncVMInitialzer;
 typedef std::function<v8::Local<v8::Value>(DCCallVM*)> TSyncVMInvoker;
 
-typedef std::function<TAsyncFunctionInvoker(const Nan::FunctionCallbackInfo<v8::Value>&, TAsyncResults&)> TAsyncVMInitialzer;
+typedef std::function<TAsyncFunctionInvoker(const Nan::FunctionCallbackInfo<v8::Value>&, TReleaseFunctions&)> TAsyncVMInitialzer;
 typedef std::function<TAsyncFunctionInvoker(const v8::Local<Object>& asyncResult)> TAsyncVMInvoker;
 
 inline AsyncResultBase* AsAsyncResultBase(const Nan::FunctionCallbackInfo<v8::Value>& info, const unsigned index)
@@ -60,7 +60,7 @@ TSyncVMInitialzer MakeSyncArgProcessor(unsigned i, const F& f, const G& g)
     };
 }
 
-inline TSyncVMInitialzer MakeSyncCallbackArgProcessor(unsigned i, const v8::Local<Object>& callback, CallbackBase* callbackBase)
+inline TSyncVMInitialzer MakeSyncCallbackArgProcessor(unsigned i, const Local<Object>& callback, CallbackBase* callbackBase)
 {
     auto persistentCallback = TCopyablePersistent();
     persistentCallback.Reset(callback);
@@ -78,9 +78,9 @@ inline TSyncVMInitialzer MakeSyncCallbackArgProcessor(unsigned i, const v8::Loca
             Nan::EscapableHandleScope scope;
 
             Local<Value> args[] = { info[i] };
-            auto cb = Nan::New(persistentCallback);
-            auto factory = GetValue<Function>(cb, "factory");
-            ptr = scope.Escape(factory->Call(cb, 1, args).As<Object>());
+            auto callback = Nan::New(persistentCallback);
+            auto factory = GetValue<Function>(callback, "factory");
+            ptr = scope.Escape(factory->Call(callback, 1, args).As<Object>());
             assert(!ptr.IsEmpty() && ptr->IsObject());
         }
         else {
@@ -235,12 +235,12 @@ TSyncVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
 template <typename T, typename F, typename G>
 TAsyncVMInitialzer MakeAsyncArgProcessor(unsigned i, F f, const G& g)
 {
-    return [=](const Nan::FunctionCallbackInfo<v8::Value>& info, TAsyncResults& asyncResults) {
+    return [=](const Nan::FunctionCallbackInfo<v8::Value>& info, TReleaseFunctions& releaseFunctions) {
         auto ar = AsAsyncResultBase(info, i);
         TAsyncFunctionInvoker result;
         if (ar) {
             ar->AddRef(info[i].As<Object>());
-            asyncResults.push_back(ar);
+            releaseFunctions.push_back([=]() { ar->Release(); });
             T* valPtr = ar->GetPtr<T>();
             result = [=](DCCallVM* vm) {
                 f(vm, *valPtr);
@@ -254,6 +254,39 @@ TAsyncVMInitialzer MakeAsyncArgProcessor(unsigned i, F f, const G& g)
         return result;
     };
 }
+
+//inline TAsyncVMInitialzer MakeAsyncCallbackArgProcessor(unsigned i, const Local<Object>& callback, CallbackBase* callbackBase)
+//{
+//    auto persistentCallback = TCopyablePersistent();
+//    persistentCallback.Reset(callback);
+//    return [=](const Nan::FunctionCallbackInfo<v8::Value>& info, TAsyncResults& asyncResults) {
+//        DCCallback* cb = nullptr;
+
+//        Local<Object> ptr;
+//        if (Buffer::HasInstance(info[i])) {
+//            ptr = info[i].As<Object>();
+//        }
+//        else if (info[i]->IsFunction()) {
+//            Nan::EscapableHandleScope scope;
+
+//            Local<Value> args[] = { info[i] };
+//            auto callback = Nan::New(persistentCallback);
+//            auto factory = GetValue<Function>(callback, "factory");
+//            ptr = scope.Escape(factory->Call(callback, 1, args).As<Object>());
+//            assert(!ptr.IsEmpty() && ptr->IsObject());
+//        }
+//        else {
+//            throw logic_error("Unknown argument.");
+//        }
+
+//        cb = callbackBase->GetPtr(ptr);
+//        assert(cb);
+
+//        return [=](DCCallVM* vm) {
+//            dcArgPointer(vm, cb);
+//        };
+//    };
+//}
 
 TAsyncVMInitialzer MakeAsyncVMInitializer(const v8::Local<Object>& func)
 {
@@ -371,11 +404,11 @@ TAsyncVMInitialzer MakeAsyncVMInitializer(const v8::Local<Object>& func)
         throw logic_error(string("Invalid argument type definition at: ") + to_string(i) + ".");
     }
 
-    return [=](const Nan::FunctionCallbackInfo<v8::Value>& info, TAsyncResults& asyncResults) {
+    return [=](const Nan::FunctionCallbackInfo<v8::Value>& info, TReleaseFunctions& releaseFunctions) {
         std::vector<TAsyncFunctionInvoker> invokers;
         invokers.reserve(list.size());
         for (auto& f : list) {
-            invokers.emplace_back(f(info, asyncResults));
+            invokers.emplace_back(f(info, releaseFunctions));
         }
 
         return bind(
@@ -672,17 +705,17 @@ TFunctionInvoker fastcall::MakeFunctionInvoker(const v8::Local<Object>& func)
         return [funcBase, initializer, invoker](const Nan::FunctionCallbackInfo<v8::Value>& info) {
             Nan::EscapableHandleScope scope;
 
-            TAsyncResults asyncResults;
-            asyncResults.reserve(info.Length() + 1);
+            TReleaseFunctions releaseFunctions;
+            releaseFunctions.reserve(info.Length() + 1);
             auto resultType = GetValue<Object>(info.This(), "resultType");
             auto asyncResult = MakeAsyncResult(info.This(), resultType);
             auto ar = AsyncResultBase::GetAsyncResultBase(asyncResult);
-            asyncResults.push_back(ar);
-            auto currentInitializer = initializer(info, asyncResults);
+            releaseFunctions.push_back([=]() { ar->Release(); });
+            auto currentInitializer = initializer(info, releaseFunctions);
             auto currentInvoker = invoker(asyncResult);
             funcBase->GetLibrary()->GetLoop()->Push(
                 make_pair(
-                    TOptionalAsyncResults(std::move(asyncResults)),
+                    std::move(releaseFunctions),
                     [=](DCCallVM* vm) {
                         currentInitializer(vm);
                         currentInvoker(vm);

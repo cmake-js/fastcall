@@ -14,10 +14,10 @@ namespace fastcall {
 struct LibraryBase;
 struct AsyncResultBase;
 
-typedef nonstd::optional<TAsyncResults> TOptionalAsyncResults;
-typedef std::pair<TOptionalAsyncResults, TAsyncFunctionInvoker> TCallable;
+typedef nonstd::optional<TReleaseFunctions> TOptionalReleaseFunctions;
+typedef std::pair<TOptionalReleaseFunctions, TAsyncFunctionInvoker> TCallable;
 typedef Queue<TCallable> TCallQueue;
-typedef Queue<TOptionalAsyncResults> TReleaseQueue;
+typedef Queue<TOptionalReleaseFunctions> TReleaseQueue;
 typedef Queue<std::shared_ptr<Nan::Callback>> TSyncQueue;
 
 struct Loop : LibraryFeature
@@ -44,7 +44,7 @@ private:
     static void LoopMain(void* threadArg);
     static void Shutdown(uv_async_t* handle);
     void ProcessCallQueueItem(TCallable& item);
-    void ProcessReleaseQueueItem(TOptionalAsyncResults& item);
+    void ProcessReleaseQueueItem(TOptionalReleaseFunctions& item);
     void ProcessSyncQueueItem(std::shared_ptr<Nan::Callback>& item);
 };
 }

@@ -7,11 +7,10 @@
 #include <memory>
 
 namespace fastcall {
-struct AsyncResultBase;
-
+typedef std::function<void()> TReleaseFunction;
 typedef std::function<v8::Local<v8::Value>(const Nan::FunctionCallbackInfo<v8::Value>&)> TFunctionInvoker;
 typedef std::function<void(DCCallVM*)> TAsyncFunctionInvoker;
-typedef std::vector<AsyncResultBase*> TAsyncResults;
+typedef std::vector<TReleaseFunction> TReleaseFunctions;
 
 TFunctionInvoker MakeFunctionInvoker(const v8::Local<v8::Object>& func);
 }

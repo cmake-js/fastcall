@@ -88,7 +88,7 @@ void Loop::Synchronize(const v8::Local<v8::Function>& callback)
         callback->Call(Nan::Null(), 0, {});
     } else {
         auto cb = make_shared<Nan::Callback>(callback);
-        Push(make_pair(TOptionalAsyncResults(), [=](DCCallVM*) {
+        Push(make_pair(TOptionalReleaseFunctions(), [=](DCCallVM*) {
             this->syncQueue->Push(cb);
         }));
         lastSyncOn = counter;
@@ -104,11 +104,11 @@ void Loop::ProcessCallQueueItem(TCallable& item)
     }
 }
 
-void Loop::ProcessReleaseQueueItem(TOptionalAsyncResults& item)
+void Loop::ProcessReleaseQueueItem(TOptionalReleaseFunctions& item)
 {
     assert(item);
-    for (auto ar : *item) {
-        ar->Release();
+    for (auto f : *item) {
+        f();
     }
 }
 
