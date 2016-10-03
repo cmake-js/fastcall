@@ -232,6 +232,14 @@ TSyncVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
     };
 }
 
+inline void KeepObjectAlive(const v8::Local<v8::Object>& obj, TReleaseFunctions& releaseFunctions)
+{
+    auto persistent = TCopyablePersistent();
+    persistent.Reset(obj);
+    releaseFunctions.emplace_back(
+        std::bind([](TCopyablePersistent& p) { p.Empty(); }, std::move(persistent)));
+}
+
 template <typename T, typename F, typename G>
 TAsyncVMInitialzer MakeAsyncArgProcessor(unsigned i, F f, const G& g)
 {
@@ -255,38 +263,40 @@ TAsyncVMInitialzer MakeAsyncArgProcessor(unsigned i, F f, const G& g)
     };
 }
 
-//inline TAsyncVMInitialzer MakeAsyncCallbackArgProcessor(unsigned i, const Local<Object>& callback, CallbackBase* callbackBase)
-//{
-//    auto persistentCallback = TCopyablePersistent();
-//    persistentCallback.Reset(callback);
-//    return [=](const Nan::FunctionCallbackInfo<v8::Value>& info, TAsyncResults& asyncResults) {
-//        DCCallback* cb = nullptr;
+inline TAsyncVMInitialzer MakeAsyncCallbackArgProcessor(unsigned i, const Local<Object>& callback, CallbackBase* callbackBase)
+{
+    auto persistentCallback = TCopyablePersistent();
+    persistentCallback.Reset(callback);
+    return [=](const Nan::FunctionCallbackInfo<v8::Value>& info, TReleaseFunctions& releaseFunctions) {
+        Nan::HandleScope scope;
 
-//        Local<Object> ptr;
-//        if (Buffer::HasInstance(info[i])) {
-//            ptr = info[i].As<Object>();
-//        }
-//        else if (info[i]->IsFunction()) {
-//            Nan::EscapableHandleScope scope;
+        DCCallback* cb = nullptr;
 
-//            Local<Value> args[] = { info[i] };
-//            auto callback = Nan::New(persistentCallback);
-//            auto factory = GetValue<Function>(callback, "factory");
-//            ptr = scope.Escape(factory->Call(callback, 1, args).As<Object>());
-//            assert(!ptr.IsEmpty() && ptr->IsObject());
-//        }
-//        else {
-//            throw logic_error("Unknown argument.");
-//        }
+        Local<Object> ptr;
+        if (Buffer::HasInstance(info[i])) {
+            ptr = info[i].As<Object>();
+        } else if (info[i]->IsFunction()) {
+            Nan::EscapableHandleScope scope;
 
-//        cb = callbackBase->GetPtr(ptr);
-//        assert(cb);
+            Local<Value> args[] = { info[i] };
+            auto callback = Nan::New(persistentCallback);
+            auto factory = GetValue<Function>(callback, "factory");
+            ptr = scope.Escape(factory->Call(callback, 1, args).As<Object>());
+            assert(!ptr.IsEmpty() && ptr->IsObject());
+        } else {
+            throw logic_error("Unknown argument.");
+        }
 
-//        return [=](DCCallVM* vm) {
-//            dcArgPointer(vm, cb);
-//        };
-//    };
-//}
+        cb = callbackBase->GetPtr(ptr);
+        assert(cb);
+
+        KeepObjectAlive(ptr, releaseFunctions);
+
+        return [=](DCCallVM* vm) {
+            dcArgPointer(vm, cb);
+        };
+    };
+}
 
 TAsyncVMInitialzer MakeAsyncVMInitializer(const v8::Local<Object>& func)
 {
