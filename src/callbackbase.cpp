@@ -109,7 +109,7 @@ NAN_METHOD(CallbackBase::factory)
     auto jsFunc = info[0].As<Function>();
 
     try {
-        Local<Object> ptr = obj->callbackFactory(jsFunc);
+        Local<Object> ptr = obj->callbackFactory(self, jsFunc);
         info.GetReturnValue().Set(ptr);
     }
     catch (exception& ex) {

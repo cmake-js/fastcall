@@ -4,7 +4,7 @@
 
 namespace fastcall {
 typedef std::vector<v8::Local<v8::Value> > TCallbackArgs;
-typedef std::function<v8::Local<v8::Object>(const v8::Local<v8::Function>&)> TCallbackFactory;
+typedef std::function<v8::Local<v8::Object>(const v8::Local<v8::Object>&, const v8::Local<v8::Function>&)> TCallbackFactory;
 
 struct StaticCallbackData {
     StaticCallbackData();

@@ -393,17 +393,14 @@ TCallbackFactory fastcall::MakeCallbackFactory(const v8::Local<Object>& cb)
     auto voidPtrType = GetValue<Object>(cb, "_ptrType");
     TCopyablePersistent pVoidPtrType;
     pVoidPtrType.Reset(voidPtrType);
-    TCopyablePersistent pCallback;
-    pCallback.Reset(cb);
 
-    return [=](const Local<Function>& jsFunc) {
+    return [=](const v8::Local<Object>& callback, const Local<Function>& jsFunc) {
         Nan::EscapableHandleScope scope;
 
         auto userData = new CallbackUserData(dcArgsToCallbackArgs, setDCValue, new Nan::Callback(jsFunc), resultTypeCode);
         auto dcCallback = MakeDCCallback(signature, userData);
 
         auto voidPtrType = Nan::New(pVoidPtrType);
-        auto callback = Nan::New(pCallback);
         auto ptr = Wrap<DCCallback>(dcCallback, [](char* data, void* hint) { dcbFreeCallback(reinterpret_cast<DCCallback*>(data)); });
         auto ptrUserData = Wrap<CallbackUserData>(userData);
         SetValue(ptr, "userData", ptrUserData);
