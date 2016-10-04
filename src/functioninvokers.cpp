@@ -60,6 +60,31 @@ TSyncVMInitialzer MakeSyncArgProcessor(unsigned i, const F& f, const G& g)
     };
 }
 
+inline std::pair<Local<Object>, DCCallback*> GetOrMakeCallbackPtr(CallbackBase* callbackBase, const Nan::FunctionCallbackInfo<v8::Value>& info, unsigned i, const TCopyablePersistent& persistentCallback)
+{
+    DCCallback* cb = nullptr;
+
+    Local<Object> ptr;
+    if (Buffer::HasInstance(info[i])) {
+        ptr = info[i].As<Object>();
+    } else if (info[i]->IsFunction()) {
+        Nan::EscapableHandleScope scope;
+
+        Local<Value> args[] = { info[i] };
+        auto callback = Nan::New(persistentCallback);
+        auto factory = GetValue<Function>(callback, "factory");
+        ptr = scope.Escape(factory->Call(callback, 1, args).As<Object>());
+        assert(!ptr.IsEmpty() && ptr->IsObject());
+    } else {
+        throw logic_error("Unknown argument.");
+    }
+
+    cb = callbackBase->GetPtr(ptr);
+    assert(cb);
+
+    return make_pair(ptr, cb);
+}
+
 inline TSyncVMInitialzer MakeSyncCallbackArgProcessor(unsigned i, const Local<Object>& callback, CallbackBase* callbackBase)
 {
     auto persistentCallback = TCopyablePersistent(callback);
@@ -67,29 +92,9 @@ inline TSyncVMInitialzer MakeSyncCallbackArgProcessor(unsigned i, const Local<Ob
         // No new handle scope here!
         // Temporary ptr should live until the function call completes.
 
-        DCCallback* cb = nullptr;
+        auto ptr = GetOrMakeCallbackPtr(callbackBase, info, i, persistentCallback);
 
-        Local<Object> ptr;
-        if (Buffer::HasInstance(info[i])) {
-            ptr = info[i].As<Object>();
-        }
-        else if (info[i]->IsFunction()) {
-            Nan::EscapableHandleScope scope;
-
-            Local<Value> args[] = { info[i] };
-            auto callback = Nan::New(persistentCallback);
-            auto factory = GetValue<Function>(callback, "factory");
-            ptr = scope.Escape(factory->Call(callback, 1, args).As<Object>());
-            assert(!ptr.IsEmpty() && ptr->IsObject());
-        }
-        else {
-            throw logic_error("Unknown argument.");
-        }
-
-        cb = callbackBase->GetPtr(ptr);
-        assert(cb);
-
-        dcArgPointer(vm, cb);
+        dcArgPointer(vm, ptr.second);
     };
 }
 
@@ -266,27 +271,10 @@ inline TAsyncVMInitialzer MakeAsyncCallbackArgProcessor(unsigned i, const Local<
     return [=](const Nan::FunctionCallbackInfo<v8::Value>& info, TReleaseFunctions& releaseFunctions) {
         Nan::HandleScope scope;
 
-        DCCallback* cb = nullptr;
+        auto ptr = GetOrMakeCallbackPtr(callbackBase, info, i, persistentCallback);
+        auto cb = ptr.second;
 
-        Local<Object> ptr;
-        if (Buffer::HasInstance(info[i])) {
-            ptr = info[i].As<Object>();
-        } else if (info[i]->IsFunction()) {
-            Nan::EscapableHandleScope scope;
-
-            Local<Value> args[] = { info[i] };
-            auto callback = Nan::New(persistentCallback);
-            auto factory = GetValue<Function>(callback, "factory");
-            ptr = scope.Escape(factory->Call(callback, 1, args).As<Object>());
-            assert(!ptr.IsEmpty() && ptr->IsObject());
-        } else {
-            throw logic_error("Unknown argument.");
-        }
-
-        cb = callbackBase->GetPtr(ptr);
-        assert(cb);
-
-        KeepObjectAlive(ptr, releaseFunctions);
+        KeepObjectAlive(ptr.first, releaseFunctions);
 
         return [=](DCCallVM* vm) {
             dcArgPointer(vm, cb);
@@ -306,6 +294,14 @@ TAsyncVMInitialzer MakeAsyncVMInitializer(const v8::Local<Object>& func)
     for (unsigned i = 0; i < length; i++) {
         auto arg = args->Get(i).As<Object>();
         auto type = GetValue<Object>(arg, "type");
+
+        auto callback = GetValue<Object>(type, "callback");
+        auto callbackBase = CallbackBase::AsCallbackBase(callback);
+        if (callbackBase) {
+            list.emplace_back(MakeAsyncCallbackArgProcessor(i, callback, callbackBase));
+            continue;
+        }
+
         auto typeName = *Nan::Utf8String(GetValue<String>(type, "name"));
         auto indirection = GetValue(type, "indirection")->Uint32Value();
         if (indirection > 1) {
