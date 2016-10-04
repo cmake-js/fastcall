@@ -62,8 +62,7 @@ TSyncVMInitialzer MakeSyncArgProcessor(unsigned i, const F& f, const G& g)
 
 inline TSyncVMInitialzer MakeSyncCallbackArgProcessor(unsigned i, const Local<Object>& callback, CallbackBase* callbackBase)
 {
-    auto persistentCallback = TCopyablePersistent();
-    persistentCallback.Reset(callback);
+    auto persistentCallback = TCopyablePersistent(callback);
     return [=](DCCallVM* vm, const Nan::FunctionCallbackInfo<v8::Value>& info) {
         // No new handle scope here!
         // Temporary ptr should live until the function call completes.
@@ -234,10 +233,8 @@ TSyncVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
 
 inline void KeepObjectAlive(const v8::Local<v8::Object>& obj, TReleaseFunctions& releaseFunctions)
 {
-    auto persistent = TCopyablePersistent();
-    persistent.Reset(obj);
-    releaseFunctions.emplace_back(
-        std::bind([](TCopyablePersistent& p) { p.Reset(); }, std::move(persistent)));
+    auto persistent = new Nan::Persistent<Object>(obj);
+    releaseFunctions.emplace_back(std::bind([=]() { delete persistent; }));
 }
 
 template <typename T, typename F, typename G>
@@ -247,9 +244,8 @@ TAsyncVMInitialzer MakeAsyncArgProcessor(unsigned i, F f, const G& g)
         auto ar = AsAsyncResultBase(info, i);
         TAsyncFunctionInvoker result;
         if (ar) {
-            //ar->AddRef(info[i].As<Object>());
-            //releaseFunctions.push_back([=]() { ar->Release(); });
-            KeepObjectAlive(info[i].As<Object>(), releaseFunctions);
+            ar->AddRef(info[i].As<Object>());
+            releaseFunctions.push_back([=]() { ar->Release(); });
             T* valPtr = ar->GetPtr<T>();
             result = [=](DCCallVM* vm) {
                 f(vm, *valPtr);
@@ -266,8 +262,7 @@ TAsyncVMInitialzer MakeAsyncArgProcessor(unsigned i, F f, const G& g)
 
 inline TAsyncVMInitialzer MakeAsyncCallbackArgProcessor(unsigned i, const Local<Object>& callback, CallbackBase* callbackBase)
 {
-    auto persistentCallback = TCopyablePersistent();
-    persistentCallback.Reset(callback);
+    auto persistentCallback = TCopyablePersistent(callback);
     return [=](const Nan::FunctionCallbackInfo<v8::Value>& info, TReleaseFunctions& releaseFunctions) {
         Nan::HandleScope scope;
 

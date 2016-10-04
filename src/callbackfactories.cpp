@@ -100,8 +100,7 @@ TDCArgsToCallbackArgs MakeDCArgsToCallbackArgsFunction(const v8::Local<Object>& 
         if (indirection > 1) {
             // pointer:
             auto pointerType = DerefType(type);
-            auto pointerTypeHolder = TCopyablePersistent();
-            pointerTypeHolder.Reset(pointerType);
+            auto pointerTypeHolder = TCopyablePersistent(pointerType);
             list.emplace_back(MakePtrArgToValueConverter(pointerTypeHolder));
             continue;
         } else if (indirection == 1) {
@@ -391,8 +390,7 @@ TCallbackFactory fastcall::MakeCallbackFactory(const v8::Local<Object>& cb)
     auto signature = GetSignature(cb);
     char resultTypeCode = signature[signature.size() - 1];
     auto voidPtrType = GetValue<Object>(cb, "_ptrType");
-    TCopyablePersistent pVoidPtrType;
-    pVoidPtrType.Reset(voidPtrType);
+    TCopyablePersistent pVoidPtrType(voidPtrType);
 
     return [=](const v8::Local<Object>& callback, const Local<Function>& jsFunc) {
         Nan::EscapableHandleScope scope;

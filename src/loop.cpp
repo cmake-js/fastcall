@@ -107,7 +107,7 @@ void Loop::ProcessCallQueueItem(TCallable& item)
 void Loop::ProcessReleaseQueueItem(TOptionalReleaseFunctions& item)
 {
     assert(item);
-    for (auto f : *item) {
+    for (auto& f : *item) {
         f();
     }
 }
