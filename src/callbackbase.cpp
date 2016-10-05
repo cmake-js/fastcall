@@ -84,6 +84,7 @@ NAN_METHOD(CallbackBase::initialize)
     }
 
     try {
+        obj->library = FindLibraryBase(self);
         obj->callbackFactory = MakeCallbackFactory(self);
     }
     catch (exception& ex) {
@@ -109,7 +110,7 @@ NAN_METHOD(CallbackBase::factory)
     auto jsFunc = info[0].As<Function>();
 
     try {
-        Local<Object> ptr = obj->callbackFactory(self, jsFunc);
+        Local<Object> ptr = obj->callbackFactory(self, jsFunc, obj->GetLibrary()->GetLoop());
         info.GetReturnValue().Set(ptr);
     }
     catch (exception& ex) {

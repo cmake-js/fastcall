@@ -30,6 +30,7 @@ Loop::Loop(LibraryBase* library, size_t vmSize)
     callQueue = std::unique_ptr<TCallQueue>(new TCallQueue(this, loop, bind(&Loop::ProcessCallQueueItem, this, _1)));
     releaseQueue = std::unique_ptr<TReleaseQueue>(new TReleaseQueue(this, loop, bind(&Loop::ProcessReleaseQueueItem, this, _1)));
     syncQueue = std::unique_ptr<TSyncQueue>(new TSyncQueue(this, uv_default_loop(), bind(&Loop::ProcessSyncQueueItem, this, _1)));
+    mainLoopTaskQueue = std::unique_ptr<TTaskQueue>(new TTaskQueue(this, uv_default_loop(), bind(&Loop::ProcessMainLoopTaskQueueItem, this, _1)));
 
     uv_thread_create(loopThread, LoopMain, this);
 }
@@ -39,6 +40,7 @@ Loop::~Loop()
     std::unique_lock<std::mutex> ulock(destroyLock);
 
     syncQueue->Close();
+    mainLoopTaskQueue->Close();
     uv_async_send(shutdownHandle);
 
     destroyCond.wait(ulock);
@@ -95,7 +97,12 @@ void Loop::Synchronize(const v8::Local<v8::Function>& callback)
     }
 }
 
-void Loop::ProcessCallQueueItem(TCallable& item)
+void Loop::DoInMainLoop(TTask&& task)
+{
+    mainLoopTaskQueue->Push(std::move(task));
+}
+
+void Loop::ProcessCallQueueItem(TCallable& item) const
 {
     item.second(vm);
 
@@ -104,7 +111,7 @@ void Loop::ProcessCallQueueItem(TCallable& item)
     }
 }
 
-void Loop::ProcessReleaseQueueItem(TOptionalReleaseFunctions& item)
+void Loop::ProcessReleaseQueueItem(TOptionalReleaseFunctions& item) const
 {
     assert(item);
     for (auto& f : *item) {
@@ -112,8 +119,13 @@ void Loop::ProcessReleaseQueueItem(TOptionalReleaseFunctions& item)
     }
 }
 
-void Loop::ProcessSyncQueueItem(std::shared_ptr<Nan::Callback>& item)
+void Loop::ProcessSyncQueueItem(std::shared_ptr<Nan::Callback>& item) const
 {
     Nan::HandleScope scope;
     item->Call(0, {});
+}
+
+void Loop::ProcessMainLoopTaskQueueItem(TTask& item) const
+{
+    item();
 }

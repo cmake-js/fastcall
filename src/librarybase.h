@@ -33,6 +33,7 @@ private:
 
 inline Loop* LibraryBase::GetLoop()
 {
+    EnsureAsyncSupport();
     return loop.get();
 }
 }

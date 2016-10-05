@@ -5,7 +5,8 @@
 #include "getv8value.h"
 #include "helpers.h"
 #include "int64.h"
-#include "target.h"
+#include "statics.h"
+#include "loop.h"
 
 using namespace v8;
 using namespace node;
@@ -24,23 +25,40 @@ typedef std::function<void(DCValue*, v8::Local<v8::Value>&)> TSetDCValue;
 typedef std::function<v8::Local<v8::Value>(DCArgs*)> TArgToValueConverter;
 
 struct CallbackUserData {
+    struct Sync {
+        std::mutex lock;
+        std::condition_variable cond;
+    };
+
     CallbackUserData(
         const TDCArgsToCallbackArgs& dcArgsToCallbackArgs,
         const TSetDCValue& setDCValue,
         Nan::Callback* jsCallback,
-        char resultTypeCode)
+        char resultTypeCode,
+        Loop* loop)
         : dcArgsToCallbackArgs(dcArgsToCallbackArgs)
         , setDCValue(setDCValue)
         , jsCallback(jsCallback)
         , resultTypeCode(resultTypeCode)
+        , loop(loop)
     {
         assert(jsCallback);
+        assert(loop);
     }
 
     TDCArgsToCallbackArgs dcArgsToCallbackArgs;
     TSetDCValue setDCValue;
     std::unique_ptr<Nan::Callback> jsCallback;
     char resultTypeCode;
+    std::unique_ptr<Sync> sync;
+    Loop* loop;
+
+    void Async()
+    {
+        if (!sync) {
+            sync = std::unique_ptr<Sync>(new Sync());
+        }
+    }
 };
 
 template <typename T, typename F>
@@ -356,7 +374,7 @@ std::string GetSignature(const v8::Local<Object>& cb)
     return result;
 }
 
-char V8CallbackHandler(DCArgs* args, DCValue* result, CallbackUserData* cbUserData)
+char V8ThreadCallbackHandler(DCArgs* args, DCValue* result, CallbackUserData* cbUserData)
 {
     Nan::HandleScope scope;
 
@@ -366,13 +384,38 @@ char V8CallbackHandler(DCArgs* args, DCValue* result, CallbackUserData* cbUserDa
     return cbUserData->resultTypeCode;
 }
 
+char OtherThreadCallbackHandler(DCArgs* args, DCValue* result, CallbackUserData* cbUserData)
+{
+    cbUserData->Async();
+    assert(cbUserData->sync);
+
+    std::unique_lock<std::mutex> ulock(cbUserData->sync->lock);
+
+    cbUserData->loop->DoInMainLoop([args, result, cbUserData]() {
+        V8ThreadCallbackHandler(args, result, cbUserData);
+
+        {
+            std::unique_lock<std::mutex> ulock(cbUserData->sync->lock);
+            cbUserData->sync->cond.notify_one();
+        }
+    });
+
+    cbUserData->sync->cond.wait(ulock);
+
+    return cbUserData->resultTypeCode;
+}
+
 char ThreadSafeCallbackHandler(DCCallback* cb, DCArgs* args, DCValue* result, void* userdata)
 {
     auto cbUserData = reinterpret_cast<CallbackUserData*>(userdata);
     assert(cbUserData);
 
-    // TODO: Thread safe this
-    return V8CallbackHandler(args, result, cbUserData);
+    if (IsV8Thread()) {
+        return V8ThreadCallbackHandler(args, result, cbUserData);
+    }
+    else {
+        return OtherThreadCallbackHandler(args, result, cbUserData);
+    }
 }
 
 DCCallback* MakeDCCallback(const std::string& signature, CallbackUserData* userData)
@@ -392,10 +435,10 @@ TCallbackFactory fastcall::MakeCallbackFactory(const v8::Local<Object>& cb)
     auto voidPtrType = GetValue<Object>(cb, "_ptrType");
     TCopyablePersistent pVoidPtrType(voidPtrType);
 
-    return [=](const v8::Local<Object>& callback, const Local<Function>& jsFunc) {
+    return [=](const v8::Local<Object>& callback, const Local<Function>& jsFunc, Loop* loop) {
         Nan::EscapableHandleScope scope;
 
-        auto userData = new CallbackUserData(dcArgsToCallbackArgs, setDCValue, new Nan::Callback(jsFunc), resultTypeCode);
+        auto userData = new CallbackUserData(dcArgsToCallbackArgs, setDCValue, new Nan::Callback(jsFunc), resultTypeCode, loop);
         auto dcCallback = MakeDCCallback(signature, userData);
 
         auto voidPtrType = Nan::New(pVoidPtrType);

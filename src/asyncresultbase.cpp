@@ -47,8 +47,7 @@ NAN_METHOD(AsyncResultBase::New)
 }
 
 AsyncResultBase::AsyncResultBase(FunctionBase* func, void* ptr)
-    : RefCountedObjecWrap()
-    , func(func)
+    : func(func)
     , ptr(ptr)
 {
     assert(func);

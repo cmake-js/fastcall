@@ -2,7 +2,7 @@
 #include "dynloadwrapper.h"
 #include "librarybase.h"
 #include "functionbase.h"
-#include "target.h"
+#include "statics.h"
 #include "asyncresultbase.h"
 #include "callbackbase.h"
 
@@ -11,7 +11,7 @@ using namespace fastcall;
 
 NAN_MODULE_INIT(InitAll)
 {
-    InitTarget(target);
+    InitStatics(target);
     InitDyncallWrapper(target);
     LibraryBase::Init(target);
     FunctionBase::Init(target);

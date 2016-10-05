@@ -7,7 +7,7 @@
 #include "librarybase.h"
 #include "locker.h"
 #include "loop.h"
-#include "target.h"
+#include "statics.h"
 #include "defs.h"
 #include "dcarg.h"
 #include "dccall.h"
@@ -249,7 +249,7 @@ TAsyncVMInitialzer MakeAsyncArgProcessor(unsigned i, F f, const G& g)
         auto ar = AsAsyncResultBase(info, i);
         TAsyncFunctionInvoker result;
         if (ar) {
-            ar->AddRef(info[i].As<Object>());
+            ar->AddRef();
             releaseFunctions.push_back([=]() { ar->Release(); });
             T* valPtr = ar->GetPtr<T>();
             result = [=](DCCallVM* vm) {
