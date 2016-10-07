@@ -21,7 +21,7 @@ describe('native dynload interface', function () {
         assert(_.isBuffer(pLib));
         assert.equal(pLib.length, 0);
         const pMul = native.findSymbol(pLib, 'mul');
-        assert(!!pMul);
+        assert.ok(pMul);
         assert(_.isBuffer(pMul));
         assert.equal(pMul.length, 0);
         native.freeLibrary(pLib);

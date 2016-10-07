@@ -316,7 +316,7 @@ describe('Library', function () {
                     .callback({ TMakeIntFunc: ['int', [ref.types.float, 'double']] })
                     .function({ makeInt: ['int', ['float', 'double', 'TMakeIntFunc']] });
 
-                testMakeIntAsync(
+                return testMakeIntAsync(
                     'int TMakeIntFunc(float arg0, double arg1)',
                     'int makeInt(float arg0, double arg1, TMakeIntFunc arg2)');
             });
@@ -360,7 +360,7 @@ describe('Library', function () {
                     .callback('int TMakeIntFunc(float fv, double)')
                     .function('int makeInt(float , double dv, TMakeIntFunc func)');
 
-                testMakeIntAsync(
+                return testMakeIntAsync(
                     'int TMakeIntFunc(float fv, double arg1)',
                     'int makeInt(float arg0, double dv, TMakeIntFunc func)');
             });

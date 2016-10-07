@@ -39,11 +39,12 @@ Loop::~Loop()
 {
     std::unique_lock<std::mutex> ulock(destroyLock);
 
-    syncQueue->Close();
-    mainLoopTaskQueue->Close();
     uv_async_send(shutdownHandle);
 
     destroyCond.wait(ulock);
+
+    syncQueue->Close();
+    mainLoopTaskQueue->Close();
 
     delete loop;
     delete loopThread;
