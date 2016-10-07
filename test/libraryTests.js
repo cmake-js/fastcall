@@ -107,8 +107,8 @@ describe('Library', function () {
 
             it('should support callbacks', function () {
                 lib
-                .callback({ TMakeIntFunc: ['int', [ref.types.float, 'double']] })
-                .function({ makeInt: ['int', ['float', 'double', 'TMakeIntFunc']] });
+                    .callback({ TMakeIntFunc: ['int', [ref.types.float, 'double']] })
+                    .function({ makeInt: ['int', ['float', 'double', 'TMakeIntFunc']] });
 
                 testMakeIntSync(
                     'int TMakeIntFunc(float arg0, double arg1)',
@@ -151,8 +151,8 @@ describe('Library', function () {
 
             it('should support callbacks', function () {
                 lib
-                .callback('int TMakeIntFunc(float fv, double)')
-                .function('int makeInt(float , double dv, TMakeIntFunc func)');
+                    .callback('int TMakeIntFunc(float fv, double)')
+                    .function('int makeInt(float , double dv, TMakeIntFunc func)');
 
                 testMakeIntSync(
                     'int TMakeIntFunc(float fv, double arg1)',
@@ -272,7 +272,7 @@ describe('Library', function () {
         let lib = null;
 
         beforeEach(function () {
-            lib = new Library(libPath, {defaultCallMode: Library.callMode.async});
+            lib = new Library(libPath, { defaultCallMode: Library.callMode.async });
         });
 
         afterEach(function () {
@@ -310,6 +310,16 @@ describe('Library', function () {
                 lib.function({ getNumbers: ['void', ['double**', ref.refType('size_t')]] });
                 return testGetNumbersAsync('void getNumbers(double** arg0, size_t* arg1)');
             });
+
+            it('should support callbacks', function () {
+                lib
+                    .callback({ TMakeIntFunc: ['int', [ref.types.float, 'double']] })
+                    .function({ makeInt: ['int', ['float', 'double', 'TMakeIntFunc']] });
+
+                testMakeIntAsync(
+                    'int TMakeIntFunc(float arg0, double arg1)',
+                    'int makeInt(float arg0, double arg1, TMakeIntFunc arg2)');
+            });
         });
 
         describe('string declaration', function () {
@@ -344,9 +354,19 @@ describe('Library', function () {
                 lib.function('  void   getNumbers ( double *  * nums , size_t*count) ');
                 return testGetNumbersAsync('void getNumbers(double** nums, size_t* count)');
             });
+
+            it('should support callbacks', function () {
+                lib
+                    .callback('int TMakeIntFunc(float fv, double)')
+                    .function('int makeInt(float , double dv, TMakeIntFunc func)');
+
+                testMakeIntAsync(
+                    'int TMakeIntFunc(float fv, double arg1)',
+                    'int makeInt(float arg0, double dv, TMakeIntFunc func)');
+            });
         });
 
-        var testMulAsync = async(function *(declaration) {
+        var testMulAsync = async(function* (declaration) {
             assert(lib.functions);
             assert(lib.functions.mul);
             assert(lib.interface);
@@ -378,7 +398,7 @@ describe('Library', function () {
             assert.equal(yield mul("a", "b").get(), 0);
         });
 
-        var testReadLongPtrAsync = async(function *(declaration) {
+        var testReadLongPtrAsync = async(function* (declaration) {
             const readLongPtr = lib.interface.readLongPtr;
             assert(_.isFunction(readLongPtr));
             assert.equal(readLongPtr.function.toString(), declaration);
@@ -390,7 +410,7 @@ describe('Library', function () {
             assert.equal(yield readLongPtr(data, 1).get(), 42);
         });
 
-        var testWriteStringAsync = async(function *(declaration) {
+        var testWriteStringAsync = async(function* (declaration) {
             const writeString = lib.interface.writeString;
             assert(_.isFunction(writeString));
             assert.equal(writeString.function.toString(), declaration);
@@ -400,7 +420,7 @@ describe('Library', function () {
             assert.equal(ref.readCString(string), 'hello');
         });
 
-        var testGetStringAsync = async(function *(declaration) {
+        var testGetStringAsync = async(function* (declaration) {
             const getString = lib.interface.getString;
             assert(_.isFunction(getString));
             assert.equal(getString.function.toString(), declaration);
@@ -413,7 +433,7 @@ describe('Library', function () {
         });
 
         // void getNumbers(double** nums, size_t* size)
-        var testGetNumbersAsync = async(function *(declaration) {
+        var testGetNumbersAsync = async(function* (declaration) {
             const getNumbers = lib.interface.getNumbers;
             assert(_.isFunction(getNumbers));
             assert.equal(getNumbers.function.toString(), declaration);
@@ -434,6 +454,23 @@ describe('Library', function () {
             doublePtr = ref.reinterpret(doublePtr, size * double.size);
             assert.equal(double.get(doublePtr, 1 * double.size), 2.2);
             assert.equal(double.get(doublePtr, 2 * double.size), 3.3);
+        });
+
+        var testMakeIntAsync = async(function* (callbackDecl, funcDecl) {
+            const TMakeIntFunc = lib.interface.TMakeIntFunc;
+            assert(_.isFunction(TMakeIntFunc));
+            assert(TMakeIntFunc.callback);
+            assert.equal(TMakeIntFunc.callback.toString(), callbackDecl);
+
+            const makeInt = lib.interface.makeInt;
+            assert(_.isFunction(makeInt));
+            assert.equal(makeInt.function.toString(), funcDecl);
+
+            const predeclaredCallback = TMakeIntFunc((fv, dv) => fv + dv);
+
+            // Note: result of an async method is "thennable".
+            let result = yield makeInt(1.1, 2.2, predeclaredCallback);
+            assert.equal(result, Math.floor((1.1 + 2.2) * 2));
         });
     });
 });
