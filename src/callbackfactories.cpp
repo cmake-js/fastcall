@@ -424,7 +424,7 @@ DCCallback* MakeDCCallback(const std::string& signature, CallbackUserData* userD
 }
 }
 
-TCallbackFactory fastcall::MakeCallbackFactory(const v8::Local<Object>& cb)
+TCallbackFactory fastcall::MakeCallbackFactory(const v8::Local<Object>& cb, Loop* loop)
 {
     Nan::HandleScope scope;
 
@@ -435,7 +435,7 @@ TCallbackFactory fastcall::MakeCallbackFactory(const v8::Local<Object>& cb)
     auto voidPtrType = GetValue<Object>(cb, "_ptrType");
     TCopyablePersistent pVoidPtrType(voidPtrType);
 
-    return [=](const v8::Local<Object>& callback, const Local<Function>& jsFunc, Loop* loop) {
+    return [=](const v8::Local<Object>& callback, const Local<Function>& jsFunc) {
         Nan::EscapableHandleScope scope;
 
         auto userData = new CallbackUserData(dcArgsToCallbackArgs, setDCValue, new Nan::Callback(jsFunc), resultTypeCode, loop);

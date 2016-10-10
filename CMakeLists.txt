@@ -23,7 +23,8 @@ include_directories(
     ${DYNCALLBACK_INCLUDE_DIRS}
     ${DYNLOAD_INCLUDE_DIRS}
     ${CMAKE_JS_INC}
-    "${CMAKE_SOURCE_DIR}/deps/optional")
+    "${CMAKE_SOURCE_DIR}/deps/optional"
+    "${CMAKE_SOURCE_DIR}/src")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -53,4 +54,10 @@ endif()
 
 add_subdirectory(deps/ref-build)
 add_subdirectory(src)
-add_subdirectory(test/testlib)
+
+set(node_env $ENV{NODE_ENV})
+if (NOT node_env STREQUAL production)
+    message(STATUS "Developer mode modules added to build configuration.")
+    add_subdirectory(test/testlib)
+    add_subdirectory(benchmarks/benchlib)
+endif()
