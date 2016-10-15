@@ -1,29 +1,15 @@
 'use strict';
+const Promise = require('bluebird');
+const async = Promise.coroutine;
+const lib = require('../lib');
+const Library = lib.Library;
 const path = require('path');
-const fs = require('fs');
 
 let testlib = null;
 
-exports.findTestlib = function () {
-    if (testlib) {
-        return testlib;
-    }
-
-    const rootDir = path.join(__dirname, '../build');
-    testlib = findIn('Debug') || findIn('Release');
+exports.findTestlib = async(function* () {
     if (!testlib) {
-        throw new Error('testlib library is not found.');
+        testlib = yield Library.find(path.join(__dirname, '../'), 'testlib');
     }
     return testlib;
-
-    function findIn(name) {
-        const dir = path.join(rootDir, name);
-        const files = fs.readdirSync(dir);
-        for (const file of files) {
-            if (/testlib/.test(file)) {
-                return path.join(dir, file);
-            }
-        }
-        return null;
-    }
-}
+});

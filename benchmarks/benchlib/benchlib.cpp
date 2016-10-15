@@ -37,44 +37,41 @@ void runNativeStringSyncTest()
 
 void runNativeCallbackSyncTest()
 {
-    auto f = [](float floatValue, double doubleValue) {
+    auto f = [](float floatValue, double doubleValue, void* context) {
         return (int)floatValue + (int)doubleValue;
     };
-    int result = makeInt(makeInt(5.5, 5.1, f), makeInt(1.1, 1.8, f), f);
+    int result = makeInt(makeInt(5.5, 5.1, f, nullptr), makeInt(1.1, 1.8, f, nullptr), f, nullptr);
     assert(result == 5 + 5 + 1 + 1);
 }
 
 void runNativeNumberAsyncTest()
 {
-    double result = std::async(std::launch::async, addNumbers,
-                        std::async(std::launch::async, addNumbers, 5.5, 5).get(),
-                        std::async(std::launch::async, addNumbers, 1.1, 1).get())
-                        .get();
-    assert(result == 5.5 + 5 + 1.1 + 1);
+    std::async(
+        std::launch::async,
+        [=]() {
+            runNativeNumberSyncTest();
+        })
+        .wait();
 }
 
 void runNativeStringAsyncTest()
 {
-    char* result = (char*)malloc(100);
-    string str1("Hello, ");
-    string str2("World!");
-    std::async(std::launch::async, concat, str1.c_str(), str2.c_str(), result, 100).get();
-    string resultString(result);
-    free(result);
-    assert(resultString == "Hello, World!");
+    std::async(
+        std::launch::async,
+        [=]() {
+            runNativeStringSyncTest();
+        })
+        .wait();
 }
 
 void runNativeCallbackAsyncTest()
 {
-    auto f = [](float floatValue, double doubleValue) {
-        return (int)floatValue + (int)doubleValue;
-    };
-    int result = std::async(std::launch::async, makeInt,
-                     std::async(std::launch::async, makeInt, 5.5, 5.1, f).get(),
-                     std::async(std::launch::async, makeInt, 1.1, 1.8, f).get(),
-                     f)
-                     .get();
-    assert(result == 5 + 5 + 1 + 1);
+    std::async(
+        std::launch::async,
+        [=]() {
+            runNativeNumberSyncTest();
+        })
+        .wait();
 }
 
 extern "C" {

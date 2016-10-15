@@ -9,10 +9,14 @@ const Promise = require('bluebird');
 const async = Promise.coroutine;
 
 describe('Library', function () {
+    let libPath = null;
+    before(async(function* () {
+        libPath = yield helpers.findTestlib();
+    }));
+
     describe('initialize', function () {
         describe('without options', function () {
             it('should init in sync mode as default', function () {
-                const libPath = helpers.findTestlib();
                 const lib = new Library(libPath);
                 try {
                     assert(_.isObject(lib));
@@ -27,7 +31,6 @@ describe('Library', function () {
 
         describe('with options', function () {
             it('should init in sync mode explicitly', function () {
-                const libPath = helpers.findTestlib();
                 const lib = new Library(libPath, { defaultCallMode: Library.callMode.sync });
                 try {
                     assert(_.isObject(lib));
@@ -40,7 +43,6 @@ describe('Library', function () {
             });
 
             it('should init in async mode explicitly', function () {
-                const libPath = helpers.findTestlib();
                 const lib = new Library(libPath, { defaultCallMode: Library.callMode.async });
                 try {
                     assert(_.isObject(lib));
@@ -54,7 +56,6 @@ describe('Library', function () {
 
             it('should throw when mode is unknown', function () {
                 assert.throws(() => {
-                    const libPath = helpers.findTestlib();
                     const lib = new Library(libPath, { defaultCallMode: 42 });
                 });
             });
@@ -62,7 +63,6 @@ describe('Library', function () {
     });
 
     describe('sync call mode (smoke test)', function () {
-        const libPath = helpers.findTestlib();
         let lib = null;
 
         beforeEach(function () {
@@ -268,7 +268,6 @@ describe('Library', function () {
     });
 
     describe('async call mode (smoke test)', function () {
-        const libPath = helpers.findTestlib();
         let lib = null;
 
         beforeEach(function () {

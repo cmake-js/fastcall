@@ -22,7 +22,7 @@ void fastcall::benchmarks::concat(const char* str1, const char* str2, char* resu
     memcpy(result, resultString.c_str(), resultString.size());
 }
 
-int fastcall::benchmarks::makeInt(float floatValue, double doubleValue, fastcall::benchmarks::TMakeIntFunc func)
+int fastcall::benchmarks::makeInt(float floatValue, double doubleValue, fastcall::benchmarks::TMakeIntFunc func, void* context)
 {
-    return func(floatValue, doubleValue);
+    return func(floatValue, doubleValue, context);
 }

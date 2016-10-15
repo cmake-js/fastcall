@@ -3,8 +3,15 @@ const native = require('../lib/native');
 const helpers = require('./helpers');
 const assert = require('assert');
 const _ = require('lodash');
+const Promise = require('bluebird');
+const async = Promise.coroutine;
 
 describe('native dynload interface', function () {
+    let libPath = null;
+    before(async(function* () {
+        libPath = yield helpers.findTestlib();
+    }));
+
     it('should export an object', function () {
         assert(_.isObject(native));
     });
@@ -16,8 +23,7 @@ describe('native dynload interface', function () {
     });
 
     it('should load a library, and find a function pointer there', function () {
-        const lib = helpers.findTestlib();
-        const pLib = native.loadLibrary(lib);
+        const pLib = native.loadLibrary(libPath);
         assert(_.isBuffer(pLib));
         assert.equal(pLib.length, 0);
         const pMul = native.findSymbol(pLib, 'mul');
@@ -36,8 +42,7 @@ describe('native dynload interface', function () {
     });
 
     it('should return null when function not found', function () {
-        const lib = helpers.findTestlib();
-        const pLib = native.loadLibrary(lib);
+        const pLib = native.loadLibrary(libPath);
         assert(native.findSymbol(pLib, '42') === null);
         native.freeLibrary(pLib);
     });
