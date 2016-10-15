@@ -17,7 +17,25 @@
             "env": {
                 "NODE_ENV": "development"
             },
-            "externalConsole": false,
+            "console": "integratedTerminal",
+            "sourceMaps": false,
+            "outDir": null
+        },
+        {
+            "name": "benchmarks",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceRoot}/benchmarks/run.js",
+            "stopOnEntry": false,
+            "args": [],
+            "cwd": "${workspaceRoot}",
+            "preLaunchTask": null,
+            "runtimeExecutable": null,
+            "runtimeArgs": [],
+            "env": {
+                "NODE_ENV": "production"
+            },
+            "console": "integratedTerminal",
             "sourceMaps": false,
             "outDir": null
         },

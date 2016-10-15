@@ -28,7 +28,7 @@ NAN_METHOD(AddNumbersAsync)
     int intValue = info[1]->Int32Value();
 
     auto worker = new Worker<double>(
-        new Nan::Callback(info[1].As<Function>()),
+        new Nan::Callback(info[2].As<Function>()),
         [=]() {
             return addNumbers(floatValue, intValue);
         },
@@ -159,6 +159,12 @@ NAN_METHOD(MakeIntAsync)
 
 NAN_MODULE_INIT(Init)
 {
+    Nan::Set(target, Nan::New<String>("addNumbers").ToLocalChecked(), Nan::New<FunctionTemplate>(AddNumbers)->GetFunction());
+    Nan::Set(target, Nan::New<String>("concat").ToLocalChecked(), Nan::New<FunctionTemplate>(Concat)->GetFunction());
+    Nan::Set(target, Nan::New<String>("makeInt").ToLocalChecked(), Nan::New<FunctionTemplate>(MakeInt)->GetFunction());
+    Nan::Set(target, Nan::New<String>("addNumbersAsync").ToLocalChecked(), Nan::New<FunctionTemplate>(AddNumbersAsync)->GetFunction());
+    Nan::Set(target, Nan::New<String>("concatAsync").ToLocalChecked(), Nan::New<FunctionTemplate>(ConcatAsync)->GetFunction());
+    Nan::Set(target, Nan::New<String>("makeIntAsync").ToLocalChecked(), Nan::New<FunctionTemplate>(MakeIntAsync)->GetFunction());
 }
 
 NODE_MODULE(benchmod, Init)

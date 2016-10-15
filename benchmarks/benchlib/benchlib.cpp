@@ -15,13 +15,13 @@ double measureTime(std::function<void()> code, unsigned iterations)
         code();
     }
     duration<double> ellapsed = now() - t;
-    return ellapsed.count();
+    return ellapsed.count() * 1000.0;
 }
 
 void runNativeNumberSyncTest()
 {
     double result = addNumbers(addNumbers(5.5, 5), addNumbers(1.1, 1));
-    assert(result == 5.5 + 5 + 1.1 + 1);
+    assert(result == 5.5 + 5 + 1 + 1);
 }
 
 void runNativeStringSyncTest()
@@ -103,5 +103,20 @@ NODE_MODULE_EXPORT double measureNativeStringAsyncTest(unsigned iterations)
 NODE_MODULE_EXPORT double measureNativeCallbackAsyncTest(unsigned iterations)
 {
     return measureTime(runNativeCallbackAsyncTest, iterations);
+}
+
+NODE_MODULE_EXPORT double addNumbersExp(float floatValue, int intValue)
+{
+    return addNumbers(floatValue, intValue);
+}
+
+NODE_MODULE_EXPORT void concatExp(const char* str1, const char* str2, char* result, unsigned resultSize)
+{
+    return concat(str1, str2, result, resultSize);
+}
+
+NODE_MODULE_EXPORT int makeIntExp(float floatValue, double doubleValue, TMakeIntFunc func, void* context)
+{
+    return makeInt(floatValue, doubleValue, func, context);
 }
 }
