@@ -40,4 +40,9 @@ NODE_MODULE_EXPORT int makeInt(float fv, double dv, TMakeIntFunc func)
 {
     return func(fv, dv) * 2;
 }
+
+NODE_MODULE_EXPORT double addNumbers(float floatValue, int intValue)
+{
+    return (double)floatValue + (double)intValue;
+}
 }

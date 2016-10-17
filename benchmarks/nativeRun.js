@@ -6,11 +6,11 @@ const config = require('./config.json');
 const common = require('./common');
 
 module.exports = async(function* () {
-    const lib = yield imports.importBenchlib();
+    const lib = yield imports.importBenchlib.fastcallWay();
 
-    console.log('- sync -');
+    console.log('--- sync ---');
     syncRun(lib);
-    console.log('- async -');
+    console.log('--- async ---');
     asyncRun(lib);
 });
 

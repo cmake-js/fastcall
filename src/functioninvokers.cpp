@@ -1,19 +1,19 @@
 #include "functioninvokers.h"
 #include "asyncresultbase.h"
+#include "callbackbase.h"
+#include "callbackfactories.h"
+#include "dcarg.h"
+#include "dccall.h"
+#include "defs.h"
 #include "deps.h"
 #include "functionbase.h"
+#include "getv8value.h"
 #include "helpers.h"
 #include "int64.h"
 #include "librarybase.h"
 #include "locker.h"
 #include "loop.h"
 #include "statics.h"
-#include "defs.h"
-#include "dcarg.h"
-#include "dccall.h"
-#include "getv8value.h"
-#include "callbackbase.h"
-#include "callbackfactories.h"
 
 using namespace v8;
 using namespace node;
@@ -228,8 +228,7 @@ TSyncVMInitialzer MakeSyncVMInitializer(const v8::Local<Object>& func)
             auto& f = list[i];
             try {
                 f(vm, info);
-            }
-            catch (std::exception& ex) {
+            } catch (std::exception& ex) {
                 throw logic_error(string("Argument error at position ") + to_string(i) + ": " + ex.what());
             }
         }
@@ -252,14 +251,18 @@ TAsyncVMInitialzer MakeAsyncArgProcessor(unsigned i, F f, const G& g)
             ar->AddRef();
             releaseFunctions.push_back([=]() { ar->Release(); });
             T* valPtr = ar->GetPtr<T>();
-            result = [=](DCCallVM* vm) {
-                f(vm, *valPtr);
-            };
+            result = bind(
+                [=](DCCallVM* vm, const F& f) {
+                    f(vm, *valPtr);
+                },
+                placeholders::_1, std::move(f));
         } else {
             auto value = g(info, i);
-            result = [=](DCCallVM* vm) {
-                f(vm, value);
-            };
+            result = bind(
+                [=](DCCallVM* vm, const F& f) {
+                    f(vm, value);
+                },
+                placeholders::_1, std::move(f));
         }
         return result;
     };
@@ -410,7 +413,7 @@ TAsyncVMInitialzer MakeAsyncVMInitializer(const v8::Local<Object>& func)
         std::vector<TAsyncFunctionInvoker> invokers;
         invokers.reserve(list.size());
         for (auto& f : list) {
-            invokers.emplace_back(f(info, releaseFunctions));
+            invokers.emplace_back(std::move(f(info, releaseFunctions)));
         }
 
         return bind(
@@ -576,10 +579,13 @@ TAsyncVMInvoker MakeAsyncVMInvoker(F f, void* funcPtr)
         assert(ar);
         T* valPtr = ar->GetPtr<T>();
         assert(valPtr);
-        return [=](DCCallVM* vm) {
-            T result = f(vm, funcPtr);
-            *valPtr = result;
-        };
+        return bind(
+            [=](DCCallVM* vm, const F& f) {
+                T result = f(vm, funcPtr);
+                *valPtr = result;
+            },
+            placeholders::_1,
+            std::move(f));
     };
 }
 
@@ -587,9 +593,12 @@ template <typename F>
 TAsyncVMInvoker MakeAsyncVoidVMInvoker(F f, void* funcPtr)
 {
     return [=](const v8::Local<Object>& x) {
-        return [=](DCCallVM* vm) {
-            f(vm, funcPtr);
-        };
+        return bind(
+            [=](DCCallVM* vm, const F& f) {
+                f(vm, funcPtr);
+            },
+            placeholders::_1,
+            std::move(f));
     };
 }
 
@@ -694,11 +703,15 @@ TFunctionInvoker fastcall::MakeFunctionInvoker(const v8::Local<Object>& func)
     if (callMode == SYNC_CALL_MODE) {
         auto initializer = MakeSyncVMInitializer(func);
         auto invoker = MakeSyncVMInvoker(func);
-        return [funcBase, initializer, invoker](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-            auto lock(funcBase->GetLibrary()->AcquireLock());
-            initializer(funcBase->GetVM(), info);
-            return invoker(funcBase->GetVM());
-        };
+        return bind(
+            [=](const Nan::FunctionCallbackInfo<v8::Value>& info, const TSyncVMInitialzer& initializer, const TSyncVMInvoker& invoker) {
+                auto lock(funcBase->GetLibrary()->AcquireLock());
+                initializer(funcBase->GetVM(), info);
+                return invoker(funcBase->GetVM());
+            },
+            placeholders::_1,
+            std::move(initializer),
+            std::move(invoker));
     } else if (callMode == ASYNC_CALL_MODE) {
         auto initializer = MakeAsyncVMInitializer(func);
         auto invoker = MakeAsyncVMInvoker(func);
@@ -711,16 +724,19 @@ TFunctionInvoker fastcall::MakeFunctionInvoker(const v8::Local<Object>& func)
             releaseFunctions.reserve(info.Length());
             auto resultType = GetValue<Object>(info.This(), "resultType");
             auto asyncResult = MakeAsyncResult(info.This(), resultType);
-            auto ar = AsyncResultBase::GetAsyncResultBase(asyncResult);
             auto currentInitializer = initializer(info, releaseFunctions);
             auto currentInvoker = invoker(asyncResult);
             funcBase->GetLibrary()->GetLoop()->Push(
                 make_pair(
                     std::move(releaseFunctions),
-                    [=](DCCallVM* vm) {
-                        currentInitializer(vm);
-                        currentInvoker(vm);
-                    }));
+                    bind(
+                        [=](DCCallVM* vm, const TAsyncFunctionInvoker& initializer, const TAsyncFunctionInvoker& invoker) {
+                            initializer(vm);
+                            invoker(vm);
+                        },
+                        placeholders::_1,
+                        std::move(currentInitializer),
+                        std::move(currentInvoker))));
 
             return scope.Escape(asyncResult);
         };

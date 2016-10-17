@@ -467,8 +467,7 @@ describe('Library', function () {
 
             const predeclaredCallback = TMakeIntFunc((fv, dv) => fv + dv);
 
-            // Note: result of an async method is "thennable".
-            let result = yield makeInt(1.1, 2.2, predeclaredCallback);
+            let result = yield makeInt(1.1, 2.2, predeclaredCallback).get();
             assert.equal(result, Math.floor((1.1 + 2.2) * 2));
         });
     });

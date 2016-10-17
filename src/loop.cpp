@@ -80,7 +80,7 @@ void Loop::LoopMain(void* threadArg)
 
 void Loop::Push(TCallable&& callable)
 {
-    counter++;
+    //counter++;
     callQueue->Push(std::move(callable));
 }
 
@@ -123,7 +123,7 @@ void Loop::ProcessReleaseQueueItem(TOptionalReleaseFunctions& item) const
 void Loop::ProcessSyncQueueItem(std::shared_ptr<Nan::Callback>& item) const
 {
     Nan::HandleScope scope;
-    item->Call(0, {});
+    item->Call(0, nullptr);
 }
 
 void Loop::ProcessMainLoopTaskQueueItem(TTask& item) const

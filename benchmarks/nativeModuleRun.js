@@ -7,11 +7,11 @@ const assert = require('assert');
 const common = require('./common');
 
 module.exports = async(function* () {
-    const module = yield imports.importBenchmod();
+    const module = imports.importBenchmod();
 
-    console.log('- sync -');
+    console.log('--- sync ---');
     syncRun(module);
-    console.log('- async -');
+    console.log('--- async ---');
     yield asyncRun(module);
 });
 

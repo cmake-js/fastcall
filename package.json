@@ -20,6 +20,7 @@
   },
   "main": "lib/",
   "devDependencies": {
+    "ffi": "^2.1.0",
     "mocha": "3"
   }
 }

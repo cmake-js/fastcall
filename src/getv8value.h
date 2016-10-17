@@ -4,6 +4,7 @@
 #include "asyncresultbase.h"
 #include <string>
 #include <exception>
+#include "int64.h"
 
 namespace fastcall {
 inline void* GetPointer(v8::Local<v8::Value>& val)
