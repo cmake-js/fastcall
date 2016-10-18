@@ -57,7 +57,6 @@ AsyncResultBase::AsyncResultBase(FunctionBase* func, void* ptr)
 bool AsyncResultBase::IsAsyncResultBase(const v8::Local<Object>& self)
 {
     Nan::HandleScope scope;
-
     return InstanceOf(self, Nan::New<Function>(constructor));
 }
 

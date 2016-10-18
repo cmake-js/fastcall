@@ -32,9 +32,10 @@ inline AsyncResultBase* AsAsyncResultBase(const Nan::FunctionCallbackInfo<v8::Va
     using namespace v8;
     using namespace node;
 
-    Nan::HandleScope scope;
-
-    return AsyncResultBase::AsAsyncResultBase(info[index].As<Object>());
+    if (info[index]->IsObject()) {
+        return AsyncResultBase::AsAsyncResultBase(info[index].As<Object>());
+    }
+    return nullptr;
 }
 
 template <typename T>
@@ -699,13 +700,15 @@ TFunctionInvoker fastcall::MakeFunctionInvoker(const v8::Local<Object>& func)
 {
     unsigned callMode = GetValue(func, "callMode")->Uint32Value();
     auto funcBase = FunctionBase::GetFunctionBase(func);
+    auto libraryBase = funcBase->GetLibrary();
+    auto loop = libraryBase->GetLoop();
 
     if (callMode == SYNC_CALL_MODE) {
         auto initializer = MakeSyncVMInitializer(func);
         auto invoker = MakeSyncVMInvoker(func);
         return bind(
             [=](const Nan::FunctionCallbackInfo<v8::Value>& info, const TSyncVMInitialzer& initializer, const TSyncVMInvoker& invoker) {
-                auto lock(funcBase->GetLibrary()->AcquireLock());
+                auto lock(libraryBase->AcquireLock());
                 initializer(funcBase->GetVM(), info);
                 return invoker(funcBase->GetVM());
             },
@@ -716,27 +719,31 @@ TFunctionInvoker fastcall::MakeFunctionInvoker(const v8::Local<Object>& func)
         auto initializer = MakeAsyncVMInitializer(func);
         auto invoker = MakeAsyncVMInvoker(func);
         // Note: this branch's invocation and stuff gets locked in the Loop.
-        funcBase->GetLibrary()->EnsureAsyncSupport();
-        return [funcBase, initializer, invoker](const Nan::FunctionCallbackInfo<v8::Value>& info) {
+        libraryBase->EnsureAsyncSupport();
+        return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
             Nan::EscapableHandleScope scope;
 
-            TReleaseFunctions releaseFunctions;
-            releaseFunctions.reserve(info.Length());
+            auto releaseFunctions = make_shared<TReleaseFunctions>();
+            releaseFunctions->reserve(info.Length());
             auto resultType = GetValue<Object>(info.This(), "resultType");
             auto asyncResult = MakeAsyncResult(info.This(), resultType);
-            auto currentInitializer = initializer(info, releaseFunctions);
+            auto currentInitializer = initializer(info, *releaseFunctions);
             auto currentInvoker = invoker(asyncResult);
-            funcBase->GetLibrary()->GetLoop()->Push(
-                make_pair(
-                    std::move(releaseFunctions),
-                    bind(
-                        [=](DCCallVM* vm, const TAsyncFunctionInvoker& initializer, const TAsyncFunctionInvoker& invoker) {
-                            initializer(vm);
-                            invoker(vm);
-                        },
-                        placeholders::_1,
-                        std::move(currentInitializer),
-                        std::move(currentInvoker))));
+
+            auto asyncInvoker = bind(
+                [=](DCCallVM* vm, const TAsyncFunctionInvoker& initializer, const TAsyncFunctionInvoker& invoker) {
+                    initializer(vm);
+                    invoker(vm);
+                },
+                placeholders::_1,
+                std::move(currentInitializer),
+                std::move(currentInvoker));
+
+            auto callable = make_shared<Callable>(
+                std::move(asyncInvoker),
+                std::move(releaseFunctions));
+
+            loop->Push(std::move(callable));
 
             return scope.Escape(asyncResult);
         };

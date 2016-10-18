@@ -45,6 +45,12 @@ struct Queue {
         }
     }
 
+    bool IsEmpty()
+    {
+        auto lock(AcquireLock());
+        return queue.empty();
+    }
+
 private:
     LibraryFeature* owner;
     TQueue queue;
@@ -69,7 +75,7 @@ private:
                 if (self->queue.empty()) {
                     return;
                 }
-                item = self->queue.front();
+                item = std::move(self->queue.front());
                 self->queue.pop();
             }
 

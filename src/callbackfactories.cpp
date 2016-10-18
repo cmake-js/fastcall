@@ -391,14 +391,16 @@ char OtherThreadCallbackHandler(DCArgs* args, DCValue* result, CallbackUserData*
 
     std::unique_lock<std::mutex> ulock(cbUserData->sync->lock);
 
-    cbUserData->loop->DoInMainLoop([args, result, cbUserData]() {
+    auto task = [args, result, cbUserData]() {
         V8ThreadCallbackHandler(args, result, cbUserData);
 
         {
             std::unique_lock<std::mutex> ulock(cbUserData->sync->lock);
             cbUserData->sync->cond.notify_one();
         }
-    });
+    };
+
+    cbUserData->loop->DoInMainLoop(std::make_shared<TTask>(std::move(task)));
 
     cbUserData->sync->cond.wait(ulock);
 

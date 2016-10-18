@@ -78,41 +78,42 @@ void Loop::LoopMain(void* threadArg)
     }
 }
 
-void Loop::Push(TCallable&& callable)
+void Loop::Push(TCallablePtr callable)
 {
-    //counter++;
+    counter++;
     callQueue->Push(std::move(callable));
 }
 
 void Loop::Synchronize(const v8::Local<v8::Function>& callback)
 {
-    Nan::HandleScope scope;
     if (counter == lastSyncOn) {
         callback->Call(Nan::Null(), 0, {});
     } else {
         auto cb = make_shared<Nan::Callback>(callback);
-        Push(make_pair(TOptionalReleaseFunctions(), [=](DCCallVM*) {
+        Push(make_shared<Callable>([=](DCCallVM*) {
             this->syncQueue->Push(cb);
         }));
         lastSyncOn = counter;
     }
 }
 
-void Loop::DoInMainLoop(TTask&& task)
+void Loop::DoInMainLoop(TTaskPtr task)
 {
     mainLoopTaskQueue->Push(std::move(task));
 }
 
-void Loop::ProcessCallQueueItem(TCallable& item) const
+void Loop::ProcessCallQueueItem(TCallablePtr& item) const
 {
-    item.second(vm);
+    assert(item);
 
-    if (item.first) {
-        releaseQueue->Push(std::move(item.first));
+    item->invoker(vm);
+
+    if (item->releaseFunctions) {
+        releaseQueue->Push(item->releaseFunctions);
     }
 }
 
-void Loop::ProcessReleaseQueueItem(TOptionalReleaseFunctions& item) const
+void Loop::ProcessReleaseQueueItem(TReleaseFunctionsPtr& item) const
 {
     assert(item);
     for (auto& f : *item) {
@@ -122,11 +123,13 @@ void Loop::ProcessReleaseQueueItem(TOptionalReleaseFunctions& item) const
 
 void Loop::ProcessSyncQueueItem(TCallbackPtr& item) const
 {
+    assert(item);
     Nan::HandleScope scope;
     item->Call(0, nullptr);
 }
 
-void Loop::ProcessMainLoopTaskQueueItem(TTask& item) const
+void Loop::ProcessMainLoopTaskQueueItem(TTaskPtr& item) const
 {
-    item();
+    assert(item);
+    (*item)();
 }
