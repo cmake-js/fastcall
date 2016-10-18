@@ -120,7 +120,7 @@ void Loop::ProcessReleaseQueueItem(TOptionalReleaseFunctions& item) const
     }
 }
 
-void Loop::ProcessSyncQueueItem(std::shared_ptr<Nan::Callback>& item) const
+void Loop::ProcessSyncQueueItem(TCallbackPtr& item) const
 {
     Nan::HandleScope scope;
     item->Call(0, nullptr);

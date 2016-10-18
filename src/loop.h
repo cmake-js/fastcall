@@ -1,4 +1,5 @@
 #pragma once
+#include "defs.h"
 #include "functioninvokers.h"
 #include "libraryfeature.h"
 #include "optional.h"
@@ -17,9 +18,10 @@ struct AsyncResultBase;
 typedef nonstd::optional<TReleaseFunctions> TOptionalReleaseFunctions;
 typedef std::pair<TOptionalReleaseFunctions, TAsyncFunctionInvoker> TCallable;
 typedef std::function<void()> TTask;
+
 typedef Queue<TCallable> TCallQueue;
 typedef Queue<TOptionalReleaseFunctions> TReleaseQueue;
-typedef Queue<std::shared_ptr<Nan::Callback> > TSyncQueue;
+typedef Queue<TCallbackPtr> TSyncQueue;
 typedef Queue<TTask> TTaskQueue;
 
 struct Loop : LibraryFeature {
@@ -48,7 +50,7 @@ private:
     static void Shutdown(uv_async_t* handle);
     void ProcessCallQueueItem(TCallable& item) const;
     void ProcessReleaseQueueItem(TOptionalReleaseFunctions& item) const;
-    void ProcessSyncQueueItem(std::shared_ptr<Nan::Callback>& item) const;
+    void ProcessSyncQueueItem(TCallbackPtr& item) const;
     void ProcessMainLoopTaskQueueItem(TTask& item) const;
 };
 }
