@@ -32,8 +32,10 @@ struct Queue {
     void Push(Args&&... args)
     {
         assert(handle);
-        auto lock(AcquireLock());
-        queue.emplace(std::forward<Args>(args)...);
+        {
+            auto lock(AcquireLock());
+            queue.emplace(std::forward<Args>(args)...);
+        }
         uv_async_send(handle);
     }
 

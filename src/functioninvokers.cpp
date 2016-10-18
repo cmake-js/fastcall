@@ -256,14 +256,16 @@ TAsyncVMInitialzer MakeAsyncArgProcessor(unsigned i, F f, const G& g)
                 [=](DCCallVM* vm, const F& f) {
                     f(vm, *valPtr);
                 },
-                placeholders::_1, std::move(f));
+                placeholders::_1,
+                std::move(f));
         } else {
             auto value = g(info, i);
             result = bind(
                 [=](DCCallVM* vm, const F& f) {
                     f(vm, value);
                 },
-                placeholders::_1, std::move(f));
+                placeholders::_1,
+                std::move(f));
         }
         return result;
     };
@@ -721,8 +723,6 @@ TFunctionInvoker fastcall::MakeFunctionInvoker(const v8::Local<Object>& func)
         // Note: this branch's invocation and stuff gets locked in the Loop.
         libraryBase->EnsureAsyncSupport();
         return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-            Nan::EscapableHandleScope scope;
-
             auto releaseFunctions = make_shared<TReleaseFunctions>();
             releaseFunctions->reserve(info.Length());
             auto resultType = GetValue<Object>(info.This(), "resultType");
@@ -745,7 +745,7 @@ TFunctionInvoker fastcall::MakeFunctionInvoker(const v8::Local<Object>& func)
 
             loop->Push(std::move(callable));
 
-            return scope.Escape(asyncResult);
+            return asyncResult;
         };
 
     } else {

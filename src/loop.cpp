@@ -87,7 +87,7 @@ void Loop::Push(TCallablePtr callable)
 void Loop::Synchronize(const v8::Local<v8::Function>& callback)
 {
     if (counter == lastSyncOn) {
-        callback->Call(Nan::Null(), 0, {});
+        callback->Call(Nan::Null(), 0, nullptr);
     } else {
         auto cb = make_shared<Nan::Callback>(callback);
         Push(make_shared<Callable>([=](DCCallVM*) {

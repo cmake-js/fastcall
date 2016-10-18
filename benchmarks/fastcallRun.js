@@ -27,7 +27,7 @@ var asyncRun = async(function* (lib) {
     let result = 0;
     const addNumbersAsync = lib.functions.addNumbersExp.async();
     yield common.measureAsync('addNumbers', async(function* () {
-        result = yield addNumbersAsync(addNumbersAsync(5.5, 5), addNumbersAsync(1.1, 1)).get();
+        result = yield addNumbersAsync(yield addNumbersAsync(5.5, 5).get(), yield addNumbersAsync(1.1, 1).get()).get();
     }));
     //assert.equal(result, 5.5 + 5 + 1 + 1);
 });
