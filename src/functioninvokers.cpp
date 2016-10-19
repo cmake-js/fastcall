@@ -720,13 +720,14 @@ TFunctionInvoker fastcall::MakeFunctionInvoker(const v8::Local<Object>& func)
     } else if (callMode == ASYNC_CALL_MODE) {
         auto initializer = MakeAsyncVMInitializer(func);
         auto invoker = MakeAsyncVMInvoker(func);
+        auto resultType = GetValue<Object>(func, "resultType");
+        auto resultTypePersistent = TCopyablePersistent(resultType);
         // Note: this branch's invocation and stuff gets locked in the Loop.
         libraryBase->EnsureAsyncSupport();
         return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
             auto releaseFunctions = TReleaseFunctions();
             releaseFunctions.reserve(info.Length());
-            auto resultType = GetValue<Object>(info.This(), "resultType");
-            auto asyncResult = MakeAsyncResult(info.This(), resultType);
+            auto asyncResult = MakeAsyncResult(info.This(), Nan::New(resultTypePersistent));
             auto currentInitializer = initializer(info, releaseFunctions);
             auto currentInvoker = invoker(asyncResult);
 

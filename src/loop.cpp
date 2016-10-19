@@ -85,20 +85,14 @@ void Loop::Push(TCallablePtr callable)
 
 void Loop::Synchronize(const v8::Local<v8::Function>& callback)
 {
-    bool on;
-    unsigned long currentBeginCount;
-    {
-        auto lock(AcquireLock());
-        on = endCount == beginCount;
-        currentBeginCount = beginCount;
-    }
+    auto lock(AcquireLock());
 
-    if (on) {
+    if (endCount == beginCount) {
         callback->Call(Nan::Null(), 0, nullptr);
         return;
     }
 
-    syncCallbackQueue.emplace(make_pair(make_shared<Nan::Callback>(callback), currentBeginCount));
+    syncCallbackQueue.emplace(make_pair(make_shared<Nan::Callback>(callback), beginCount));
 }
 
 void Loop::DoInMainLoop(TTask&& task)
@@ -149,7 +143,7 @@ void Loop::SyncTo(unsigned long count)
             syncCallbackQueue.pop();
         }
         else {
-            break;
+            return;
         }
     };
 }
