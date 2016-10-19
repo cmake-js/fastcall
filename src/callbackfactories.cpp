@@ -400,7 +400,7 @@ char OtherThreadCallbackHandler(DCArgs* args, DCValue* result, CallbackUserData*
         }
     };
 
-    cbUserData->loop->DoInMainLoop(std::make_shared<TTask>(std::move(task)));
+    cbUserData->loop->DoInMainLoop(std::move(task));
 
     cbUserData->sync->cond.wait(ulock);
 

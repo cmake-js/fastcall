@@ -15,30 +15,22 @@ namespace fastcall {
 struct LibraryBase;
 struct AsyncResultBase;
 
-typedef std::shared_ptr<TReleaseFunctions> TReleaseFunctionsPtr;
-
 struct Callable {
-    Callable(TAsyncFunctionInvoker&& invoker)
-        : invoker(invoker)
-    {
-    }
-
-    Callable(TAsyncFunctionInvoker&& invoker, TReleaseFunctionsPtr&& releaseFunctions)
+    Callable(TAsyncFunctionInvoker&& invoker, TReleaseFunctions&& releaseFunctions)
         : invoker(invoker)
         , releaseFunctions(releaseFunctions)
     {
     }
 
     TAsyncFunctionInvoker invoker;
-    TReleaseFunctionsPtr releaseFunctions;
+    TReleaseFunctions releaseFunctions;
 };
 
 typedef std::function<void()> TTask;
 typedef std::shared_ptr<Callable> TCallablePtr;
-typedef std::shared_ptr<TTask> TTaskPtr;
 
 typedef Queue<TCallablePtr> TCallQueue;
-typedef Queue<TTaskPtr> TTaskQueue;
+typedef Queue<TTask> TTaskQueue;
 typedef std::pair<TCallbackPtr, unsigned long> TSyncCallbackQueueItem;
 
 struct Loop : LibraryFeature {
@@ -47,7 +39,7 @@ struct Loop : LibraryFeature {
 
     void Push(TCallablePtr callable);
     void Synchronize(const v8::Local<v8::Function>& callback);
-    void DoInMainLoop(TTaskPtr task);
+    void DoInMainLoop(TTask&& task);
 
 private:
     uv_thread_t* loopThread;
@@ -65,7 +57,7 @@ private:
     static void LoopMain(void* threadArg);
     static void Shutdown(uv_async_t* handle);
     void ProcessCallQueueItem(TCallablePtr& item);
-    void ProcessMainLoopTaskQueueItem(TTaskPtr& item) const;
+    void ProcessMainLoopTaskQueueItem(TTask& item) const;
     void SyncTo(unsigned long count);
 };
 }

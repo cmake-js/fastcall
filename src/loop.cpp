@@ -101,7 +101,7 @@ void Loop::Synchronize(const v8::Local<v8::Function>& callback)
     syncCallbackQueue.emplace(make_pair(make_shared<Nan::Callback>(callback), currentBeginCount));
 }
 
-void Loop::DoInMainLoop(TTaskPtr task)
+void Loop::DoInMainLoop(TTask&& task)
 {
     mainLoopTaskQueue->Push(std::move(task));
 }
@@ -112,33 +112,32 @@ void Loop::ProcessCallQueueItem(TCallablePtr& item)
 
     item->invoker(vm);
 
+    unsigned long currentEndCount;
     {
         auto lock(AcquireLock());
         endCount++;
+        currentEndCount = endCount;
     }
 
-    auto functions = item->releaseFunctions;
     auto task = [=]() {
-        if (functions) {
-            for (auto& f : *functions) {
-                f();
-            }
+        SyncTo(currentEndCount);
+        for (auto& f : item->releaseFunctions) {
+            f();
         }
-        SyncTo(endCount);
     };
-
-    DoInMainLoop(make_shared<TTask>(std::move(task)));
+    DoInMainLoop(std::move(task));
 }
 
-void Loop::ProcessMainLoopTaskQueueItem(TTaskPtr& item) const
+void Loop::ProcessMainLoopTaskQueueItem(TTask& item) const
 {
     assert(item);
-    (*item)();
+    item();
 }
 
 void Loop::SyncTo(unsigned long count)
 {
     Nan::HandleScope scope;
+
     for (;;) {
         if (syncCallbackQueue.empty()) {
             return;

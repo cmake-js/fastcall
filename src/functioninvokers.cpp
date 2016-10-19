@@ -723,11 +723,11 @@ TFunctionInvoker fastcall::MakeFunctionInvoker(const v8::Local<Object>& func)
         // Note: this branch's invocation and stuff gets locked in the Loop.
         libraryBase->EnsureAsyncSupport();
         return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
-            auto releaseFunctions = make_shared<TReleaseFunctions>();
-            releaseFunctions->reserve(info.Length());
+            auto releaseFunctions = TReleaseFunctions();
+            releaseFunctions.reserve(info.Length());
             auto resultType = GetValue<Object>(info.This(), "resultType");
             auto asyncResult = MakeAsyncResult(info.This(), resultType);
-            auto currentInitializer = initializer(info, *releaseFunctions);
+            auto currentInitializer = initializer(info, releaseFunctions);
             auto currentInvoker = invoker(asyncResult);
 
             auto asyncInvoker = bind(
