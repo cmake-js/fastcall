@@ -28,8 +28,6 @@ Loop::Loop(LibraryBase* library, size_t vmSize)
 
     using namespace std::placeholders;
     callQueue = std::unique_ptr<TCallQueue>(new TCallQueue(this, loop, bind(&Loop::ProcessCallQueueItem, this, _1)));
-    releaseQueue = std::unique_ptr<TReleaseQueue>(new TReleaseQueue(this, loop, bind(&Loop::ProcessReleaseQueueItem, this, _1)));
-    syncQueue = std::unique_ptr<TSyncQueue>(new TSyncQueue(this, uv_default_loop(), bind(&Loop::ProcessSyncQueueItem, this, _1)));
     mainLoopTaskQueue = std::unique_ptr<TTaskQueue>(new TTaskQueue(this, uv_default_loop(), bind(&Loop::ProcessMainLoopTaskQueueItem, this, _1)));
 
     uv_thread_create(loopThread, LoopMain, this);
@@ -43,7 +41,6 @@ Loop::~Loop()
 
     destroyCond.wait(ulock);
 
-    syncQueue->Close();
     mainLoopTaskQueue->Close();
 
     delete loop;
@@ -58,7 +55,6 @@ void Loop::Shutdown(uv_async_t* handle)
 
     uv_close((uv_handle_t*)(self->shutdownHandle), DeleteUVAsyncHandle);
     self->callQueue->Close();
-    self->releaseQueue->Close();
     uv_stop(self->loop);
 }
 
@@ -80,21 +76,29 @@ void Loop::LoopMain(void* threadArg)
 
 void Loop::Push(TCallablePtr callable)
 {
-    counter++;
+    {
+        auto lock(AcquireLock());
+        beginCount++;
+    }
     callQueue->Push(std::move(callable));
 }
 
 void Loop::Synchronize(const v8::Local<v8::Function>& callback)
 {
-    if (counter == lastSyncOn) {
-        callback->Call(Nan::Null(), 0, nullptr);
-    } else {
-        auto cb = make_shared<Nan::Callback>(callback);
-        Push(make_shared<Callable>([=](DCCallVM*) {
-            this->syncQueue->Push(cb);
-        }));
-        lastSyncOn = counter;
+    bool on;
+    unsigned long currentBeginCount;
+    {
+        auto lock(AcquireLock());
+        on = endCount == beginCount;
+        currentBeginCount = beginCount;
     }
+
+    if (on) {
+        callback->Call(Nan::Null(), 0, nullptr);
+        return;
+    }
+
+    syncCallbackQueue.emplace(make_pair(make_shared<Nan::Callback>(callback), currentBeginCount));
 }
 
 void Loop::DoInMainLoop(TTaskPtr task)
@@ -102,34 +106,51 @@ void Loop::DoInMainLoop(TTaskPtr task)
     mainLoopTaskQueue->Push(std::move(task));
 }
 
-void Loop::ProcessCallQueueItem(TCallablePtr& item) const
+void Loop::ProcessCallQueueItem(TCallablePtr& item)
 {
     assert(item);
 
     item->invoker(vm);
 
-    if (item->releaseFunctions) {
-        releaseQueue->Push(item->releaseFunctions);
+    {
+        auto lock(AcquireLock());
+        endCount++;
     }
-}
 
-void Loop::ProcessReleaseQueueItem(TReleaseFunctionsPtr& item) const
-{
-    assert(item);
-    for (auto& f : *item) {
-        f();
-    }
-}
+    auto functions = item->releaseFunctions;
+    auto task = [=]() {
+        if (functions) {
+            for (auto& f : *functions) {
+                f();
+            }
+        }
+        SyncTo(endCount);
+    };
 
-void Loop::ProcessSyncQueueItem(TCallbackPtr& item) const
-{
-    assert(item);
-    Nan::HandleScope scope;
-    item->Call(0, nullptr);
+    DoInMainLoop(make_shared<TTask>(std::move(task)));
 }
 
 void Loop::ProcessMainLoopTaskQueueItem(TTaskPtr& item) const
 {
     assert(item);
     (*item)();
+}
+
+void Loop::SyncTo(unsigned long count)
+{
+    Nan::HandleScope scope;
+    for (;;) {
+        if (syncCallbackQueue.empty()) {
+            return;
+        }
+
+        auto& front = syncCallbackQueue.front();
+        if (front.second <= count) {
+            front.first->Call(0, nullptr);
+            syncCallbackQueue.pop();
+        }
+        else {
+            break;
+        }
+    };
 }

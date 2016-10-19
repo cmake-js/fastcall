@@ -38,9 +38,8 @@ typedef std::shared_ptr<Callable> TCallablePtr;
 typedef std::shared_ptr<TTask> TTaskPtr;
 
 typedef Queue<TCallablePtr> TCallQueue;
-typedef Queue<TReleaseFunctionsPtr> TReleaseQueue;
-typedef Queue<TCallbackPtr> TSyncQueue;
 typedef Queue<TTaskPtr> TTaskQueue;
+typedef std::pair<TCallbackPtr, unsigned long> TSyncCallbackQueueItem;
 
 struct Loop : LibraryFeature {
     Loop(LibraryBase* library, size_t vmSize);
@@ -56,19 +55,17 @@ private:
     uv_async_t* shutdownHandle;
     DCCallVM* vm;
     std::unique_ptr<TCallQueue> callQueue;
-    std::unique_ptr<TReleaseQueue> releaseQueue;
-    std::unique_ptr<TSyncQueue> syncQueue;
     std::unique_ptr<TTaskQueue> mainLoopTaskQueue;
-    unsigned counter = 0;
-    unsigned lastSyncOn = 0;
+    std::queue<TSyncCallbackQueueItem> syncCallbackQueue;
+    unsigned long beginCount = 0;
+    unsigned long endCount = 0;
     std::mutex destroyLock;
     std::condition_variable destroyCond;
 
     static void LoopMain(void* threadArg);
     static void Shutdown(uv_async_t* handle);
-    void ProcessCallQueueItem(TCallablePtr& item) const;
-    void ProcessReleaseQueueItem(TReleaseFunctionsPtr& item) const;
-    void ProcessSyncQueueItem(TCallbackPtr& item) const;
+    void ProcessCallQueueItem(TCallablePtr& item);
     void ProcessMainLoopTaskQueueItem(TTaskPtr& item) const;
+    void SyncTo(unsigned long count);
 };
 }
