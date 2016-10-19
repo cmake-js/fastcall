@@ -52,7 +52,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message(STATUS "Clang configured.")
 endif()
 
-add_subdirectory(deps/ref-build)
+add_subdirectory(deps/ref-cmake)
 add_subdirectory(src)
 
 set(node_env $ENV{NODE_ENV})
