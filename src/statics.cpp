@@ -1,4 +1,5 @@
 #ifdef WIN32
+#define _WINSOCKAPI_
 #include <windows.h>
 #else
 #include <pthread.h>
