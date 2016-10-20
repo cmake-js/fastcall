@@ -16,7 +16,7 @@ NAN_MODULE_INIT(LibraryBase::Init)
 
     auto tmpl = Nan::New<FunctionTemplate>(New);
     tmpl->SetClassName(Nan::New("LibraryBase").ToLocalChecked());
-    tmpl->InstanceTemplate()->SetInternalFieldCount(1);    
+    tmpl->InstanceTemplate()->SetInternalFieldCount(1);
 
     Nan::SetPrototypeTemplate(tmpl, Nan::New("initialize").ToLocalChecked(), Nan::New<FunctionTemplate>(initialize), v8::ReadOnly);
     Nan::SetPrototypeTemplate(tmpl, Nan::New("free").ToLocalChecked(), Nan::New<FunctionTemplate>(free), v8::ReadOnly);
@@ -29,15 +29,22 @@ NAN_MODULE_INIT(LibraryBase::Init)
 
 NAN_METHOD(LibraryBase::New)
 {
-    auto libraryBase = new LibraryBase();
-    libraryBase->Wrap(info.This());
-    info.GetReturnValue().Set(info.This());
+    if (info.IsConstructCall()) {
+        auto libraryBase = new LibraryBase();
+        libraryBase->Wrap(info.This());
+        info.GetReturnValue().Set(info.This());
+    } else {
+        const int argc = 1;
+        v8::Local<v8::Value> argv[argc] = { info[0] };
+        v8::Local<v8::Function> cons = Nan::New(constructor);
+        info.GetReturnValue().Set(cons->NewInstance(argc, argv));
+    }
 }
 
 NAN_METHOD(LibraryBase::initialize)
 {
+    auto obj = ObjectWrap::Unwrap<LibraryBase>(info.Holder());
     auto self = info.This().As<Object>();
-    auto obj = ObjectWrap::Unwrap<LibraryBase>(self);
 
     obj->pLib = FindPLib(self);
 
@@ -46,8 +53,8 @@ NAN_METHOD(LibraryBase::initialize)
 
 NAN_METHOD(LibraryBase::free)
 {
+    auto obj = ObjectWrap::Unwrap<LibraryBase>(info.Holder());
     auto self = info.This().As<Object>();
-    auto obj = ObjectWrap::Unwrap<LibraryBase>(self);
 
     obj->pLib = nullptr;
     obj->loop = nullptr;
@@ -57,8 +64,8 @@ NAN_METHOD(LibraryBase::free)
 
 NAN_METHOD(LibraryBase::_synchronize)
 {
+    auto obj = ObjectWrap::Unwrap<LibraryBase>(info.Holder());
     auto self = info.This().As<Object>();
-    auto obj = ObjectWrap::Unwrap<LibraryBase>(self);
 
     if (!info[0]->IsFunction()) {
         return Nan::ThrowTypeError("First argument must be a callback function!");
@@ -94,4 +101,3 @@ void LibraryBase::EnsureAsyncSupport()
         loop = unique_ptr<Loop>(new Loop(this, 4096));
     }
 }
-
