@@ -28,27 +28,27 @@ NAN_MODULE_INIT(FunctionBase::Init)
 
 NAN_METHOD(FunctionBase::New)
 {
+    auto self = info.This().As<Object>();
+    SetValue(self, "_func", info[0]);
     auto functionBase = new FunctionBase();
     functionBase->Wrap(info.This());
     info.GetReturnValue().Set(info.This());
 }
 
-void* FunctionBase::GetFuncPtr(const v8::Local<v8::Object>& self)
+void* FunctionBase::GetFuncPtr(const v8::Local<v8::Object>& _func)
 {
     Nan::HandleScope scope;
 
-    auto ref = GetValue(self, "_ptr");
+    auto ref = GetValue(_func, "_ptr");
     assert(Buffer::HasInstance(ref));
     auto ptr = UnwrapPointer<void>(ref);
     assert(ptr);
     return ptr;
 }
 
-FunctionBase* FunctionBase::GetFunctionBase(const v8::Local<v8::Object>& self)
+FunctionBase* FunctionBase::GetFunctionBase(const v8::Local<v8::Object>& _base)
 {
-    auto obj = Nan::ObjectWrap::Unwrap<FunctionBase>(self);
-    assert(obj);
-    return obj;
+    return Nan::ObjectWrap::Unwrap<FunctionBase>(_base);
 }
 
 NAN_METHOD(FunctionBase::initialize)
@@ -63,8 +63,8 @@ NAN_METHOD(FunctionBase::initialize)
     try {
         // TODO: make size parameter + add GC memory usage
         obj->vm = shared_ptr<DCCallVM>(dcNewCallVM(4096), dcFree);
-        obj->library = FindLibraryBase(info.This());
-        obj->invoker = MakeFunctionInvoker(info.This());
+        obj->library = FindLibraryBase(self);
+        obj->invoker = MakeFunctionInvoker(self);
     }
     catch(exception& ex) {
         Nan::ThrowError(ex.what());
@@ -92,20 +92,20 @@ NAN_METHOD(FunctionBase::call)
     info.GetReturnValue().Set(result);
 }
 
-Local<Object> FunctionBase::FindLibrary(const Local<Object>& self)
+Local<Object> FunctionBase::FindLibrary(const Local<Object>& _base)
 {
     Nan::EscapableHandleScope scope;
 
-    auto library = GetValue<Object>(self, "library");
+    auto _func = GetValue<Object>(_base, "_func");
+    auto library = GetValue<Object>(_func, "library");
+    assert(library->IsObject() && !library->IsUndefined());
     return scope.Escape(library);
 }
 
-LibraryBase* FunctionBase::FindLibraryBase(const Local<Object>& self)
+LibraryBase* FunctionBase::FindLibraryBase(const Local<Object>& _base)
 {
     Nan::HandleScope scope;
 
-    auto library = FindLibrary(self);
-    auto ptr = Nan::ObjectWrap::Unwrap<LibraryBase>(library);
-    assert(ptr);
-    return ptr;
+    auto library = FindLibrary(_base);
+    return LibraryBase::FindLibraryBase(library);
 }

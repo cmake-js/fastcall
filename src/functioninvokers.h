@@ -12,5 +12,5 @@ typedef std::function<v8::Local<v8::Value>(const Nan::FunctionCallbackInfo<v8::V
 typedef std::function<void(DCCallVM*)> TAsyncFunctionInvoker;
 typedef std::vector<TReleaseFunction> TReleaseFunctions;
 
-TFunctionInvoker MakeFunctionInvoker(const v8::Local<v8::Object>& func);
+TFunctionInvoker MakeFunctionInvoker(const v8::Local<v8::Object>& _base);
 }

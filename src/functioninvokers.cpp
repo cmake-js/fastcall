@@ -73,8 +73,9 @@ inline std::pair<Local<Object>, DCCallback*> GetOrMakeCallbackPtr(CallbackBase* 
 
         Local<Value> args[] = { info[i] };
         auto callback = Nan::New(persistentCallback);
-        auto factory = GetValue<Function>(callback, "factory");
-        ptr = scope.Escape(factory->Call(callback, 1, args).As<Object>());
+        auto _base = GetValue<Object>(callback, "_base");
+        auto factory = GetValue<Function>(_base, "factory");
+        ptr = scope.Escape(factory->Call(_base, 1, args).As<Object>());
         assert(!ptr.IsEmpty() && ptr->IsObject());
     } else {
         throw logic_error("Unknown argument.");
@@ -578,7 +579,7 @@ template <typename T, typename F>
 TAsyncVMInvoker MakeAsyncVMInvoker(F f, void* funcPtr)
 {
     return [=](const v8::Local<Object>& asyncResult) {
-        auto ar = AsyncResultBase::GetAsyncResultBase(asyncResult);
+        auto ar = AsyncResultBase::AsAsyncResultBase(asyncResult);
         assert(ar);
         T* valPtr = ar->GetPtr<T>();
         assert(valPtr);
@@ -698,10 +699,11 @@ TAsyncVMInvoker MakeAsyncVMInvoker(const v8::Local<Object>& func)
 }
 }
 
-TFunctionInvoker fastcall::MakeFunctionInvoker(const v8::Local<Object>& func)
+TFunctionInvoker fastcall::MakeFunctionInvoker(const v8::Local<Object>& _base)
 {
+    auto funcBase = FunctionBase::GetFunctionBase(_base);
+    auto func = GetValue<Object>(_base, "_func");
     unsigned callMode = GetValue(func, "callMode")->Uint32Value();
-    auto funcBase = FunctionBase::GetFunctionBase(func);
     auto libraryBase = funcBase->GetLibrary();
     auto loop = libraryBase->GetLoop();
 
@@ -727,7 +729,9 @@ TFunctionInvoker fastcall::MakeFunctionInvoker(const v8::Local<Object>& func)
         return [=](const Nan::FunctionCallbackInfo<v8::Value>& info) {
             auto releaseFunctions = TReleaseFunctions();
             releaseFunctions.reserve(info.Length());
-            auto asyncResult = MakeAsyncResult(info.This(), Nan::New(resultTypePersistent));
+            auto _base = info.This();
+            auto func = GetValue<Object>(_base, "_func");
+            auto asyncResult = MakeAsyncResult(func, Nan::New(resultTypePersistent));
             auto currentInitializer = initializer(info, releaseFunctions);
             auto currentInvoker = invoker(asyncResult);
 

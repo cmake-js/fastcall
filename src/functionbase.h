@@ -11,7 +11,7 @@ struct LibraryBase;
 struct FunctionBase : public Nan::ObjectWrap, Instance {
     static NAN_MODULE_INIT(Init);
 
-    static FunctionBase* GetFunctionBase(const v8::Local<v8::Object>& self);
+    static FunctionBase* GetFunctionBase(const v8::Local<v8::Object>& _base);
     static void* GetFuncPtr(const v8::Local<v8::Object>& self);
     LibraryBase* GetLibrary();
     DCCallVM* GetVM();

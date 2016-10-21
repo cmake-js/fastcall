@@ -13,5 +13,5 @@ struct StaticCallbackData {
     static StaticCallbackData instance;
 };
 
-TCallbackFactory MakeCallbackFactory(const v8::Local<v8::Object>& cb, Loop* loop);
+TCallbackFactory MakeCallbackFactory(const v8::Local<v8::Object>& _base, Loop* loop);
 }

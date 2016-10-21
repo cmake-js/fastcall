@@ -11,9 +11,9 @@ struct AsyncResultBase : public Nan::ObjectWrap, Instance
 {
     static NAN_MODULE_INIT(Init);
     
-    static bool IsAsyncResultBase(const v8::Local<v8::Object>& self);
-    static AsyncResultBase* AsAsyncResultBase(const v8::Local<v8::Object>& self);
-    static AsyncResultBase* GetAsyncResultBase(const v8::Local<v8::Object>& self);
+    static bool IsAsyncResultBase(const v8::Local<v8::Object>& _base);
+    static AsyncResultBase* AsAsyncResultBase(const v8::Local<v8::Object>& _asyncResult);
+    static AsyncResultBase* GetAsyncResultBase(const v8::Local<v8::Object>& _base);
     template <typename T>
     T* GetPtr();
     void AddRef();

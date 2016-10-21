@@ -14,6 +14,7 @@ struct LibraryBase : public Nan::ObjectWrap, Instance {
     Lock AcquireLock();
     void EnsureAsyncSupport();
     Loop* GetLoop();
+    static LibraryBase* FindLibraryBase(const v8::Local<v8::Object>& _lib);
 
 private:
     static Nan::Persistent<v8::Function> constructor;
@@ -28,7 +29,7 @@ private:
     static NAN_METHOD(free);
     static NAN_METHOD(_synchronize);
 
-    static DLLib* FindPLib(const v8::Local<v8::Object>& self);
+    static DLLib* FindPLib(const v8::Local<v8::Object>& _base);
 };
 
 inline Loop* LibraryBase::GetLoop()

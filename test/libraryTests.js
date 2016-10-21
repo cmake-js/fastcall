@@ -24,7 +24,7 @@ describe('Library', function () {
                     assert.equal(lib.options.defaultCallMode, Library.callMode.sync);
                 }
                 finally {
-                    lib.free();
+                    lib.release();
                 }
             });
         });
@@ -38,7 +38,7 @@ describe('Library', function () {
                     assert.equal(lib.options.defaultCallMode, Library.callMode.sync);
                 }
                 finally {
-                    lib.free();
+                    lib.release();
                 }
             });
 
@@ -50,7 +50,7 @@ describe('Library', function () {
                     assert.equal(lib.options.defaultCallMode, Library.callMode.async);
                 }
                 finally {
-                    lib.free();
+                    lib.release();
                 }
             });
 
@@ -70,7 +70,7 @@ describe('Library', function () {
         });
 
         afterEach(function () {
-            lib.free();
+            lib.release();
             lib = null;
         });
 
@@ -275,7 +275,7 @@ describe('Library', function () {
         });
 
         afterEach(function () {
-            lib.free();
+            lib.release();
             lib = null;
         });
 

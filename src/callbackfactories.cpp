@@ -426,20 +426,22 @@ DCCallback* MakeDCCallback(const std::string& signature, CallbackUserData* userD
 }
 }
 
-TCallbackFactory fastcall::MakeCallbackFactory(const v8::Local<Object>& cb, Loop* loop)
+TCallbackFactory fastcall::MakeCallbackFactory(const v8::Local<Object>& _base, Loop* loop)
 {
     Nan::HandleScope scope;
 
-    auto dcArgsToCallbackArgs = MakeDCArgsToCallbackArgsFunction(cb);
-    auto setDCValue = MakeSetDCValueFunction(cb);
-    auto signature = GetSignature(cb);
+    auto _callback = GetValue<Object>(_base, "_callback");
+    auto dcArgsToCallbackArgs = MakeDCArgsToCallbackArgsFunction(_callback);
+    auto setDCValue = MakeSetDCValueFunction(_callback);
+    auto signature = GetSignature(_callback);
     char resultTypeCode = signature[signature.size() - 1];
-    auto voidPtrType = GetValue<Object>(cb, "_ptrType");
+    auto voidPtrType = GetValue<Object>(_callback, "_ptrType");
     TCopyablePersistent pVoidPtrType(voidPtrType);
 
-    return [=](const v8::Local<Object>& callback, const Local<Function>& jsFunc) {
+    return [=](const v8::Local<Object>& _base, const Local<Function>& jsFunc) {
         Nan::EscapableHandleScope scope;
 
+        auto _callback = GetValue<Object>(_base, "_callback");
         auto userData = new CallbackUserData(dcArgsToCallbackArgs, setDCValue, new Nan::Callback(jsFunc), resultTypeCode, loop);
         auto dcCallback = MakeDCCallback(signature, userData);
 
@@ -449,7 +451,7 @@ TCallbackFactory fastcall::MakeCallbackFactory(const v8::Local<Object>& cb, Loop
         SetValue(ptr, "userData", ptrUserData);
         SetValue(ptr, "type", voidPtrType);
         SetValue(ptrUserData, "type", voidPtrType);
-        SetValue(ptr, "callback", callback);
+        SetValue(ptr, "callback", _callback);
 
         return scope.Escape(ptr);
     };

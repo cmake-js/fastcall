@@ -30,9 +30,11 @@ NAN_MODULE_INIT(LibraryBase::Init)
 NAN_METHOD(LibraryBase::New)
 {
     if (info.IsConstructCall()) {
+        auto self = info.This().As<Object>();
+        SetValue(self, "_lib", info[0]);
         auto libraryBase = new LibraryBase();
-        libraryBase->Wrap(info.This());
-        info.GetReturnValue().Set(info.This());
+        libraryBase->Wrap(self);
+        info.GetReturnValue().Set(self);
     } else {
         const int argc = 1;
         v8::Local<v8::Value> argv[argc] = { info[0] };
@@ -78,11 +80,12 @@ NAN_METHOD(LibraryBase::_synchronize)
     info.GetReturnValue().SetUndefined();
 }
 
-DLLib* LibraryBase::FindPLib(const v8::Local<Object>& self)
+DLLib* LibraryBase::FindPLib(const v8::Local<Object>& _base)
 {
     Nan::HandleScope scope;
 
-    auto ref = GetValue(self, "_pLib");
+    auto _lib = GetValue<Object>(_base, "_lib");
+    auto ref = GetValue(_lib, "_pLib");
     assert(Buffer::HasInstance(ref));
     auto pLib = UnwrapPointer<DLLib>(ref);
     assert(pLib);
@@ -100,4 +103,10 @@ void LibraryBase::EnsureAsyncSupport()
     if (!loop) {
         loop = unique_ptr<Loop>(new Loop(this, 4096));
     }
+}
+
+LibraryBase* LibraryBase::FindLibraryBase(const Local<Object>& _lib)
+{
+    auto _base = GetValue<Object>(_lib, "_base");
+    return ObjectWrap::Unwrap<LibraryBase>(_base);
 }

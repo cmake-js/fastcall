@@ -29,49 +29,52 @@ NAN_MODULE_INIT(CallbackBase::Init)
 
 NAN_METHOD(CallbackBase::New)
 {
+    auto self = info.This().As<Object>();
+    SetValue(self, "_callback", info[0]);
     auto callbackBase = new CallbackBase();
     callbackBase->Wrap(info.This());
     info.GetReturnValue().Set(info.This());
 }
 
-bool CallbackBase::IsCallbackBase(const v8::Local<Object>& self)
+bool CallbackBase::IsCallbackBase(const v8::Local<Object>& _base)
 {
     Nan::HandleScope scope;
 
-    return InstanceOf(self, Nan::New(constructor));
+    return InstanceOf(_base, Nan::New(constructor));
 }
 
-CallbackBase* CallbackBase::AsCallbackBase(const v8::Local<Object>& self)
+CallbackBase* CallbackBase::AsCallbackBase(const v8::Local<Object>& _callback)
 {
-    if (IsCallbackBase(self)) {
-        return GetCallbackBase(self);
+    if (_callback->IsObject()) {
+        auto _base = GetValue<Object>(_callback, "_base");
+        if (IsCallbackBase(_base)) {
+            return GetCallbackBase(_base);
+        }
     }
     return nullptr;
 }
 
-CallbackBase* CallbackBase::GetCallbackBase(const v8::Local<v8::Object>& self)
+CallbackBase* CallbackBase::GetCallbackBase(const v8::Local<v8::Object>& _base)
 {
-    auto obj = Nan::ObjectWrap::Unwrap<CallbackBase>(self);
+    auto obj = Nan::ObjectWrap::Unwrap<CallbackBase>(_base);
     assert(obj);
     return obj;
 }
 
-Local<Object> CallbackBase::FindLibrary(const Local<Object>& self)
+Local<Object> CallbackBase::FindLibrary(const Local<Object>& _base)
 {
     Nan::EscapableHandleScope scope;
 
-    auto library = GetValue<Object>(self, "library");
+    auto library = GetValue<Object>(GetValue<Object>(_base, "_callback"), "library");
     return scope.Escape(library);
 }
 
-LibraryBase* CallbackBase::FindLibraryBase(const Local<Object>& self)
+LibraryBase* CallbackBase::FindLibraryBase(const Local<Object>& _base)
 {
     Nan::HandleScope scope;
 
-    auto library = FindLibrary(self);
-    auto ptr = Nan::ObjectWrap::Unwrap<LibraryBase>(library);
-    assert(ptr);
-    return ptr;
+    auto library = FindLibrary(_base);
+    return LibraryBase::FindLibraryBase(library);
 }
 
 NAN_METHOD(CallbackBase::initialize)

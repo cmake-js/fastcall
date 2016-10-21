@@ -26,21 +26,17 @@ NAN_MODULE_INIT(AsyncResultBase::Init)
 
 NAN_METHOD(AsyncResultBase::New)
 {
-    //super(func, ref.alloc(type))
-    assert(info.Length() == 2);
-    
     auto self = info.This();
-    
-    assert(info[0]->IsObject());
-    SetValue(self, "func", info[0]);
-    auto func = FunctionBase::GetFunctionBase(info[0].As<Object>());
-    assert(func);
-    
-    auto ptr = UnwrapPointer(info[1]);
+    auto _asyncResult = info[0].As<Object>();
+    auto func = GetValue<Object>(_asyncResult, "func");
+    auto func_base = GetValue<Object>(func, "_base");
+    auto funcBase = FunctionBase::GetFunctionBase(func_base);
+    auto ptr = UnwrapPointer(GetValue<Object>(_asyncResult, "ptr"));
     assert(ptr);
-    SetValue(self, "ptr", info[1]);
     
-    auto asyncResultBase = new AsyncResultBase(func, ptr);
+    SetValue(self, "_asyncResult", _asyncResult);
+    
+    auto asyncResultBase = new AsyncResultBase(funcBase, ptr);
     asyncResultBase->Wrap(self);
 
     info.GetReturnValue().Set(self);
@@ -54,23 +50,24 @@ AsyncResultBase::AsyncResultBase(FunctionBase* func, void* ptr)
     assert(ptr);
 }
 
-bool AsyncResultBase::IsAsyncResultBase(const v8::Local<Object>& self)
+bool AsyncResultBase::IsAsyncResultBase(const v8::Local<Object>& _base)
+{
+    return InstanceOf(_base, Nan::New<Function>(constructor));
+}
+
+AsyncResultBase* AsyncResultBase::GetAsyncResultBase(const v8::Local<v8::Object>& _base)
+{
+    return Nan::ObjectWrap::Unwrap<AsyncResultBase>(_base);
+}
+
+AsyncResultBase* AsyncResultBase::AsAsyncResultBase(const v8::Local<v8::Object>& _asyncResult)
 {
     Nan::HandleScope scope;
-    return InstanceOf(self, Nan::New<Function>(constructor));
-}
-
-AsyncResultBase* AsyncResultBase::AsAsyncResultBase(const v8::Local<v8::Object>& self)
-{
-    if (IsAsyncResultBase(self)) {
-        return GetAsyncResultBase(self);
+    if (_asyncResult->IsObject()) {
+        auto _base = GetValue<Object>(_asyncResult, "_base");
+        if (IsAsyncResultBase(_base)) {
+            return GetAsyncResultBase(_base);
+        }
     }
     return nullptr;
-}
-
-AsyncResultBase* AsyncResultBase::GetAsyncResultBase(const v8::Local<v8::Object>& self)
-{
-    auto obj = Nan::ObjectWrap::Unwrap<AsyncResultBase>(self);
-    assert(obj);
-    return obj;
 }
