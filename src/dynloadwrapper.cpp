@@ -45,7 +45,7 @@ NAN_METHOD(findSymbol)
 }
 }
 
-NAN_MODULE_INIT(fastcall::InitDyncallWrapper)
+NAN_MODULE_INIT(fastcall::InitDynloadWrapper)
 {
     Nan::HandleScope scope;
     Nan::Set(target, Nan::New<String>("loadLibrary").ToLocalChecked(), Nan::New<FunctionTemplate>(loadLibrary)->GetFunction());

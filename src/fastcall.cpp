@@ -1,10 +1,7 @@
 #include "deps.h"
 #include "dynloadwrapper.h"
 #include "librarybase.h"
-#include "functionbase.h"
 #include "statics.h"
-#include "asyncresultbase.h"
-#include "callbackbase.h"
 
 using namespace v8;
 using namespace fastcall;
@@ -12,11 +9,8 @@ using namespace fastcall;
 NAN_MODULE_INIT(InitAll)
 {
     InitStatics(target);
-    InitDyncallWrapper(target);
+    InitDynloadWrapper(target);
     LibraryBase::Init(target);
-    FunctionBase::Init(target);
-    AsyncResultBase::Init(target);
-    CallbackBase::Init(target);
 }
 
 NODE_MODULE(fastcall, InitAll)

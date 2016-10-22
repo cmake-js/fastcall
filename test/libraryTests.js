@@ -62,7 +62,7 @@ describe('Library', function () {
         });
     });
 
-    describe('sync call mode (smoke test)', function () {
+    describe.skip('sync call mode (smoke test)', function () {
         let lib = null;
 
         beforeEach(function () {
@@ -267,7 +267,7 @@ describe('Library', function () {
         }
     });
 
-    describe('async call mode (smoke test)', function () {
+    describe.skip('async call mode (smoke test)', function () {
         let lib = null;
 
         beforeEach(function () {
