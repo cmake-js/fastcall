@@ -6,24 +6,18 @@ inline void Noop(char* data, void* hint) {}
 
 inline v8::Local<v8::Object> WrapPointer(char* ptr, size_t length = 0)
 {
-    Nan::EscapableHandleScope scope;
-
     if (ptr == nullptr)
         length = 0;
-    return scope.Escape(Nan::NewBuffer(ptr, length, Noop, nullptr).ToLocalChecked());
+    return Nan::NewBuffer(ptr, length, Noop, nullptr).ToLocalChecked();
 }
 
 inline v8::Local<v8::Object> WrapNullPointer()
 {
-    Nan::EscapableHandleScope scope;
-
-    return scope.Escape(WrapPointer((char*)nullptr, (size_t)0));
+    return WrapPointer((char*)nullptr, (size_t)0);
 }
 
 inline char* UnwrapPointer(const v8::Local<v8::Value>& value)
 {
-    Nan::HandleScope scope;
-
     if (value->IsObject() && node::Buffer::HasInstance(value)) {
         return node::Buffer::Data(value);
     }
@@ -33,11 +27,9 @@ inline char* UnwrapPointer(const v8::Local<v8::Value>& value)
 template <typename T>
 inline v8::Local<v8::Object> Wrap(T* object)
 {
-    Nan::EscapableHandleScope scope;
-
     assert(object);
 
-    return scope.Escape(
+    return
         Nan::NewBuffer(
            reinterpret_cast<char*>(object),
             0,
@@ -45,30 +37,26 @@ inline v8::Local<v8::Object> Wrap(T* object)
                 delete reinterpret_cast<T*>(data);
             },
             nullptr)
-            .ToLocalChecked());
+            .ToLocalChecked();
 }
 
 template <typename T>
 inline v8::Local<v8::Object> Wrap(T* object, Nan::FreeCallback freeFunction)
 {
-    Nan::EscapableHandleScope scope;
-
     assert(object);
 
-    return scope.Escape(
+    return
         Nan::NewBuffer(
            reinterpret_cast<char*>(object),
             0,
             freeFunction,
             nullptr)
-            .ToLocalChecked());
+            .ToLocalChecked();
 }
 
 template <typename T>
 inline T* Unwrap(const v8::Local<v8::Value>& value)
 {
-    Nan::HandleScope scope;
-
     assert(value->IsObject() && node::Buffer::HasInstance(value));
     return reinterpret_cast<T*>(node::Buffer::Data(value));
 }
