@@ -11,8 +11,8 @@ module.exports = async(function* () {
 
     console.log('--- sync ---');
     syncRun(lib);
-    console.log('--- async ---');
-    yield asyncRun(lib);
+    // console.log('--- async ---');
+    // yield asyncRun(lib);
 });
 
 function syncRun(lib) {

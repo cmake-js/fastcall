@@ -12,12 +12,13 @@ using namespace fastcall;
 
 namespace {
 
+DCCallVM* vm = nullptr;
+
 NAN_METHOD(newCallVM)
 {
     unsigned size = info[0]->Uint32Value();
     auto ptr = dcNewCallVM(size);
-    auto buff = WrapPointer(ptr);
-    info.GetReturnValue().Set(buff);
+    info.GetReturnValue().Set(WrapPointer(ptr));
 }
 
 NAN_METHOD(free)
@@ -25,282 +26,287 @@ NAN_METHOD(free)
     dcFree(Unwrap<DCCallVM>(info[0]));
 }
 
+NAN_METHOD(setVM)
+{
+    vm = Unwrap<DCCallVM>(info[0]);
+}
+
 NAN_METHOD(mode)
 {
-    dcMode(Unwrap<DCCallVM>(info[0]), info[1]->Int32Value());
+    dcMode(vm, info[0]->Int32Value());
 }
 
 NAN_METHOD(reset)
 {
-    dcFree(Unwrap<DCCallVM>(info[0]));
+    dcReset(vm);
 }
 
 NAN_METHOD(argBool)
 {
-    dcArgBool(Unwrap<DCCallVM>(info[0]), info[1]->BooleanValue());
+    dcArgBool(vm, info[0]->BooleanValue());
 }
 
 NAN_METHOD(argChar)
 {
-    dcArgChar(Unwrap<DCCallVM>(info[0]), info[1]->Int32Value());
+    dcArgChar(vm, info[0]->Int32Value());
 }
 
 NAN_METHOD(argShort)
 {
-    dcArgShort(Unwrap<DCCallVM>(info[0]), info[1]->Int32Value());
+    dcArgShort(vm, info[0]->Int32Value());
 }
 
 NAN_METHOD(argInt)
 {
-    dcArgInt(Unwrap<DCCallVM>(info[0]), info[1]->Int32Value());
+    dcArgInt(vm, info[0]->Int32Value());
 }
 
 NAN_METHOD(argLong)
 {
-    dcArgLong(Unwrap<DCCallVM>(info[0]), GetInt64(info[1]));
+    dcArgLong(vm, GetInt64(info[0]));
 }
 
 NAN_METHOD(argLongLong)
 {
-    dcArgLongLong(Unwrap<DCCallVM>(info[0]), GetInt64(info[1]));
+    dcArgLongLong(vm, GetInt64(info[0]));
 }
 
 NAN_METHOD(argFloat)
 {
-    dcArgFloat(Unwrap<DCCallVM>(info[0]), info[1]->NumberValue());
+    dcArgFloat(vm, info[0]->NumberValue());
 }
 
 NAN_METHOD(argDouble)
 {
-    dcArgDouble(Unwrap<DCCallVM>(info[0]), info[1]->NumberValue());
+    dcArgDouble(vm, info[0]->NumberValue());
 }
 
 NAN_METHOD(argPointer)
 {
-    dcArgPointer(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    dcArgPointer(vm, UnwrapPointer(info[0]));
 }
 
 NAN_METHOD(argInt8)
 {
-    dcArgInt8(Unwrap<DCCallVM>(info[0]), info[1]->Int32Value());
+    dcArgInt8(vm, info[0]->Int32Value());
 }
 
 NAN_METHOD(argUInt8)
 {
-    dcArgUInt8(Unwrap<DCCallVM>(info[0]), info[1]->Uint32Value());
+    dcArgUInt8(vm, info[0]->Uint32Value());
 }
 
 NAN_METHOD(argInt16)
 {
-    dcArgInt16(Unwrap<DCCallVM>(info[0]), info[1]->Int32Value());
+    dcArgInt16(vm, info[0]->Int32Value());
 }
 
 NAN_METHOD(argUInt16)
 {
-    dcArgUInt16(Unwrap<DCCallVM>(info[0]), info[1]->Uint32Value());
+    dcArgUInt16(vm, info[0]->Uint32Value());
 }
 
 NAN_METHOD(argInt32)
 {
-    dcArgInt32(Unwrap<DCCallVM>(info[0]), info[1]->Int32Value());
+    dcArgInt32(vm, info[0]->Int32Value());
 }
 
 NAN_METHOD(argUInt32)
 {
-    dcArgUInt32(Unwrap<DCCallVM>(info[0]), info[1]->Uint32Value());
+    dcArgUInt32(vm, info[0]->Uint32Value());
 }
 
 NAN_METHOD(argInt64)
 {
-    dcArgInt64(Unwrap<DCCallVM>(info[0]), GetInt64(info[1]));
+    dcArgInt64(vm, GetInt64(info[0]));
 }
 
 NAN_METHOD(argUInt64)
 {
-    dcArgUInt64(Unwrap<DCCallVM>(info[0]), GetUint64(info[1]));
+    dcArgUInt64(vm, GetUint64(info[0]));
 }
 
 NAN_METHOD(argByte)
 {
-    dcArgByte(Unwrap<DCCallVM>(info[0]), info[1]->Uint32Value());
+    dcArgByte(vm, info[0]->Uint32Value());
 }
 
 NAN_METHOD(argUChar)
 {
-    dcArgUChar(Unwrap<DCCallVM>(info[0]), info[1]->Uint32Value());
+    dcArgUChar(vm, info[0]->Uint32Value());
 }
 
 NAN_METHOD(argUShort)
 {
-    dcArgUShort(Unwrap<DCCallVM>(info[0]), info[1]->Uint32Value());
+    dcArgUShort(vm, info[0]->Uint32Value());
 }
 
 NAN_METHOD(argUInt)
 {
-    dcArgUInt(Unwrap<DCCallVM>(info[0]), info[1]->Uint32Value());
+    dcArgUInt(vm, info[0]->Uint32Value());
 }
 
 NAN_METHOD(argULong)
 {
-    dcArgULong(Unwrap<DCCallVM>(info[0]), GetUint64(info[1]));
+    dcArgULong(vm, GetUint64(info[0]));
 }
 
 NAN_METHOD(argULongLong)
 {
-    dcArgULongLong(Unwrap<DCCallVM>(info[0]), GetUint64(info[1]));
+    dcArgULongLong(vm, GetUint64(info[0]));
 }
 
 NAN_METHOD(argSizeT)
 {
-    dcArgSizeT(Unwrap<DCCallVM>(info[0]), GetUint64(info[1]));
+    dcArgSizeT(vm, GetUint64(info[0]));
 }
 
 NAN_METHOD(callVoid)
 {
-    dcCallVoid(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    dcCallVoid(vm, UnwrapPointer(info[0]));
 }
 
 NAN_METHOD(callBool)
 {
-    auto result = dcCallBool(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallBool(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
 NAN_METHOD(callChar)
 {
-    auto result = dcCallChar(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallChar(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
 NAN_METHOD(callShort)
 {
-    auto result = dcCallShort(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallShort(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
 NAN_METHOD(callInt)
 {
-    auto result = dcCallInt(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallInt(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
 NAN_METHOD(callLong)
 {
-    auto result = dcCallLong(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallLong(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(MakeInt64(result));
 }
 
 NAN_METHOD(callLongLong)
 {
-    auto result = dcCallLongLong(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallLongLong(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(MakeInt64(result));
 }
 
 NAN_METHOD(callFloat)
 {
-    auto result = dcCallFloat(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallFloat(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
 NAN_METHOD(callDouble)
 {
-    auto result = dcCallDouble(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallDouble(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
 NAN_METHOD(callPointer)
 {
-    auto result = dcCallPointer(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallPointer(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(WrapPointer(result));
 }
 
 NAN_METHOD(callInt8)
 {
-    auto result = dcCallInt8(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallInt8(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
 NAN_METHOD(callInt16)
 {
-    auto result = dcCallInt16(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallInt16(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
 NAN_METHOD(callInt32)
 {
-    auto result = dcCallInt32(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallInt32(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
 NAN_METHOD(callInt64)
 {
-    auto result = dcCallInt64(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallInt64(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(MakeInt64(result));
 }
 
 NAN_METHOD(callUInt8)
 {
-    auto result = dcCallUInt8(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallUInt8(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
 NAN_METHOD(callUInt16)
 {
-    auto result = dcCallUInt16(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallUInt16(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
 NAN_METHOD(callUInt32)
 {
-    auto result = dcCallUInt32(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallUInt32(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
 NAN_METHOD(callIntU64)
 {
-    auto result = dcCallUInt64(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallUInt64(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(MakeUint64(result));
 }
 
 NAN_METHOD(callByte)
 {
-    auto result = dcCallByte(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallByte(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
 NAN_METHOD(callUChar)
 {
-    auto result = dcCallUChar(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallUChar(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
 NAN_METHOD(callUShort)
 {
-    auto result = dcCallUShort(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallUShort(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
 NAN_METHOD(callUInt)
 {
-    auto result = dcCallUInt(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallUInt(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
 NAN_METHOD(callULong)
 {
-    auto result = dcCallULong(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallULong(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(MakeUint64(result));
 }
 
 NAN_METHOD(callULongLong)
 {
-    auto result = dcCallULongLong(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallULongLong(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(MakeUint64(result));
 }
 
 NAN_METHOD(callSizeT)
 {
-    auto result = dcCallSizeT(Unwrap<DCCallVM>(info[0]), UnwrapPointer(info[1]));
+    auto result = dcCallSizeT(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(MakeUint64(result));
 }
 }
@@ -314,6 +320,7 @@ NAN_MODULE_INIT(fastcall::InitDyncallWrapper)
     Nan::Set(dyncall, Nan::New<String>("free").ToLocalChecked(), Nan::New<FunctionTemplate>(free)->GetFunction());
     Nan::Set(dyncall, Nan::New<String>("mode").ToLocalChecked(), Nan::New<FunctionTemplate>(mode)->GetFunction());
     Nan::Set(dyncall, Nan::New<String>("reset").ToLocalChecked(), Nan::New<FunctionTemplate>(reset)->GetFunction());
+    Nan::Set(dyncall, Nan::New<String>("setVM").ToLocalChecked(), Nan::New<FunctionTemplate>(setVM)->GetFunction());
     Nan::Set(dyncall, Nan::New<String>("argBool").ToLocalChecked(), Nan::New<FunctionTemplate>(argBool)->GetFunction());
     Nan::Set(dyncall, Nan::New<String>("argChar").ToLocalChecked(), Nan::New<FunctionTemplate>(argChar)->GetFunction());
     Nan::Set(dyncall, Nan::New<String>("argShort").ToLocalChecked(), Nan::New<FunctionTemplate>(argShort)->GetFunction());

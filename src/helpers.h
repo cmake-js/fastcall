@@ -18,10 +18,8 @@ inline v8::Local<v8::Object> WrapNullPointer()
 
 inline char* UnwrapPointer(const v8::Local<v8::Value>& value)
 {
-    if (value->IsObject() && node::Buffer::HasInstance(value)) {
-        return node::Buffer::Data(value);
-    }
-    return nullptr;
+	assert(value->IsObject() && node::Buffer::HasInstance(value));
+    return node::Buffer::Data(value);
 }
 
 template <typename T>
@@ -58,7 +56,9 @@ template <typename T>
 inline T* Unwrap(const v8::Local<v8::Value>& value)
 {
     assert(value->IsObject() && node::Buffer::HasInstance(value));
-    return reinterpret_cast<T*>(node::Buffer::Data(value));
+	auto data = node::Buffer::Data(value);
+    auto ptr = reinterpret_cast<T*>(data);
+	return ptr;
 }
 
 template <typename S>
