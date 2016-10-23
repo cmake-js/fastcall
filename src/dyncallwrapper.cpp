@@ -29,6 +29,7 @@ NAN_METHOD(free)
 NAN_METHOD(setVM)
 {
     vm = Unwrap<DCCallVM>(info[0]);
+    dcReset(vm);
 }
 
 NAN_METHOD(mode)
