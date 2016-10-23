@@ -9,12 +9,12 @@ const common = require('./common');
 module.exports = async(function* () {
     const lib = yield imports.importBenchlib.fastcallWay();
 
-    // console.log('--- sync ---');
-    // syncRun(lib);
-    // console.log('--- async ---');
+    console.log('--- sync ---');
+    syncRun(lib);
+    console.log('--- async ---');
     yield asyncRun(lib);
-    // console.log('--- async (wired) ---');
-    // yield asyncWiredRun(lib);
+    console.log('--- async (wired) ---');
+    yield asyncWiredRun(lib);
 });
 
 function syncRun(lib) {
