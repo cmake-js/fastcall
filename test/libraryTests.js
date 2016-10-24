@@ -267,7 +267,7 @@ describe('Library', function () {
         }
     });
 
-    describe.skip('async call mode (smoke test)', function () {
+    describe('async call mode (smoke test)', function () {
         let lib = null;
 
         beforeEach(function () {
@@ -310,7 +310,7 @@ describe('Library', function () {
                 return testGetNumbersAsync('void getNumbers(double** arg0, size_t* arg1)');
             });
 
-            it('should support callbacks', function () {
+            it.skip('should support callbacks', function () {
                 lib
                     .callback({ TMakeIntFunc: ['int', [ref.types.float, 'double']] })
                     .function({ makeInt: ['int', ['float', 'double', 'TMakeIntFunc']] });
@@ -354,7 +354,7 @@ describe('Library', function () {
                 return testGetNumbersAsync('void getNumbers(double** nums, size_t* count)');
             });
 
-            it('should support callbacks', function () {
+            it.skip('should support callbacks', function () {
                 lib
                     .callback('int TMakeIntFunc(float fv, double)')
                     .function('int makeInt(float , double dv, TMakeIntFunc func)');
@@ -384,17 +384,16 @@ describe('Library', function () {
             assert.equal(mul.function.args[1].type.name, 'int');
 
             // Call!
-            assert.equal(yield mul(2, 2).get(), 4);
-            assert.equal(yield mul(10, 2).get(), 20);
-            assert.equal(yield mul(10, "3").get(), 30);
-            assert.equal(yield mul(10.1, 2.1).get(), 20);
-            // Notice: async methods are chainable without getting their result to Node.js side!
-            assert.equal(yield mul(mul(4, 4), 2).get(), 32);
+            assert.equal(yield mul(2, 2), 4);
+            assert.equal(yield mul(10, 2), 20);
+            assert.equal(yield mul(10, "3"), 30);
+            assert.equal(yield mul(10.1, 2.1), 20);
+            assert.equal(yield mul(yield mul(4, 4), 2), 32);
 
             // Zero is the default:
-            assert.equal(yield mul(10).get(), 0);
-            assert.equal(yield mul().get(), 0);
-            assert.equal(yield mul("a", "b").get(), 0);
+            assert.equal(yield mul(10), 0);
+            assert.equal(yield mul(), 0);
+            assert.equal(yield mul("a", "b"), 0);
         });
 
         var testReadLongPtrAsync = async(function* (declaration) {
@@ -405,8 +404,8 @@ describe('Library', function () {
             const data = new Buffer(long.size * 2);
             long.set(data, 0, 1);
             long.set(data, long.size, 42);
-            assert.equal(yield readLongPtr(data, 0).get(), 1);
-            assert.equal(yield readLongPtr(data, 1).get(), 42);
+            assert.equal(yield readLongPtr(data, 0), 1);
+            assert.equal(yield readLongPtr(data, 1), 42);
         });
 
         var testWriteStringAsync = async(function* (declaration) {
@@ -414,8 +413,7 @@ describe('Library', function () {
             assert(_.isFunction(writeString));
             assert.equal(writeString.function.toString(), declaration);
             const string = ref.allocCString('          ');
-            writeString(string);
-            yield lib.synchronize();
+            yield writeString(string);
             assert.equal(ref.readCString(string), 'hello');
         });
 
@@ -423,7 +421,7 @@ describe('Library', function () {
             const getString = lib.interface.getString;
             assert(_.isFunction(getString));
             assert.equal(getString.function.toString(), declaration);
-            const string = yield getString().get();
+            const string = yield getString();
             assert(_.isBuffer(string));
             assert(_.isObject(string.type));
             assert.equal(string.type.name, 'char');
@@ -441,7 +439,7 @@ describe('Library', function () {
             const doublePtrType = ref.refType(double);
             const doublePtrPtr = ref.alloc(doublePtrType);
             const sizeTPtr = ref.alloc('size_t');
-            yield getNumbers(doublePtrPtr, sizeTPtr).get();
+            yield getNumbers(doublePtrPtr, sizeTPtr);
 
             const size = ref.deref(sizeTPtr);
             assert.equal(size, 3);
@@ -467,7 +465,7 @@ describe('Library', function () {
 
             const predeclaredCallback = TMakeIntFunc((fv, dv) => fv + dv);
 
-            let result = yield makeInt(1.1, 2.2, predeclaredCallback).get();
+            let result = yield makeInt(1.1, 2.2, predeclaredCallback);
             assert.equal(result, Math.floor((1.1 + 2.2) * 2));
         });
     });

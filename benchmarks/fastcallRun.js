@@ -11,10 +11,8 @@ module.exports = async(function* () {
 
     console.log('--- sync ---');
     syncRun(lib);
-    // console.log('--- async ---');
-    // yield asyncRun(lib);
-    // console.log('--- async (wired) ---');
-    // yield asyncWiredRun(lib);
+    console.log('--- async ---');
+    yield asyncRun(lib);
 });
 
 function syncRun(lib) {
@@ -30,16 +28,7 @@ var asyncRun = async(function* (lib) {
     let result = 0;
     const addNumbersAsync = lib.functions.addNumbersExp.async();
     yield common.measureAsync('addNumbers', async(function* () {
-        result = yield addNumbersAsync(yield addNumbersAsync(5.5, 5).get(), yield addNumbersAsync(1.1, 1).get()).get();
-    }));
-    assert.equal(result, 5.5 + 5 + 1 + 1);
-});
-
-var asyncWiredRun = async(function* (lib) {
-    let result = 0;
-    const addNumbersAsync = lib.functions.addNumbersExp.async();
-    yield common.measureAsync('addNumbers', async(function* () {
-        result = yield addNumbersAsync(addNumbersAsync(5.5, 5), addNumbersAsync(1.1, 1)).get();
+        result = yield addNumbersAsync(yield addNumbersAsync(5.5, 5), yield addNumbersAsync(1.1, 1));
     }));
     assert.equal(result, 5.5 + 5 + 1 + 1);
 });
