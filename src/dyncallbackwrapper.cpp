@@ -25,5 +25,6 @@ NAN_MODULE_INIT(fastcall::InitCallbackWrapper)
     Nan::HandleScope scope;
     auto callback = Nan::New<Object>();
     Nan::Set(target, Nan::New<String>("callback").ToLocalChecked(), callback);
-    //Nan::Set(dynload, Nan::New<String>("loadLibrary").ToLocalChecked(), Nan::New<FunctionTemplate>(loadLibrary)->GetFunction());
+    Nan::Set(callback, Nan::New<String>("newLoop").ToLocalChecked(), Nan::New<FunctionTemplate>(newLoop)->GetFunction());
+    Nan::Set(callback, Nan::New<String>("freeLoop").ToLocalChecked(), Nan::New<FunctionTemplate>(freeLoop)->GetFunction());
 }

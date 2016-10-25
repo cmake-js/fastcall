@@ -6,20 +6,22 @@
 namespace fastcall {
 static v8::Local<v8::Value> workerArgs[2] = { Nan::Null(), Nan::Null() };
 
-template <typename T, typename TCallFunc, typename TConvertFunc>
+template <typename T>
 struct CallAsyncWorker : Nan::AsyncWorker {
+    typedef T (*TCallFunc)(DCCallVM*, DCpointer);
+    typedef v8::Local<v8::Value>(*TConvertFunc)(T);
 
     CallAsyncWorker(
         Nan::Callback* callback,
         DCCallVM* vm,
         DCpointer funcPtr,
-        TCallFunc&& callFunc,
-        TConvertFunc&& convertFunc)
+        TCallFunc callFunc,
+        TConvertFunc convertFunc)
         : Nan::AsyncWorker(callback)
         , vm(vm)
         , funcPtr(funcPtr)
-        , callFunc(std::forward<TCallFunc>(callFunc))
-        , convertFunc(std::forward<TConvertFunc>(convertFunc))
+        , callFunc(callFunc)
+        , convertFunc(convertFunc)
     {
     }
 
@@ -47,35 +49,35 @@ private:
     }
 };
 
-template <typename T, typename TCallFunc, typename TConvertFunc>
-inline CallAsyncWorker<T, TCallFunc, TConvertFunc>* MakeCallAsyncWorker(
+template <typename T>
+inline CallAsyncWorker<T>* MakeCallAsyncWorker(
     Nan::Callback* callback,
     DCCallVM* vm,
     DCpointer funcPtr,
-    TCallFunc&& callFunc,
-    TConvertFunc&& convertFunc)
+    typename CallAsyncWorker<T>::TCallFunc callFunc,
+    typename CallAsyncWorker<T>::TConvertFunc convertFunc)
 {
-    return new CallAsyncWorker<T, TCallFunc, TConvertFunc>(
+    return new CallAsyncWorker<T>(
         callback,
         vm,
         funcPtr,
-        std::forward<TCallFunc>(callFunc),
-        std::forward<TConvertFunc>(convertFunc));
+        callFunc,
+        convertFunc);
 }
 
-template <typename T, typename TCallFunc, typename TConvertFunc>
+template <typename T>
 inline void CallAsync(
     const Nan::FunctionCallbackInfo<v8::Value>& info,
-    TCallFunc&& callFunc,
-    TConvertFunc&& convertFunc)
+    typename CallAsyncWorker<T>::TCallFunc callFunc,
+    typename CallAsyncWorker<T>::TConvertFunc convertFunc)
 {
     Nan::AsyncQueueWorker(
         MakeCallAsyncWorker<T>(
             new Nan::Callback(info[2].As<v8::Function>()),
             Unwrap<DCCallVM>(info[0]),
             UnwrapPointer(info[1]),
-            std::forward<TCallFunc>(callFunc),
-            std::forward<TConvertFunc>(convertFunc)));
+            callFunc,
+            convertFunc));
     info.GetReturnValue().SetUndefined();
 }
 

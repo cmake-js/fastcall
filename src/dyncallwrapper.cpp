@@ -29,6 +29,11 @@ NAN_METHOD(free)
 NAN_METHOD(setVM)
 {
     vm = Unwrap<DCCallVM>(info[0]);
+}
+
+NAN_METHOD(setVMAndReset)
+{
+    vm = Unwrap<DCCallVM>(info[0]);
     dcReset(vm);
 }
 
@@ -176,7 +181,7 @@ NAN_METHOD(callVoidAsync)
             return 0;
         },
         [](int) {
-            return Nan::Undefined();
+            return Local<Value>(Nan::Undefined());
         });
 }
 
@@ -190,9 +195,11 @@ NAN_METHOD(callBoolAsync)
 {
     CallAsync<bool>(
         info,
-        dcCallBool,
+        [](DCCallVM* vm, DCpointer funcPtr) {
+            return (bool)dcCallBool(vm, funcPtr);
+        },
         [](bool value) {
-            return Nan::New(value);
+            return Local<Value>(Nan::New(value));
         });
 }
 
@@ -208,7 +215,7 @@ NAN_METHOD(callCharAsync)
         info,
         dcCallChar,
         [](char value) {
-            return Nan::New(value);
+            return Local<Value>(Nan::New(value));
         });
 }
 
@@ -223,8 +230,8 @@ NAN_METHOD(callShortAsync)
     CallAsync<short>(
         info,
         dcCallShort,
-        [](char value) {
-            return Nan::New(value);
+        [](short value) {
+            return Local<Value>(Nan::New(value));
         });
 }
 
@@ -240,7 +247,7 @@ NAN_METHOD(callIntAsync)
         info,
         dcCallInt,
         [](int value) {
-            return Nan::New(value);
+            return Local<Value>(Nan::New(value));
         });
 }
 
@@ -255,7 +262,7 @@ NAN_METHOD(callLongAsync)
     CallAsync<long>(
         info,
         dcCallLong,
-        [](size_t value) {
+        [](long value) {
             return MakeInt64(value);
         });
 }
@@ -271,7 +278,7 @@ NAN_METHOD(callLongLongAsync)
     CallAsync<long long>(
         info,
         dcCallLongLong,
-        [](size_t value) {
+        [](long long value) {
             return MakeInt64(value);
         });
 }
@@ -288,7 +295,7 @@ NAN_METHOD(callFloatAsync)
         info,
         dcCallFloat,
         [](float value) {
-            return Nan::New(value);
+            return Local<Value>(Nan::New(value));
         });
 }
 
@@ -303,8 +310,8 @@ NAN_METHOD(callDoubleAsync)
     CallAsync<double>(
         info,
         dcCallDouble,
-        [](float value) {
-            return Nan::New(value);
+        [](double value) {
+            return Local<Value>(Nan::New(value));
         });
 }
 
@@ -320,7 +327,7 @@ NAN_METHOD(callPointerAsync)
         info,
         dcCallPointer,
         [](void* value) {
-            return WrapPointer(value);
+            return Local<Value>(WrapPointer(value));
         });
 }
 
@@ -336,7 +343,7 @@ NAN_METHOD(callInt8Async)
         info,
         dcCallInt8,
         [](char value) {
-            return Nan::New(value);
+            return Local<Value>(Nan::New(value));
         });
 }
 
@@ -352,7 +359,7 @@ NAN_METHOD(callInt16Async)
         info,
         dcCallInt16,
         [](short value) {
-            return Nan::New(value);
+            return Local<Value>(Nan::New(value));
         });
 }
 
@@ -368,7 +375,7 @@ NAN_METHOD(callInt32Async)
         info,
         dcCallInt32,
         [](int value) {
-            return Nan::New(value);
+            return Local<Value>(Nan::New(value));
         });
 }
 
@@ -383,8 +390,8 @@ NAN_METHOD(callInt64Async)
     CallAsync<long long>(
         info,
         dcCallInt64,
-        [](size_t value) {
-            return MakeInt64(value);
+        [](long long value) {
+            return Local<Value>(MakeInt64(value));
         });
 }
 
@@ -400,7 +407,7 @@ NAN_METHOD(callUInt8Async)
         info,
         dcCallUInt8,
         [](uint8_t value) {
-            return Nan::New(value);
+            return Local<Value>(Nan::New(value));
         });
 }
 
@@ -416,7 +423,7 @@ NAN_METHOD(callUInt16Async)
         info,
         dcCallUInt16,
         [](uint16_t value) {
-            return Nan::New(value);
+            return Local<Value>(Nan::New(value));
         });
 }
 
@@ -432,7 +439,7 @@ NAN_METHOD(callUInt32Async)
         info,
         dcCallUInt32,
         [](uint32_t value) {
-            return Nan::New(value);
+            return Local<Value>(Nan::New(value));
         });
 }
 
@@ -464,7 +471,7 @@ NAN_METHOD(callByteAsync)
         info,
         dcCallByte,
         [](uint8_t value) {
-            return Nan::New(value);
+            return Local<Value>(Nan::New(value));
         });
 }
 
@@ -480,7 +487,7 @@ NAN_METHOD(callUCharAsync)
         info,
         dcCallUChar,
         [](unsigned char value) {
-            return Nan::New(value);
+            return Local<Value>(Nan::New(value));
         });
 }
 
@@ -496,7 +503,7 @@ NAN_METHOD(callUShortAsync)
         info,
         dcCallUShort,
         [](unsigned short value) {
-            return Nan::New(value);
+            return Local<Value>(Nan::New(value));
         });
 }
 
@@ -512,7 +519,7 @@ NAN_METHOD(callUIntAsync)
         info,
         dcCallUInt,
         [](unsigned int value) {
-            return Nan::New(value);
+            return Local<Value>(Nan::New(value));
         });
 }
 
@@ -575,6 +582,7 @@ NAN_MODULE_INIT(fastcall::InitDyncallWrapper)
     Nan::Set(dyncall, Nan::New<String>("mode").ToLocalChecked(), Nan::New<FunctionTemplate>(mode)->GetFunction());
     Nan::Set(dyncall, Nan::New<String>("reset").ToLocalChecked(), Nan::New<FunctionTemplate>(reset)->GetFunction());
     Nan::Set(dyncall, Nan::New<String>("setVM").ToLocalChecked(), Nan::New<FunctionTemplate>(setVM)->GetFunction());
+    Nan::Set(dyncall, Nan::New<String>("setVMAndReset").ToLocalChecked(), Nan::New<FunctionTemplate>(setVMAndReset)->GetFunction());
     Nan::Set(dyncall, Nan::New<String>("argBool").ToLocalChecked(), Nan::New<FunctionTemplate>(argBool)->GetFunction());
     Nan::Set(dyncall, Nan::New<String>("argChar").ToLocalChecked(), Nan::New<FunctionTemplate>(argChar)->GetFunction());
     Nan::Set(dyncall, Nan::New<String>("argShort").ToLocalChecked(), Nan::New<FunctionTemplate>(argShort)->GetFunction());
