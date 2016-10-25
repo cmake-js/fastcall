@@ -69,14 +69,11 @@ inline void CallAsync(
     TCallFunc&& callFunc,
     TConvertFunc&& convertFunc)
 {
-    auto vm = Unwrap<DCCallVM>(info[0]);
-    DCpointer funcPtr = UnwrapPointer(info[1]);
-    auto callback = info[2].As<v8::Function>();
     Nan::AsyncQueueWorker(
         MakeCallAsyncWorker<T>(
-            new Nan::Callback(callback),
-            vm,
-            funcPtr,
+            new Nan::Callback(info[2].As<v8::Function>()),
+            Unwrap<DCCallVM>(info[0]),
+            UnwrapPointer(info[1]),
             std::forward<TCallFunc>(callFunc),
             std::forward<TConvertFunc>(convertFunc)));
     info.GetReturnValue().SetUndefined();
