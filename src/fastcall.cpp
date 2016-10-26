@@ -1,6 +1,7 @@
 #include "deps.h"
 #include "dynloadwrapper.h"
 #include "dyncallwrapper.h"
+#include "dyncallbackwrapper.h"
 #include "statics.h"
 
 using namespace v8;
@@ -11,6 +12,7 @@ NAN_MODULE_INIT(InitAll)
     InitStatics(target);
     InitDynloadWrapper(target);
     InitDyncallWrapper(target);
+    InitCallbackWrapper(target);
     InitStatics(target);
 }
 

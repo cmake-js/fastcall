@@ -78,7 +78,6 @@ inline void CallAsync(
             UnwrapPointer(info[1]),
             callFunc,
             convertFunc));
-    info.GetReturnValue().SetUndefined();
 }
 
 NAN_MODULE_INIT(InitDyncallWrapper);

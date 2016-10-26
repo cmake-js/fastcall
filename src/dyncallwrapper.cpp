@@ -4,6 +4,7 @@
 #include "deps.h"
 #include "helpers.h"
 #include "int64.h"
+#include "getv8value.h"
 
 using namespace std;
 using namespace v8;
@@ -89,37 +90,42 @@ NAN_METHOD(argDouble)
 
 NAN_METHOD(argPointer)
 {
-    dcArgPointer(vm, UnwrapPointer(info[0]));
+    try {
+        dcArgPointer(vm, GetPointer(info[0]));
+    }
+    catch (exception& ex) {
+        Nan::ThrowTypeError(ex.what());
+    }
 }
 
 NAN_METHOD(argInt8)
 {
-    dcArgInt8(vm, info[0]->Int32Value());
+    dcArgInt8(vm, GetInt8(info[0]));
 }
 
 NAN_METHOD(argUInt8)
 {
-    dcArgUInt8(vm, info[0]->Uint32Value());
+    dcArgUInt8(vm, GetUInt8(info[0]));
 }
 
 NAN_METHOD(argInt16)
 {
-    dcArgInt16(vm, info[0]->Int32Value());
+    dcArgInt16(vm, GetInt16(info[0]));
 }
 
 NAN_METHOD(argUInt16)
 {
-    dcArgUInt16(vm, info[0]->Uint32Value());
+    dcArgUInt16(vm, GetUInt8(info[0]));
 }
 
 NAN_METHOD(argInt32)
 {
-    dcArgInt32(vm, info[0]->Int32Value());
+    dcArgInt32(vm, GetInt32(info[0]));
 }
 
 NAN_METHOD(argUInt32)
 {
-    dcArgUInt32(vm, info[0]->Uint32Value());
+    dcArgUInt32(vm, GetUInt32(info[0]));
 }
 
 NAN_METHOD(argInt64)
@@ -134,32 +140,32 @@ NAN_METHOD(argUInt64)
 
 NAN_METHOD(argByte)
 {
-    dcArgByte(vm, info[0]->Uint32Value());
+    dcArgByte(vm, GetByte(info[0]));
 }
 
 NAN_METHOD(argUChar)
 {
-    dcArgUChar(vm, info[0]->Uint32Value());
+    dcArgUChar(vm, GetUChar(info[0]));
 }
 
 NAN_METHOD(argUShort)
 {
-    dcArgUShort(vm, info[0]->Uint32Value());
+    dcArgUShort(vm, GetUShort(info[0]));
 }
 
 NAN_METHOD(argUInt)
 {
-    dcArgUInt(vm, info[0]->Uint32Value());
+    dcArgUInt(vm, GetUInt(info[0]));
 }
 
 NAN_METHOD(argULong)
 {
-    dcArgULong(vm, GetUint64(info[0]));
+    dcArgULong(vm, GetULong(info[0]));
 }
 
 NAN_METHOD(argULongLong)
 {
-    dcArgULongLong(vm, GetUint64(info[0]));
+    dcArgULongLong(vm, GetULongLong(info[0]));
 }
 
 NAN_METHOD(argSizeT)
@@ -583,6 +589,7 @@ NAN_MODULE_INIT(fastcall::InitDyncallWrapper)
     Nan::Set(dyncall, Nan::New<String>("reset").ToLocalChecked(), Nan::New<FunctionTemplate>(reset)->GetFunction());
     Nan::Set(dyncall, Nan::New<String>("setVM").ToLocalChecked(), Nan::New<FunctionTemplate>(setVM)->GetFunction());
     Nan::Set(dyncall, Nan::New<String>("setVMAndReset").ToLocalChecked(), Nan::New<FunctionTemplate>(setVMAndReset)->GetFunction());
+
     Nan::Set(dyncall, Nan::New<String>("argBool").ToLocalChecked(), Nan::New<FunctionTemplate>(argBool)->GetFunction());
     Nan::Set(dyncall, Nan::New<String>("argChar").ToLocalChecked(), Nan::New<FunctionTemplate>(argChar)->GetFunction());
     Nan::Set(dyncall, Nan::New<String>("argShort").ToLocalChecked(), Nan::New<FunctionTemplate>(argShort)->GetFunction());
