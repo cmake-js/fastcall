@@ -25,11 +25,12 @@ NAN_METHOD(freeLoop)
 
 NAN_METHOD(makePtr)
 {
-    auto loop = Unwrap<Loop>(info[0]);
-    auto signature = string(*Nan::Utf8String(info[1]));
-    assert(result.size() >= 2);
-    auto execute = info[2].As<Function>();
-    auto func = info[3].As<Function>();
+    auto callback = info[0].As<Object>();
+    auto loop = Unwrap<Loop>(info[1]);
+    auto signature = string(*Nan::Utf8String(info[2]));
+    assert(signature.size() >= 2);
+    auto execute = info[3].As<Function>();
+    auto func = info[4].As<Function>();
 
     auto userData = new CallbackUserData(
         signature[signature.size() - 1],
@@ -40,6 +41,10 @@ NAN_METHOD(makePtr)
 
     auto userDataPtr = Wrap(userData);
     auto dcCallbackPtr = Wrap(dcCallback, [](char* data, void* hint) { dcbFreeCallback(reinterpret_cast<DCCallback*>(data)); });
+    SetValue(dcCallbackPtr, "userData", userDataPtr);
+    SetValue(dcCallbackPtr, "callback", callback);
+
+    info.GetReturnValue().Set(dcCallbackPtr);
 }
 
 NAN_METHOD(argBool)
@@ -342,6 +347,7 @@ NAN_MODULE_INIT(fastcall::InitCallbackWrapper)
     Nan::Set(target, Nan::New<String>("callback").ToLocalChecked(), callback);
     Nan::Set(callback, Nan::New<String>("newLoop").ToLocalChecked(), Nan::New<FunctionTemplate>(newLoop)->GetFunction());
     Nan::Set(callback, Nan::New<String>("freeLoop").ToLocalChecked(), Nan::New<FunctionTemplate>(freeLoop)->GetFunction());
+    Nan::Set(callback, Nan::New<String>("makePtr").ToLocalChecked(), Nan::New<FunctionTemplate>(makePtr)->GetFunction());
 
     Nan::Set(callback, Nan::New<String>("argBool").ToLocalChecked(), Nan::New<FunctionTemplate>(argBool)->GetFunction());
     Nan::Set(callback, Nan::New<String>("argChar").ToLocalChecked(), Nan::New<FunctionTemplate>(argChar)->GetFunction());
