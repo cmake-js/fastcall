@@ -2,7 +2,7 @@
 #include <functional>
 #include <nan.h>
 #include <queue>
-#include "libraryfeature.h"
+#include "locker.h"
 #include "helpers.h"
 
 namespace fastcall {
@@ -11,12 +11,12 @@ struct Queue {
     typedef std::queue<TItem> TQueue;
     typedef std::function<void(TItem&)> TProcessItemFunc;
 
-    Queue(LibraryFeature* owner, uv_loop_t* loop, TProcessItemFunc processItemFunc)
-        : owner(owner)
+    Queue(Locker* locker, uv_loop_t* loop, TProcessItemFunc processItemFunc)
+        : locker(locker)
         , processItemFunc(processItemFunc)
         , handle(new uv_async_t)
     {
-        assert(owner);
+        assert(locker);
 
         int result = uv_async_init(loop, handle, ProcessItems);
         handle->data = static_cast<void*>(this);
@@ -54,14 +54,14 @@ struct Queue {
     }
 
 private:
-    LibraryFeature* owner;
+    Locker* locker;
     TQueue queue;
     TProcessItemFunc processItemFunc;
     uv_async_t* handle;
 
     Lock AcquireLock()
     {
-        return owner->AcquireLock();
+        return Lock(*locker);
     }
 
     static void ProcessItems(uv_async_t* handle)

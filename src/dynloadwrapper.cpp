@@ -9,7 +9,6 @@ using namespace fastcall;
 
 namespace {
 
-// dynload:
 NAN_METHOD(loadLibrary)
 {
     char* str = *Nan::Utf8String(info[0]);
@@ -45,10 +44,12 @@ NAN_METHOD(findSymbol)
 }
 }
 
-NAN_MODULE_INIT(fastcall::InitDyncallWrapper)
+NAN_MODULE_INIT(fastcall::InitDynloadWrapper)
 {
     Nan::HandleScope scope;
-    Nan::Set(target, Nan::New<String>("loadLibrary").ToLocalChecked(), Nan::New<FunctionTemplate>(loadLibrary)->GetFunction());
-    Nan::Set(target, Nan::New<String>("freeLibrary").ToLocalChecked(), Nan::New<FunctionTemplate>(freeLibrary)->GetFunction());
-    Nan::Set(target, Nan::New<String>("findSymbol").ToLocalChecked(), Nan::New<FunctionTemplate>(findSymbol)->GetFunction());
+    auto dynload = Nan::New<Object>();
+    Nan::Set(target, Nan::New<String>("dynload").ToLocalChecked(), dynload);
+    Nan::Set(dynload, Nan::New<String>("loadLibrary").ToLocalChecked(), Nan::New<FunctionTemplate>(loadLibrary)->GetFunction());
+    Nan::Set(dynload, Nan::New<String>("freeLibrary").ToLocalChecked(), Nan::New<FunctionTemplate>(freeLibrary)->GetFunction());
+    Nan::Set(dynload, Nan::New<String>("findSymbol").ToLocalChecked(), Nan::New<FunctionTemplate>(findSymbol)->GetFunction());
 }

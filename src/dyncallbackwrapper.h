@@ -2,5 +2,5 @@
 #include <nan.h>
 
 namespace fastcall {
-NAN_MODULE_INIT(InitDynloadWrapper);
+NAN_MODULE_INIT(InitCallbackWrapper);
 }

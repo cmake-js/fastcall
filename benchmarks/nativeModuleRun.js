@@ -17,8 +17,9 @@ module.exports = async(function* () {
 
 function syncRun(module) {
     let result = 0;
+    const addNumbers = module.addNumbers;
     common.measure('addNumbers', () => {
-        result = module.addNumbers(module.addNumbers(5.5, 5), module.addNumbers(1.1, 1));
+        result = addNumbers(addNumbers(5.5, 5), addNumbers(1.1, 1));
     });
     assert(result === 5.5 + 5 + 1 + 1);
 }

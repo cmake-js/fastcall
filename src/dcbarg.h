@@ -45,36 +45,6 @@ inline unsigned long long dcbArgUInt64(DCArgs* args)
 
 #define dcbArgByte dcbArgUInt8
 
-inline unsigned char dcbArgUChar(DCArgs* args)
-{
-    char tmp = dcbArgChar(args);
-    return reinterpret_cast<unsigned char&>(tmp);
-}
-
-inline unsigned short dcbArgUShort(DCArgs* args)
-{
-    short tmp = dcbArgShort(args);
-    return reinterpret_cast<unsigned short&>(tmp);
-}
-
-inline unsigned int dcbArgUInt(DCArgs* args)
-{
-    int tmp = dcbArgInt(args);
-    return reinterpret_cast<unsigned int&>(tmp);
-}
-
-inline unsigned long dcbArgULong(DCArgs* args)
-{
-    long tmp = dcbArgLong(args);
-    return reinterpret_cast<unsigned long&>(tmp);
-}
-
-inline unsigned long long dcbArgULongLong(DCArgs* args)
-{
-    long long tmp = dcbArgLongLong(args);
-    return reinterpret_cast<unsigned long long&>(tmp);
-}
-
 #define dcbArgSizeT dcbArgULong
 
 #define dcbArgBool dcbArgUInt8

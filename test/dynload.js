@@ -7,6 +7,7 @@ const Promise = require('bluebird');
 const async = Promise.coroutine;
 
 describe('native dynload interface', function () {
+    const dynload = native.dynload;
     let libPath = null;
     before(async(function* () {
         libPath = yield helpers.findTestlib();
@@ -14,36 +15,37 @@ describe('native dynload interface', function () {
 
     it('should export an object', function () {
         assert(_.isObject(native));
+        assert(_.isObject(dynload));
     });
 
     it('should expose dynload methods', function () {
-        assert(_.isFunction(native.loadLibrary));
-        assert(_.isFunction(native.freeLibrary));
-        assert(_.isFunction(native.findSymbol));
+        assert(_.isFunction(dynload.loadLibrary));
+        assert(_.isFunction(dynload.freeLibrary));
+        assert(_.isFunction(dynload.findSymbol));
     });
 
     it('should load a library, and find a function pointer there', function () {
-        const pLib = native.loadLibrary(libPath);
+        const pLib = dynload.loadLibrary(libPath);
         assert(_.isBuffer(pLib));
         assert.equal(pLib.length, 0);
-        const pMul = native.findSymbol(pLib, 'mul');
+        const pMul = dynload.findSymbol(pLib, 'mul');
         assert.ok(pMul);
         assert(_.isBuffer(pMul));
         assert.equal(pMul.length, 0);
-        native.freeLibrary(pLib);
+        dynload.freeLibrary(pLib);
     });
 
     it('should throw, when library doesn\'t exsist', function () {
-        assert.throws(() => native.loadLibrary('bubukittyfuck'));
+        assert.throws(() => dynload.loadLibrary('bubukittyfuck'));
     });
 
     it('should throw, when loadLibrary\'s first argument missing', function () {
-        assert.throws(() => native.loadLibrary());
+        assert.throws(() => dynload.loadLibrary());
     });
 
     it('should return null when function not found', function () {
-        const pLib = native.loadLibrary(libPath);
-        assert(native.findSymbol(pLib, '42') === null);
-        native.freeLibrary(pLib);
+        const pLib = dynload.loadLibrary(libPath);
+        assert(dynload.findSymbol(pLib, '42') === null);
+        dynload.freeLibrary(pLib);
     });
 });
