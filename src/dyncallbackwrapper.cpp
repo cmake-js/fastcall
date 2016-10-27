@@ -34,8 +34,8 @@ NAN_METHOD(makePtr)
 
     auto userData = new CallbackUserData(
         signature[signature.size() - 1],
-        TCopyablePersistentFunction(execute),
-        TCopyablePersistentFunction(func),
+        Nan::Global<Function>(execute),
+        Nan::Global<Function>(func),
         loop);
     auto dcCallback = MakeDCCallback(signature, userData);
 

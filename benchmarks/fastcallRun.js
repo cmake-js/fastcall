@@ -13,11 +13,6 @@ module.exports = async(function* () {
     syncRun(lib);
     console.log('--- async ---');
     yield asyncRun(lib);
-<<<<<<< HEAD
-    console.log('--- async (wired) ---');
-    yield asyncWiredRun(lib);
-=======
->>>>>>> simplifyify
 });
 
 function syncRun(lib) {

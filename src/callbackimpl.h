@@ -16,20 +16,20 @@ struct CallbackUserData {
 
     CallbackUserData(
         char resultTypeCode,
-        const TCopyablePersistentFunction& execute,
-        const TCopyablePersistentFunction& func,
+        Nan::Global<v8::Function>&& execute,
+        Nan::Global<v8::Function>&& func,
         Loop* loop)
         : resultTypeCode(resultTypeCode)
-        , execute(execute)
-        , func(func)
+        , execute(std::move(execute))
+        , func(std::move(func))
         , loop(loop)
     {
         assert(loop);
     }
 
     char resultTypeCode;
-    TCopyablePersistentFunction execute;
-    TCopyablePersistentFunction func;
+    Nan::Global<v8::Function> execute;
+    Nan::Global<v8::Function> func;
     Loop* loop;
     std::unique_ptr<Sync> threading;
 

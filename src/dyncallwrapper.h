@@ -2,63 +2,88 @@
 #include <nan.h>
 #include <dyncall.h>
 #include "helpers.h"
+#include "defs.h"
 
 namespace fastcall {
 static v8::Local<v8::Value> workerArgs[2] = { Nan::Null(), Nan::Null() };
 
 template <typename T>
-struct CallAsyncWorker : Nan::AsyncWorker {
+struct CallAsyncWorker {
     typedef T (*TCallFunc)(DCCallVM*, DCpointer);
     typedef v8::Local<v8::Value>(*TConvertFunc)(T);
 
     CallAsyncWorker(
-        Nan::Callback* callback,
+        Nan::Global<v8::Function>&& callback,
         DCCallVM* vm,
         DCpointer funcPtr,
         TCallFunc callFunc,
         TConvertFunc convertFunc)
-        : Nan::AsyncWorker(callback)
+        : callback(std::move(callback))
         , vm(vm)
         , funcPtr(funcPtr)
         , callFunc(callFunc)
         , convertFunc(convertFunc)
     {
+        work.data = this;
+    }
+
+    ~CallAsyncWorker()
+    {
+        dcFree(vm);
+    }
+
+    void Start()
+    {
+        int r = uv_queue_work(uv_default_loop(), &work, Call, Finished);
+        assert(!r);
     }
 
 private:
+    Nan::Global<v8::Function> callback;
     DCCallVM* vm;
     DCpointer funcPtr;
     TCallFunc callFunc;
     TConvertFunc convertFunc;
     T result;
+    uv_work_t work;
 
-    void Execute() override
+    static void Call(uv_work_t* req)
+    {
+        auto self = (CallAsyncWorker<T>*)req->data;
+        self->Execute();
+    }
+
+    static void Finished(uv_work_t* req, int status)
+    {
+        Nan::HandleScope scope;
+
+        auto self = (CallAsyncWorker<T>*)req->data;
+        self->HandleOKCallback();
+        delete self;
+    }
+
+    void Execute()
     {
         result = callFunc(vm, funcPtr);
     }
 
-    void HandleOKCallback() override
+    void HandleOKCallback()
     {
         workerArgs[1] = convertFunc(result);
-        callback->Call(2, workerArgs);
-    }
-
-    void Destroy() override
-    {
-        dcFree(vm);
+        Nan::New(callback)->Call(Nan::Undefined(), 2, workerArgs);
     }
 };
 
 template <typename T>
 inline CallAsyncWorker<T>* MakeCallAsyncWorker(
-    Nan::Callback* callback,
+    Nan::Global<v8::Function>&& callback,
     DCCallVM* vm,
     DCpointer funcPtr,
     typename CallAsyncWorker<T>::TCallFunc callFunc,
     typename CallAsyncWorker<T>::TConvertFunc convertFunc)
 {
     return new CallAsyncWorker<T>(
-        callback,
+        std::move(callback),
         vm,
         funcPtr,
         callFunc,
@@ -71,13 +96,14 @@ inline void CallAsync(
     typename CallAsyncWorker<T>::TCallFunc callFunc,
     typename CallAsyncWorker<T>::TConvertFunc convertFunc)
 {
-    Nan::AsyncQueueWorker(
-        MakeCallAsyncWorker<T>(
-            new Nan::Callback(info[2].As<v8::Function>()),
-            Unwrap<DCCallVM>(info[0]),
-            UnwrapPointer(info[1]),
-            callFunc,
-            convertFunc));
+    auto worker = MakeCallAsyncWorker<T>(
+        Nan::Global<v8::Function>(info[2].As<v8::Function>()),
+        Unwrap<DCCallVM>(info[0]),
+        UnwrapPointer(info[1]),
+        callFunc,
+        convertFunc);
+
+    worker->Start();
 }
 
 NAN_MODULE_INIT(InitDyncallWrapper);
