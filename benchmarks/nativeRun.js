@@ -16,10 +16,10 @@ module.exports = async(function* () {
 
 function syncRun(lib) {
     const ms = lib.interface.measureNativeNumberSyncTest(config.iterations);
-    common.showResult('addNumbers', ms);
+    common.showResult('addNumbers', 3, ms);
 }
 
 function asyncRun(lib) {
     const ms = lib.interface.measureNativeNumberAsyncTest(config.iterations);
-    common.showResult('addNumbers', ms);
+    common.showResult('addNumbers', 3, ms);
 }
