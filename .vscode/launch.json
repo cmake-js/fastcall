@@ -15,7 +15,8 @@
                 "--nolazy"
             ],
             "env": {
-                "NODE_ENV": "development"
+                "NODE_ENV": "development",
+                "DEBUG": "fastcall:*"
             },
             "console": "integratedTerminal",
             "sourceMaps": false,

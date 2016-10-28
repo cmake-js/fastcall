@@ -5,4 +5,5 @@ if (!es5Support.fallbackToES5(exports, 'test')) {
     require('./suites/dynload');
     require('./suites/libraryTests');
     require('./suites/raii');
+    require('./suites/fieldTypes');
 }

@@ -4,6 +4,26 @@ const char world[] = "world";
 const double numbers[] = { 1.1, 2.2, 3.3 };
 typedef int (*TMakeIntFunc)(float, double);
 
+struct TNumbers 
+{
+    short a;
+    int64_t b;
+    long c;
+};
+
+union TUnion
+{
+    short a;
+    int64_t b;
+    long c;
+};
+
+struct TTaggedUnion
+{
+    char tag;
+    TUnion data;
+};
+
 extern "C" {
 NODE_MODULE_EXPORT int mul(int value, int by)
 {
@@ -44,5 +64,51 @@ NODE_MODULE_EXPORT int makeInt(float fv, double dv, TMakeIntFunc func)
 NODE_MODULE_EXPORT double addNumbers(float floatValue, int intValue)
 {
     return (double)floatValue + (double)intValue;
+}
+
+NODE_MODULE_EXPORT int64_t mulStructMembers(TNumbers* numbers)
+{
+    if (!numbers) {
+        return 0;
+    }
+    return numbers->a * numbers->b * numbers->c;
+}
+
+NODE_MODULE_EXPORT int64_t getAFromUnion(TUnion* u)
+{
+    if (!u) {
+        return 0;
+    }
+    return u->a;
+}
+
+NODE_MODULE_EXPORT int64_t getBFromUnion(TUnion* u)
+{
+    if (!u) {
+        return 0;
+    }
+    return u->b;
+}
+
+NODE_MODULE_EXPORT int64_t getCFromUnion(TUnion* u)
+{
+    if (!u) {
+        return 0;
+    }
+    return u->c;
+}
+
+NODE_MODULE_EXPORT int64_t getValueFromTaggedUnion(TTaggedUnion* u)
+{
+    if (!u) {
+        return 0;
+    }
+    if (u->tag == 'a') {
+        return u->data.a;
+    }
+    if (u->tag == 'b') {
+        return u->data.b;
+    }
+    return u->data.c;
 }
 }
