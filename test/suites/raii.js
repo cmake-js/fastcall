@@ -3,7 +3,7 @@ const _ = require('lodash');
 const assert = require('assert');
 const Promise = require('bluebird');
 const async = Promise.coroutine;
-const fastcall = require('..');
+const fastcall = require('../../lib');
 const scope = fastcall.scope;
 const Scoped = fastcall.Scoped;
 

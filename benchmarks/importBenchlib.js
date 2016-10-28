@@ -11,7 +11,7 @@ let fastcallLib = null;
 
 exports.ffiWay = async(function* () {
     if (ffiLib === null) {
-        const libPath = yield Library.find(path.join(__dirname, '..'), 'benchlib');
+        const libPath = yield findLib();
         ffiLib = ffi.Library(
             libPath,
             {
@@ -26,7 +26,7 @@ exports.ffiWay = async(function* () {
 
 exports.fastcallWay = async(function* () {
     if (fastcallLib === null) {
-        const libPath = yield Library.find(path.join(__dirname, '..'), 'benchlib');
+        const libPath = yield findLib();
         fastcallLib = new Library(libPath)
         //.callback('int TMakeIntFunc(float, double, void*)')
         .function('double measureNativeNumberSyncTest(uint iterations)')
@@ -48,3 +48,14 @@ exports.close = function () {
         fastcallLib = null;
     }
 };
+
+var findLib = async(function* () {
+    let libPath;
+    try {
+        libPath = yield Library.find(path.join(__dirname, '..'), 'benchlib');
+    }
+    catch (err) {
+        libPath = yield Library.find(path.join(__dirname, '../..'), 'benchlib');
+    }
+    return libPath;
+});

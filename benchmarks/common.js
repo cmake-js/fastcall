@@ -1,5 +1,5 @@
 'use strict';
-const config = require('./config.json');
+const config = require('./config');
 const Promise = require('bluebird');
 const async = Promise.coroutine;
 

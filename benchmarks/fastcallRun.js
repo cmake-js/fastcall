@@ -2,7 +2,7 @@
 const Promise = require('bluebird');
 const async = Promise.coroutine;
 const imports = require('./imports');
-const config = require('./config.json');
+const config = require('./config');
 const assert = require('assert');
 const common = require('./common');
 

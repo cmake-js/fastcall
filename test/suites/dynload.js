@@ -1,5 +1,5 @@
 'use strict';
-const native = require('../lib/native');
+const native = require('../../lib/native');
 const helpers = require('./helpers');
 const assert = require('assert');
 const _ = require('lodash');

@@ -1,0 +1,169 @@
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _ = require('lodash');
+var assert = require('assert');
+var verify = require('./verify');
+var native = require('./native');
+var util = require('util');
+var FunctionDefinition = require('./FunctionDefinition');
+var ref = require('./ref');
+
+var FastCallback = function (_FunctionDefinition) {
+    _inherits(FastCallback, _FunctionDefinition);
+
+    function FastCallback(library, def) {
+        _classCallCheck(this, FastCallback);
+
+        assert(_.isObject(library), '"library" is not an object.');
+
+        var _this = _possibleConstructorReturn(this, (FastCallback.__proto__ || Object.getPrototypeOf(FastCallback)).call(this, library, def));
+
+        _this.library = library;
+        _this._def = new FunctionDefinition(library, def);
+        _this._ptrType = ref.refType(ref.types.void);
+        _this._processArgs = null;
+        _this._setResult = null;
+        return _this;
+    }
+
+    _createClass(FastCallback, [{
+        key: 'initialize',
+        value: function initialize() {
+            this._execute = this._makeExecuteMethod();
+        }
+    }, {
+        key: 'getFactory',
+        value: function getFactory() {
+            var _this2 = this;
+
+            var factory = function factory(fn) {
+                return _this2.makeCallbackPtr(fn);
+            };
+            factory.callback = this;
+            return factory;
+        }
+    }, {
+        key: 'makeCallbackPtr',
+        value: function makeCallbackPtr(value) {
+            if (value.callback === this) {
+                return value;
+            }
+            if (_.isFunction(value)) {
+                var ptr = native.callback.makePtr(this, this.library._loop, this.signature, this.execute, value);
+                verify(ptr.callback === this);
+                return ptr;
+            }
+            if (value instanceof Buffer) {
+                throw new TypeError('Buffer is not a callback pointer.');
+            }
+            throw new TypeError('Cannot make callback from: ' + value);
+        }
+    }, {
+        key: '_makeExecuteMethod',
+        value: function _makeExecuteMethod() {
+            var _this3 = this;
+
+            var processArgsFunc = this._makeProcessArgsFunc();
+            var setResultFunc = this._findSetResultFunc();
+            var resultTypeCode = this.resultType.code;
+            return function (argsPtr, resultPtr, func) {
+                var callArgs = new Array(_this3.args.length);
+                processArgsFunc(argsPtr, callArgs);
+                var result = func.apply(null, callArgs);
+                if (resultTypeCode !== 'v') {
+                    setResultFunc(resultPtr, result);
+                }
+            };
+        }
+    }, {
+        key: '_makeProcessArgsFunc',
+        value: function _makeProcessArgsFunc() {
+            var _this4 = this;
+
+            var processArgFuncs = this.args.map(function (arg) {
+                return _this4._findProcessArgFunc(arg.type);
+            });
+            var funcArgs = ['argsPtr', 'callArgs'];
+            var funcBody = '';
+            for (var i = 0; i < processArgFuncs.length; i++) {
+                funcBody += 'callArgs[' + i + '] = this.processArgFunc' + i + '(argsPtr);';
+            }
+
+            var Ctx = function Ctx(callback) {
+                _classCallCheck(this, Ctx);
+
+                var i = 0;
+                var _iteratorNormalCompletion = true;
+                var _didIteratorError = false;
+                var _iteratorError = undefined;
+
+                try {
+                    for (var _iterator = processArgFuncs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                        var processArgFunc = _step.value;
+
+                        this['processArgFunc' + i++] = processArgFunc.func;
+                    }
+                } catch (err) {
+                    _didIteratorError = true;
+                    _iteratorError = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion && _iterator.return) {
+                            _iterator.return();
+                        }
+                    } finally {
+                        if (_didIteratorError) {
+                            throw _iteratorError;
+                        }
+                    }
+                }
+            };
+
+            var ctx = new Ctx(this);
+
+            var innerFunc = void 0;
+            try {
+                innerFunc = new (Function.prototype.bind.apply(Function, [null].concat(_toConsumableArray(funcArgs.concat([funcBody])))))();
+            } catch (err) {
+                throw Error('Invalid function body: ' + funcBody);
+            }
+
+            var func = function func() {
+                return innerFunc.apply(ctx, arguments);
+            };
+            func.callback = this;
+            return func;
+        }
+    }, {
+        key: '_findProcessArgFunc',
+        value: function _findProcessArgFunc(type) {
+            return this.findFastcallFunc(native.callback, 'arg', type);
+        }
+    }, {
+        key: '_findSetResultFunc',
+        value: function _findSetResultFunc() {
+            return this.findFastcallFunc(native.callback, 'set', this.resultType).func;
+        }
+    }, {
+        key: 'execute',
+        get: function get() {
+            assert(this._execute, 'FastCallback is not initialized.');
+            return this._execute;
+        }
+    }]);
+
+    return FastCallback;
+}(FunctionDefinition);
+
+module.exports = FastCallback;
+//# sourceMappingURL=FastCallback.js.map

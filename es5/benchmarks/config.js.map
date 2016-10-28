@@ -1,0 +1,1 @@
+{"version":3,"sources":["benchmarks/config.js"],"names":["module","exports","iterations"],"mappings":"AAAA;;AAEAA,OAAOC,OAAP,GAAiB;AACbC,gBAAY;AADC,CAAjB","file":"config.js","sourcesContent":["'use strict';\n\nmodule.exports = {\n    iterations: 100000\n};"]}

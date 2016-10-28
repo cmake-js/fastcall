@@ -1,5 +1,5 @@
 'use strict';
-const fastcall = require('..');
+const fastcall = require('../../lib');
 const Library = fastcall.Library;
 const helpers = require('./helpers');
 const assert = require('assert');

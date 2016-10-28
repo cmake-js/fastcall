@@ -1,0 +1,1 @@
+{"version":3,"sources":["lib/defs.js"],"names":["exports","callMode","sync","async"],"mappings":"AAAA;;AAEAA,QAAQC,QAAR,GAAmB;AACfC,UAAM,CADS;AAEfC,WAAO;AAFQ,CAAnB","file":"defs.js","sourcesContent":["'use strict';\n\nexports.callMode = {\n    sync: 1,\n    async: 2\n};"]}
