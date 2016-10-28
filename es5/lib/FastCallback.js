@@ -16,7 +16,7 @@ var verify = require('./verify');
 var native = require('./native');
 var util = require('util');
 var FunctionDefinition = require('./FunctionDefinition');
-var ref = require('./ref');
+var ref = require('./TooTallNates/ref');
 
 var FastCallback = function (_FunctionDefinition) {
     _inherits(FastCallback, _FunctionDefinition);
@@ -33,6 +33,7 @@ var FastCallback = function (_FunctionDefinition) {
         _this._ptrType = ref.refType(ref.types.void);
         _this._processArgs = null;
         _this._setResult = null;
+        _this._refType = ref.refType(ref.types.void);
         return _this;
     }
 
@@ -46,25 +47,35 @@ var FastCallback = function (_FunctionDefinition) {
         value: function getFactory() {
             var _this2 = this;
 
-            var factory = function factory(fn) {
-                return _this2.makeCallbackPtr(fn);
+            var factory = function factory(value) {
+                return _this2.makePtr(value);
             };
             factory.callback = this;
             return factory;
         }
     }, {
-        key: 'makeCallbackPtr',
-        value: function makeCallbackPtr(value) {
-            if (value.callback === this) {
-                return value;
-            }
-            if (_.isFunction(value)) {
-                var ptr = native.callback.makePtr(this, this.library._loop, this.signature, this.execute, value);
-                verify(ptr.callback === this);
-                return ptr;
-            }
-            if (value instanceof Buffer) {
-                throw new TypeError('Buffer is not a callback pointer.');
+        key: 'makePtr',
+        value: function makePtr(value) {
+            if (value) {
+                if (value.callback === this) {
+                    return value;
+                }
+                if (_.isFunction(value)) {
+                    var ptr = native.callback.makePtr(this, this.library._loop, this.signature, this.execute, value);
+                    verify(ptr.callback === this);
+                    ptr.type = this._refType;
+                    return ptr;
+                }
+                if (value instanceof Buffer) {
+                    if (value.type === undefined) {
+                        value.type = this._refType;
+                        value.callback = this;
+                        return value;
+                    }
+                    throw new TypeError('Buffer is not a callback pointer.');
+                }
+            } else if (value === null) {
+                return null;
             }
             throw new TypeError('Cannot make callback from: ' + value);
         }

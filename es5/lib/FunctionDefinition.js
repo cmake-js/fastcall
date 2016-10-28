@@ -7,7 +7,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var _ = require('lodash');
 var assert = require('assert');
 var verify = require('./verify');
-var ref = require('./ref');
+var ref = require('./TooTallNates/ref');
 var util = require('util');
 
 var IS_X64 = process.arch === 'x64';

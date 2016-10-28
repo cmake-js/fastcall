@@ -21,7 +21,7 @@ var callMode = defs.callMode;
 var FunctionDefinition = require('./FunctionDefinition');
 var util = require('util');
 var verify = require('./verify');
-var ref = require('./ref');
+var ref = require('./TooTallNates/ref');
 
 var FastFunction = function (_FunctionDefinition) {
     _inherits(FastFunction, _FunctionDefinition);
@@ -130,7 +130,7 @@ var FastFunction = function (_FunctionDefinition) {
 
                         if (setter.type.callback) {
                             _this3['argSetter' + i++] = function (cb) {
-                                return setter.func(setter.type.callback.makeCallbackPtr(cb));
+                                return setter.func(setter.type.callback.makePtr(cb));
                             };
                         } else {
                             _this3['argSetter' + i++] = setter.func;
@@ -180,24 +180,24 @@ var FastFunction = function (_FunctionDefinition) {
             var vmArgSetters = this.args.map(function (arg) {
                 return _this4._findVMSetterFunc(arg.type);
             });
-            var hasCallbackArg = Boolean(_(vmArgSetters).filter(function (setter) {
-                return setter.type.callback;
+            var hasPtrArg = Boolean(_(vmArgSetters).filter(function (setter) {
+                return setter.type.indirection > 1;
             }).head());
             var funcArgs = _.range(vmArgSetters.length).map(function (n) {
                 return 'arg' + n;
             });
-            var funcBody = hasCallbackArg ? 'var callbacks = [];' : '';
+            var funcBody = hasPtrArg ? 'var ptrs = [];' : '';
             funcBody += 'this.setVM(this.vm);';
             for (var i = 0; i < vmArgSetters.length; i++) {
                 var _setter = vmArgSetters[i];
-                if (_setter.type.callback) {
-                    funcBody += 'this.argSetter' + i + '(arg' + i + ', callbacks);';
+                if (_setter.type.indirection > 1) {
+                    funcBody += 'this.argSetter' + i + '(arg' + i + ', ptrs);';
                 } else {
                     funcBody += 'this.argSetter' + i + '(arg' + i + ');';
                 }
             }
-            if (hasCallbackArg) {
-                funcBody += 'return this.callerFunc(this.vm).finally(() => callbacks);';
+            if (hasPtrArg) {
+                funcBody += 'return this.callerFunc(this.vm).finally(() => ptrs = null);';
             } else {
                 funcBody += 'return this.callerFunc(this.vm);';
             }
@@ -217,11 +217,16 @@ var FastFunction = function (_FunctionDefinition) {
                     var _loop2 = function _loop2() {
                         var setter = _step2.value;
 
-                        if (setter.type.callback) {
-                            _this5['argSetter' + i++] = function (cb, callbacks) {
-                                var ptr = setter.type.callback.makeCallbackPtr(cb);
-                                callbacks.push(ptr);
-                                setter.func(ptr);
+                        if (setter.type.indirection > 1) {
+                            _this5['argSetter' + i++] = function (ptr, ptrs) {
+                                var _ptr = void 0;
+                                if (setter.type.callback) {
+                                    _ptr = setter.type.callback.makePtr(ptr);
+                                } else {
+                                    _ptr = ptr;
+                                }
+                                ptrs.push(_ptr);
+                                setter.func(_ptr);
                             };
                         } else {
                             _this5['argSetter' + i++] = setter.func;
