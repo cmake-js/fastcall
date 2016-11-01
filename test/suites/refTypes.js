@@ -25,7 +25,7 @@ describe('Field Types', function () {
     });
 
     describe('Struct', function () {
-        it('could be created from plain object definition', function () {
+        it('could be created by plain object definition', function () {
             const result = lib.struct({
                 TNumbers: {
                     a: 'short',
@@ -50,8 +50,15 @@ describe('Field Types', function () {
             testStructInterface();            
         });
 
+        it('should supports C struct like syntax', function () {
+            const result = lib.struct('struct TNumbers { short a; int64 b; long c; }');
+
+            assert.equal(result, lib);
+            testStructInterface();            
+        });
+
         describe('sync', function () {
-            it('should work with string syntax', function () {
+           it('should get referenced by string syntax', function () {
                 lib.struct({
                     TNumbers: {
                         a: 'short',
@@ -64,7 +71,7 @@ describe('Field Types', function () {
                 testMulStructMembersSync();
             });
 
-            it('should work with node-ffi-like syntax', function () {
+            it('should get referenced by node-ffi-like syntax', function () {
                 const TNumbers = new StructType({
                     a: 'short',
                     b: 'int64',
@@ -99,11 +106,11 @@ describe('Field Types', function () {
         }
 
         function testMulStructMembersSync() {
-            assert(_.isFunction(lib.interfce.mulStructMembers));
-            assert.equal(lib.interfce.mulStructMembers.function.resultType, lib.structs.TNumbers.type);
-            assert.equal(lib.interfce.mulStructMembers.function.resultType, lib.interface.TNumbers.type);
+            assert(_.isFunction(lib.interface.mulStructMembers));
+            assert(_.isFunction(lib.interface.TNumbers));
+            assert.strictEqual(lib.functions.mulStructMembers.args[0].type, lib.structs.TNumbers.type);
 
-            const result = lib.interfce.mulStructMembers({
+            const result = lib.interface.mulStructMembers({
                 a: 1,
                 b: 2,
                 c: 3
