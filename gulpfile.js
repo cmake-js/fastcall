@@ -16,7 +16,7 @@ gulp.task('compile-lib', function () {
     return gulp.src('lib/**/*.js', {base: '.'})
         .pipe(sourcemaps.init())
         .pipe(babel({
-            ignore: 'ref.js',
+            ignore: 'TooTallNates/*.js',
             presets: ['es2015']
         }))
         .pipe(sourcemaps.write('.'))

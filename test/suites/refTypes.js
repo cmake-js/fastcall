@@ -9,7 +9,7 @@ const Promise = require('bluebird');
 const async = Promise.coroutine;
 const StructType = fastcall.StructType;
 
-describe('Field Types', function () {
+describe.only('Ref Types', function () {
     let libPath = null;
     let lib = null;
     before(async(function* () {
@@ -77,10 +77,36 @@ describe('Field Types', function () {
                     b: 'int64',
                     c: ref.types.long
                 });
-                lib.function(['int64', [ TNumbers ]]);
+                lib.function({ mulStructMembers: ['int64', [ ref.refType(TNumbers) ]] });
 
-                testMulStructMembersSync();
+                testMulStructMembersSync(true);
             });
+        });
+
+        describe('async', function () {
+           it('should get referenced by string syntax', async(function* () {
+                lib.struct({
+                    TNumbers: {
+                        a: 'short',
+                        b: 'int64',
+                        c: ref.types.long
+                    }
+                })
+                .asyncFunction('int64 mulStructMembers(TNumbers* numbers)');
+
+                yield testMulStructMembersAsync();
+            }));
+
+            it('should get referenced by node-ffi-like syntax', async(function* () {
+                const TNumbers = new StructType({
+                    a: 'short',
+                    b: 'int64',
+                    c: ref.types.long
+                });
+                lib.asyncFunction({ mulStructMembers: ['int64', [ ref.refType(TNumbers) ]] });
+
+                yield testMulStructMembersAsync(true);
+            }));
         });
 
         function testStructInterface() {
@@ -105,18 +131,61 @@ describe('Field Types', function () {
             assert.equal(numbers.c, 3);
         }
 
-        function testMulStructMembersSync() {
+        function testMulStructMembersSync(noname) {
             assert(_.isFunction(lib.interface.mulStructMembers));
-            assert(_.isFunction(lib.interface.TNumbers));
-            assert.strictEqual(lib.functions.mulStructMembers.args[0].type, lib.structs.TNumbers.type);
+            
+            let result;
+            if (!noname) {
+                assert(_.isFunction(lib.interface.TNumbers));
+                assert.strictEqual(ref.derefType(lib.functions.mulStructMembers.args[0].type), lib.structs.TNumbers.type);
+                const ptr = lib.interface.TNumbers({
+                    a: 1,
+                    b: 2,
+                    c: 3
+                });
+                result = lib.interface.mulStructMembers(ptr);
+            }
+            else {
+                const TNumbers = new StructType({
+                    a: 'short',
+                    b: 'int64',
+                    c: ref.types.long
+                });
 
-            const result = lib.interface.mulStructMembers({
-                a: 1,
-                b: 2,
-                c: 3
-            });
+                const numbers = new TNumbers();
+                numbers.a = 1;
+                numbers.b = 2;
+                numbers.c = 3;
+
+                result = lib.interface.mulStructMembers(numbers.ref());
+            }
 
             assert.equal(result, 1 * 2 * 3);
         }
+
+        var testMulStructMembersAsync = async(function* (noname) {
+            assert(_.isFunction(lib.interface.mulStructMembers));
+            
+            let result;
+            if (!noname) {
+                assert(_.isFunction(lib.interface.TNumbers));
+                assert.strictEqual(ref.derefType(lib.functions.mulStructMembers.args[0].type), lib.structs.TNumbers.type);
+                const ptr = lib.interface.TNumbers({
+                    a: 1,
+                    b: 2,
+                    c: 3
+                });
+                result = yield lib.interface.mulStructMembers(ptr);
+            }
+            else {
+                result = yield lib.interface.mulStructMembers({
+                    a: 1,
+                    b: 2,
+                    c: 3
+                });
+            }
+
+            assert.equal(result, 1 * 2 * 3);
+        });
     });
 });
