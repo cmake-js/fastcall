@@ -7,3 +7,6 @@
 [submodule "deps/ref-union"]
 	path = deps/ref-union
 	url = https://github.com/cmake-js/ref-union.git
+[submodule "deps/ref-array"]
+	path = deps/ref-array
+	url = https://github.com/cmake-js/ref-array
