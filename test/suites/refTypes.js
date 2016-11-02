@@ -10,7 +10,7 @@ const async = Promise.coroutine;
 const StructType = fastcall.StructType;
 const UnionType = fastcall.UnionType;
 
-describe('Ref Types', function () {
+describe(`TooTallNate's ref types`, function () {
     let libPath = null;
     let lib = null;
     before(async(function* () {
@@ -190,7 +190,7 @@ describe('Ref Types', function () {
         });
     });
 
-    describe.only('Union', function () {
+    describe('Union', function () {
         it('could be created by plain object definition', function () {
             const result = lib.union({
                 TUnion: {
@@ -350,5 +350,56 @@ describe('Ref Types', function () {
                 assert.equal(result, 3);
             }
         });
+    });
+
+    describe('complex ref-types', function () {
+        describe('tagged union', function () {
+            beforeEach(function () {
+                lib.union('union TUnion { short a; int64 b; long c; }')
+                .struct('struct TTaggedUnion { char tag; TUnion data; }')
+                .function('int64 getValueFromTaggedUnion(TTaggedUnion* u)');
+
+                assert(_.isFunction(lib.interface.TUnion));
+                assert(_.isFunction(lib.interface.TTaggedUnion));
+                assert(_.isFunction(lib.interface.getValueFromTaggedUnion));
+                assert(lib.unions.TUnion);
+                assert(lib.structs.TTaggedUnion);
+                assert(lib.functions.getValueFromTaggedUnion);
+            });
+
+            it('works synchronously', function () {
+                let struct = lib.structs.TTaggedUnion.type({
+                    tag: 'b'.charCodeAt(0),
+                    data: { b: 42 }
+                });
+
+                assert(_.isObject(struct));
+                assert.equal(struct.tag, 'b'.charCodeAt(0));
+                assert.equal(struct.data.b, 42);
+
+                let result = lib.interface.getValueFromTaggedUnion(struct.ref());
+                assert.equal(result, 42);
+
+                struct = lib.structs.TTaggedUnion.type({
+                    tag: 'b'.charCodeAt(0),
+                    data: lib.interface.TUnion.type({ b: 42 })
+                });
+
+                assert(_.isObject(struct));
+                assert.equal(struct.tag, 'b'.charCodeAt(0));
+                assert.equal(struct.data.b, 42);
+
+                result = lib.interface.getValueFromTaggedUnion(struct.ref());
+                assert.equal(result, 42);
+            });
+
+            it('works asynchronously', async(function* () {
+                const result = yield lib.interface.getValueFromTaggedUnion.async({
+                    tag: 'a'.charCodeAt(0),
+                    data: { a: 5 }
+                });
+                assert.equal(result, 5);
+            }));
+        }); 
     });
 });
