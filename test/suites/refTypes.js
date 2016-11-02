@@ -210,7 +210,7 @@ describe('Ref Types', function () {
                 b: 'int64',
                 c: ref.types.long
             });
-            const result = lib.union({ TNumbers });
+            const result = lib.union({ TUnion });
 
             assert.equal(result, lib);
             testUnionInterface();            
@@ -225,7 +225,7 @@ describe('Ref Types', function () {
 
         describe('sync', function () {
            it('should get referenced by string syntax', function () {
-                lib.struct({
+                lib.union({
                     TUnion: {
                         a: 'short',
                         b: 'int64',
@@ -255,16 +255,16 @@ describe('Ref Types', function () {
 
         describe('async', function () {
            it('should get referenced by string syntax', async(function* () {
-                lib.struct({
+                lib.union({
                     TUnion: {
                         a: 'short',
                         b: 'int64',
                         c: ref.types.long
                     }
                 })
-                .function('int64 getAFromUnion(TUnion* union)')
-                .function('int64 getBFromUnion(TUnion* union)')
-                .function('int64 getCFromUnion(TUnion* union)');
+                .asyncFunction('int64 getAFromUnion(TUnion* union)')
+                .asyncFunction('int64 getBFromUnion(TUnion* union)')
+                .asyncFunction('int64 getCFromUnion(TUnion* union)');
 
                 yield testAccessUnionMembersAsync();
             }));
@@ -275,11 +275,11 @@ describe('Ref Types', function () {
                     b: 'int64',
                     c: ref.types.long
                 });
-                lib.function({ getAFromUnion: ['int64', [ ref.refType(TUnion) ]] })
-                .function({ getBFromUnion: ['int64', [ ref.refType(TUnion) ]] })
-                .function({ getCFromUnion: ['int64', [ ref.refType(TUnion) ]] });
+                lib.asyncFunction({ getAFromUnion: ['int64', [ ref.refType(TUnion) ]] })
+                .asyncFunction({ getBFromUnion: ['int64', [ ref.refType(TUnion) ]] })
+                .asyncFunction({ getCFromUnion: ['int64', [ ref.refType(TUnion) ]] });
 
-                yield testAccessUnionMembersSync(true);
+                yield testAccessUnionMembersAsync(true);
             }));
         });
 
@@ -305,34 +305,50 @@ describe('Ref Types', function () {
             assert(_.isFunction(lib.interface.getAFromUnion));
             assert(_.isFunction(lib.interface.getBFromUnion));
             assert(_.isFunction(lib.interface.getCFromUnion));
-            
-        //     let result;
-        //     if (!noname) {
-        //         assert(_.isFunction(lib.interface.TNumbers));
-        //         assert.strictEqual(ref.derefType(lib.functions.mulStructMembers.args[0].type), lib.structs.TNumbers.type);
-        //         const ptr = lib.interface.TNumbers({
-        //             a: 1,
-        //             b: 2,
-        //             c: 3
-        //         });
-        //         result = lib.interface.mulStructMembers(ptr);
-        //     }
-        //     else {
-        //         const TNumbers = new StructType({
-        //             a: 'short',
-        //             b: 'int64',
-        //             c: ref.types.long
-        //         });
 
-        //         const numbers = new TNumbers();
-        //         numbers.a = 1;
-        //         numbers.b = 2;
-        //         numbers.c = 3;
+            if (!noname) {
+                assert(_.isFunction(lib.interface.TUnion));
+                assert.strictEqual(ref.derefType(lib.functions.getAFromUnion.args[0].type), lib.unions.TUnion.type);
+                assert.strictEqual(ref.derefType(lib.functions.getBFromUnion.args[0].type), lib.unions.TUnion.type);
+                assert.strictEqual(ref.derefType(lib.functions.getCFromUnion.args[0].type), lib.unions.TUnion.type);
 
-        //         result = lib.interface.mulStructMembers(numbers.ref());
-        //     }
+                const ptr = lib.interface.TUnion({ a: 1 });
+                let result = lib.interface.getAFromUnion(ptr);
+                assert.equal(result, 1);
 
-        //     assert.equal(result, 1 * 2 * 3);
-        // }
+                const union = lib.unions.TUnion.type({ b: 2 });
+                result = lib.interface.getBFromUnion(union.ref());
+                assert.equal(result, 2);
+            }
+            else {
+                const result = lib.interface.getCFromUnion({ c: 3 });
+                assert.equal(result, 3);
+            }
+        }
+
+        var testAccessUnionMembersAsync = async(function* (noname) {
+            assert(_.isFunction(lib.interface.getAFromUnion));
+            assert(_.isFunction(lib.interface.getBFromUnion));
+            assert(_.isFunction(lib.interface.getCFromUnion));
+
+            if (!noname) {
+                assert(_.isFunction(lib.interface.TUnion));
+                assert.strictEqual(ref.derefType(lib.functions.getAFromUnion.args[0].type), lib.unions.TUnion.type);
+                assert.strictEqual(ref.derefType(lib.functions.getBFromUnion.args[0].type), lib.unions.TUnion.type);
+                assert.strictEqual(ref.derefType(lib.functions.getCFromUnion.args[0].type), lib.unions.TUnion.type);
+
+                const ptr = lib.interface.TUnion({ a: 1 });
+                let result = yield lib.interface.getAFromUnion(ptr);
+                assert.equal(result, 1);
+
+                const union = lib.unions.TUnion.type({ b: 2 });
+                result = yield lib.interface.getBFromUnion(union.ref());
+                assert.equal(result, 2);
+            }
+            else {
+                const result = yield lib.interface.getCFromUnion({ c: 3 });
+                assert.equal(result, 3);
+            }
+        });
     });
 });
