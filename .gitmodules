@@ -7,6 +7,3 @@
 [submodule "deps/ref-union"]
 	path = deps/ref-union
 	url = https://github.com/cmake-js/ref-union.git
-[submodule "deps/optional"]
-	path = deps/optional
-	url = https://github.com/martinmoene/optional-lite/

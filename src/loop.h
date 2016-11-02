@@ -1,6 +1,5 @@
 #pragma once
 #include "defs.h"
-#include "optional.h"
 #include "queue.h"
 #include <condition_variable>
 #include <dyncall.h>
