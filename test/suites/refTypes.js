@@ -10,7 +10,7 @@ const async = Promise.coroutine;
 const StructType = fastcall.StructType;
 const UnionType = fastcall.UnionType;
 
-describe(`TooTallNate's ref types`, function () {
+describe(`ref types`, function () {
     let libPath = null;
     let lib = null;
     before(async(function* () {
