@@ -9,6 +9,7 @@ const Promise = require('bluebird');
 const async = Promise.coroutine;
 const StructType = fastcall.StructType;
 const UnionType = fastcall.UnionType;
+const ArrayType = fastcall.ArrayType;
 
 describe(`ref types`, function () {
     let libPath = null;
@@ -350,6 +351,115 @@ describe(`ref types`, function () {
                 assert.equal(result, 3);
             }
         });
+    });
+
+    describe('Array', function () {
+        describe('fixed length', function () {
+            it('could be created by plain object definition', function () {
+                const result = lib
+                .array({ TLongArray: 'long' })
+                .struct({ 
+                    TRecWithArray: {
+                        values: 'TLongArray[5]',
+                        index: 'uint'
+                    }
+                });
+
+                assert.equal(result, lib);
+                testArrayInterface(true);            
+            });
+
+            it('could be created from ArrayType', function () {
+                const TLongArray = new ArrayType(ref.types.long);
+                const TRecWithArray = new StructType({
+                    values: new ArrayType(ref.types.long, 5),
+                    index: 'uint',
+                });
+                const result = lib.array({ TLongArray }).struct({ TRecWithArray });
+
+                assert.equal(result, lib);
+                testArrayInterface(true); 
+            });
+
+            it('should supports C union like syntax', function () {
+                const result = lib
+                .array('long[] TLongArray')
+                .struct('struct TRecWithArray { TLongArray[5] values; uint index; }');
+
+                assert.equal(result, lib);
+                testArrayInterface(true);            
+            });
+        });
+
+        describe('free length', function () {
+            it('could be created by plain object definition', function () {
+                const result = lib
+                .array({ TLongArray: 'long' })
+                .struct({ 
+                    TRecWithArray: {
+                        values: 'TLongArray',
+                        index: 'uint'
+                    }
+                });
+
+                assert.equal(result, lib);
+                testArrayInterface();            
+            });
+
+            it('could be created from ArrayType', function () {
+                const TLongArray = new ArrayType(ref.types.long);
+                const TRecWithArray = new StructType({
+                    values: TLongArray,
+                    index: 'uint',
+                });
+                const result = lib.array({ TLongArray }).struct({ TRecWithArray });
+
+                assert.equal(result, lib);
+                testArrayInterface(); 
+            });
+
+            it('should supports C union like syntax', function () {
+                const result = lib
+                .array('long[] TLongArray')
+                .struct('struct TRecWithArray { TLongArray values; uint index; }');
+
+                assert.equal(result, lib);
+                testArrayInterface();            
+            });
+        });
+
+        function testArrayInterface(fixed) {
+            assert(_.isObject(lib.structs.TRecWithArray));
+            assert(_.isFunction(lib.interface.TRecWithArray));
+            assert(_.isFunction(lib.structs.TRecWithArray.type));
+            assert.equal(lib.interface.TRecWithArray.struct, lib.structs.TRecWithArray);
+            assert.equal(lib.interface.TRecWithArray.type, lib.structs.TRecWithArray.type);
+
+            assert(_.isObject(lib.arrays.TLongArray));
+            assert(_.isFunction(lib.interface.TLongArray));
+            assert(_.isFunction(lib.arrays.TLongArray.type));
+            assert.equal(lib.interface.TLongArray.array, lib.arrays.TLongArray);
+            assert.equal(lib.interface.TLongArray.type, lib.arrays.TLongArray.type);
+            
+            const ptr1 = lib.interface.TRecWithArray({
+                values: [0, 1, 2, 3, 4],
+                index: 42
+            });
+            assert(ptr1 instanceof Buffer);
+            assert.equal(ptr1.type, lib.structs.TRecWithArray.type);
+            assert.equal(ptr1.struct, lib.structs.TRecWithArray);
+
+            const record = lib.structs.TRecWithArray.type(ptr1);
+            assert.equal(record.index, 42);
+            if (fixed) {
+                assert.equal(record.values.length, 5);
+            }
+            assert.equal(record.values.get(0), 0);
+            assert.equal(record.values.get(1), 1);
+            assert.equal(record.values.get(2), 2);
+            assert.equal(record.values.get(3), 3);
+            assert.equal(record.values.get(4), 4);
+        }
     });
 
     describe('complex ref-types', function () {

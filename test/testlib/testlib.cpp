@@ -24,6 +24,12 @@ struct TTaggedUnion
     TUnion data;
 };
 
+struct TRecWithArray
+{
+    long values[5];
+    unsigned index;
+};
+
 extern "C" {
 NODE_MODULE_EXPORT int mul(int value, int by)
 {
@@ -110,5 +116,30 @@ NODE_MODULE_EXPORT int64_t getValueFromTaggedUnion(TTaggedUnion* u)
         return u->data.b;
     }
     return u->data.c;
+}
+
+NODE_MODULE_EXPORT void makeRecWithArray(TRecWithArray** records, long* size)
+{
+    *size = 5;
+    *records = new TRecWithArray[*size];
+    for (unsigned i = 0; i < *size; ++i) {
+        for (unsigned j = 0; j < 5; j++) {
+            (*records)[i].values[j] = j;
+        }
+    }
+}
+
+NODE_MODULE_EXPORT void incRecWithArray(TRecWithArray records[], long size)
+{
+    for (unsigned i = 0; i < size; ++i) {
+        for (unsigned j = 0; j < 5; j++) {
+            records[i].values[j]++;
+        }
+    }
+}
+
+NODE_MODULE_EXPORT void freeRecWithArray(TRecWithArray records[])
+{
+    delete[] records;
 }
 }
