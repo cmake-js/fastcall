@@ -445,15 +445,23 @@ describe(`ref types`, function () {
                 values: [0, 1, 2, 3, 4],
                 index: 42
             });
+            if (fixed) {
+                assert.equal(ptr1.length, 48);
+            }
+            else {
+                assert.equal(ptr1.length, 16);
+            }
             assert(ptr1 instanceof Buffer);
             assert.equal(ptr1.type, lib.structs.TRecWithArray.type);
             assert.equal(ptr1.struct, lib.structs.TRecWithArray);
 
             const record = lib.structs.TRecWithArray.type(ptr1);
             assert.equal(record.index, 42);
-            if (fixed) {
-                assert.equal(record.values.length, 5);
+            if (!fixed) {
+                assert.equal(record.values.length, 0);
+                record.values.length = 5;
             }
+            assert.equal(record.values.length, 5);
             assert.equal(record.values.get(0), 0);
             assert.equal(record.values.get(1), 1);
             assert.equal(record.values.get(2), 2);
