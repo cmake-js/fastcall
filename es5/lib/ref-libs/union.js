@@ -1,5 +1,3 @@
-'use strict';
-
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 /**
@@ -139,12 +137,13 @@ function defineProperty(name, type) {
   assert(!(name in this.prototype), 'the field "' + name + '" already exists in this Union type');
 
   // define the getter/setter property
-  Object.defineProperty(this.prototype, name, {
+  var desc = {
     enumerable: true,
     configurable: true,
     get: get,
     set: set
-  });
+  };
+  Object.defineProperty(this.prototype, name, desc);
 
   var field = {
     type: type
@@ -155,11 +154,19 @@ function defineProperty(name, type) {
   recalc(this);
 
   function get() {
+    if (desc.cache) {
+      return desc.cache;
+    }
     debug('getting "%s" union field (length: %d)', name, type.size);
-    return ref.get(this['ref.buffer'], 0, type);
+    var got = ref.get(this['ref.buffer'], 0, type);
+    if ((typeof got === 'undefined' ? 'undefined' : _typeof(got)) === 'object') {
+      desc.cache = got;
+    }
+    return got;
   }
 
   function set(value) {
+    desc.cache = undefined;
     debug('setting "%s" union field (length: %d)', name, type.size, value);
     return ref.set(this['ref.buffer'], 0, value, type);
   }

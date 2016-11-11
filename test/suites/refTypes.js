@@ -37,7 +37,7 @@ describe(`ref types`, function () {
             });
 
             assert.equal(result, lib);
-            testStructInterface();            
+            testStructInterface();
         });
 
         it('could be created from StructType', function () {
@@ -49,14 +49,14 @@ describe(`ref types`, function () {
             const result = lib.struct({ TNumbers });
 
             assert.equal(result, lib);
-            testStructInterface();            
+            testStructInterface();
         });
 
         it('should supports C struct like syntax', function () {
             const result = lib.struct('struct TNumbers { short a; int64 b; long c; }');
 
             assert.equal(result, lib);
-            testStructInterface();            
+            testStructInterface();
         });
 
         describe('sync', function () {
@@ -117,7 +117,7 @@ describe(`ref types`, function () {
             assert(_.isFunction(lib.structs.TNumbers.type));
             assert.equal(lib.interface.TNumbers.struct, lib.structs.TNumbers);
             assert.equal(lib.interface.TNumbers.type, lib.structs.TNumbers.type);
-            
+
             const ptr1 = lib.interface.TNumbers({
                 a: 1,
                 b: 2,
@@ -135,7 +135,7 @@ describe(`ref types`, function () {
 
         function testMulStructMembersSync(noname) {
             assert(_.isFunction(lib.interface.mulStructMembers));
-            
+
             let result;
             if (!noname) {
                 assert(_.isFunction(lib.interface.TNumbers));
@@ -167,7 +167,7 @@ describe(`ref types`, function () {
 
         var testMulStructMembersAsync = async(function* (noname) {
             assert(_.isFunction(lib.interface.mulStructMembers));
-            
+
             let result;
             if (!noname) {
                 assert(_.isFunction(lib.interface.TNumbers));
@@ -202,7 +202,7 @@ describe(`ref types`, function () {
             });
 
             assert.equal(result, lib);
-            testUnionInterface();            
+            testUnionInterface();
         });
 
         it('could be created from UnionType', function () {
@@ -214,14 +214,14 @@ describe(`ref types`, function () {
             const result = lib.union({ TUnion });
 
             assert.equal(result, lib);
-            testUnionInterface();            
+            testUnionInterface();
         });
 
         it('should supports C union like syntax', function () {
             const result = lib.union('union TUnion { short a; int64 b; long c; }');
 
             assert.equal(result, lib);
-            testUnionInterface();            
+            testUnionInterface();
         });
 
         describe('sync', function () {
@@ -290,7 +290,7 @@ describe(`ref types`, function () {
             assert(_.isFunction(lib.unions.TUnion.type));
             assert.equal(lib.interface.TUnion.union, lib.unions.TUnion);
             assert.equal(lib.interface.TUnion.type, lib.unions.TUnion.type);
-            
+
             const ptr1 = lib.interface.TUnion({
                 a: 1
             });
@@ -358,7 +358,7 @@ describe(`ref types`, function () {
             it('could be created by plain object definition', function () {
                 const result = lib
                 .array({ TLongArray: 'long' })
-                .struct({ 
+                .struct({
                     TRecWithArray: {
                         values: 'TLongArray[5]',
                         index: 'uint'
@@ -366,7 +366,7 @@ describe(`ref types`, function () {
                 });
 
                 assert.equal(result, lib);
-                testArrayInterface(true);            
+                testArrayInterface(true);
             });
 
             it('could be created from ArrayType', function () {
@@ -378,7 +378,7 @@ describe(`ref types`, function () {
                 const result = lib.array({ TLongArray }).struct({ TRecWithArray });
 
                 assert.equal(result, lib);
-                testArrayInterface(true); 
+                testArrayInterface(true);
             });
 
             it('should supports C union like syntax', function () {
@@ -387,7 +387,7 @@ describe(`ref types`, function () {
                 .struct('struct TRecWithArray { TLongArray[5] values; uint index; }');
 
                 assert.equal(result, lib);
-                testArrayInterface(true);            
+                testArrayInterface(true);
             });
         });
 
@@ -395,7 +395,7 @@ describe(`ref types`, function () {
             it('could be created by plain object definition', function () {
                 const result = lib
                 .array({ TLongArray: 'long' })
-                .struct({ 
+                .struct({
                     TRecWithArray: {
                         values: 'TLongArray',
                         index: 'uint'
@@ -403,7 +403,7 @@ describe(`ref types`, function () {
                 });
 
                 assert.equal(result, lib);
-                testArrayInterface();            
+                testArrayInterface();
             });
 
             it('could be created from ArrayType', function () {
@@ -415,7 +415,7 @@ describe(`ref types`, function () {
                 const result = lib.array({ TLongArray }).struct({ TRecWithArray });
 
                 assert.equal(result, lib);
-                testArrayInterface(); 
+                testArrayInterface();
             });
 
             it('should supports C union like syntax', function () {
@@ -424,7 +424,7 @@ describe(`ref types`, function () {
                 .struct('struct TRecWithArray { TLongArray values; uint index; }');
 
                 assert.equal(result, lib);
-                testArrayInterface();            
+                testArrayInterface();
             });
         });
 
@@ -440,16 +440,16 @@ describe(`ref types`, function () {
             assert(_.isFunction(lib.arrays.TLongArray.type));
             assert.equal(lib.interface.TLongArray.array, lib.arrays.TLongArray);
             assert.equal(lib.interface.TLongArray.type, lib.arrays.TLongArray.type);
-            
+
             const ptr1 = lib.interface.TRecWithArray({
                 values: [0, 1, 2, 3, 4],
                 index: 42
             });
             if (fixed) {
-                assert.equal(ptr1.length, 48);
+                assert(ptr1.length >= 24);
             }
             else {
-                assert.equal(ptr1.length, 16);
+                assert(ptr1.length >= 16);
             }
             assert(ptr1 instanceof Buffer);
             assert.equal(ptr1.type, lib.structs.TRecWithArray.type);
@@ -518,6 +518,6 @@ describe(`ref types`, function () {
                 });
                 assert.equal(result, 5);
             }));
-        }); 
+        });
     });
 });

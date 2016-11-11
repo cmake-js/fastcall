@@ -16,7 +16,7 @@ var verify = require('./verify');
 var native = require('./native');
 var util = require('util');
 var FunctionDefinition = require('./FunctionDefinition');
-var ref = require('./TooTallNates/ref');
+var ref = require('./ref-libs/ref');
 
 var FastCallback = function (_FunctionDefinition) {
     _inherits(FastCallback, _FunctionDefinition);
@@ -30,10 +30,9 @@ var FastCallback = function (_FunctionDefinition) {
 
         _this.library = library;
         _this._def = new FunctionDefinition(library, def);
-        _this._ptrType = ref.refType(ref.types.void);
         _this._processArgs = null;
         _this._setResult = null;
-        _this._refType = ref.refType(ref.types.void);
+        _this._type.callback = _this;
         return _this;
     }
 
@@ -51,6 +50,7 @@ var FastCallback = function (_FunctionDefinition) {
                 return _this2.makePtr(value);
             };
             factory.callback = this;
+            factory.type = this.type;
             return factory;
         }
     }, {
@@ -63,12 +63,12 @@ var FastCallback = function (_FunctionDefinition) {
                 if (_.isFunction(value)) {
                     var ptr = native.callback.makePtr(this, this.library._loop, this.signature, this.execute, value);
                     verify(ptr.callback === this);
-                    ptr.type = this._refType;
+                    ptr.type = this.type;
                     return ptr;
                 }
                 if (value instanceof Buffer) {
                     if (value.type === undefined) {
-                        value.type = this._refType;
+                        value.type = this.type;
                         value.callback = this;
                         return value;
                     }

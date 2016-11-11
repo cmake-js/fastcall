@@ -7,7 +7,9 @@
             "request": "launch",
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "stopOnEntry": false,
-            "args": ["--timeout=10000"],
+            "args": [
+                "--timeout=10000"
+            ],
             "cwd": "${workspaceRoot}",
             "preLaunchTask": null,
             "runtimeExecutable": null,
@@ -19,8 +21,30 @@
                 "DEBUG": "fastcall:*"
             },
             "console": "integratedTerminal",
-            "sourceMaps": false,
-            "outDir": null
+            "sourceMaps": false
+        },
+        {
+            "name": "test-es5",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "stopOnEntry": false,
+            "args": [
+                "--timeout=10000"
+            ],
+            "cwd": "${workspaceRoot}",
+            "preLaunchTask": "babel",
+            "runtimeExecutable": null,
+            "runtimeArgs": [
+                "--nolazy"
+            ],
+            "env": {
+                "NODE_ENV": "development",
+                "DEBUG": "fastcall:*"
+            },
+            "console": "integratedTerminal",
+            "sourceMaps": true,
+            "outDir": "${workspaceRoot}/es5"
         },
         {
             "name": "benchmarks",

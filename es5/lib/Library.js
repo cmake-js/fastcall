@@ -15,6 +15,9 @@ var defs = require('./defs');
 var callMode = defs.callMode;
 var FastFunction = require('./FastFunction');
 var FastCallback = require('./FastCallback');
+var FastStruct = require('./FastStruct');
+var FastUnion = require('./FastUnion');
+var FastArray = require('./FastArray');
 
 var defaultOptions = {
     defaultCallMode: callMode.sync,
@@ -35,6 +38,9 @@ var Library = function () {
         this._loop = null;
         this.functions = {};
         this.callbacks = {};
+        this.structs = {};
+        this.unions = {};
+        this.arrays = {};
         this.interface = {};
     }
 
@@ -113,9 +119,33 @@ var Library = function () {
             return this;
         }
     }, {
+        key: 'struct',
+        value: function struct(def) {
+            this._addStruct(new FastStruct(this, def));
+            return this;
+        }
+    }, {
+        key: 'union',
+        value: function union(def) {
+            this._addUnion(new FastUnion(this, def));
+            return this;
+        }
+    }, {
+        key: 'array',
+        value: function array(def) {
+            this._addArray(new FastArray(this, def));
+            return this;
+        }
+    }, {
+        key: 'findRefDeclaration',
+        value: function findRefDeclaration(type) {
+            assert(_.isString(type), 'Argument is not a string.');
+            return this.structs[type] || this.unions[type] || this.arrays[type] || null;
+        }
+    }, {
         key: '_addFunction',
         value: function _addFunction(func) {
-            assert(!this.functions[func.name], 'FastFunction ' + func.name + ' already declared.');
+            assert(!this.functions[func.name], 'Function ' + func.name + ' already declared.');
             this.initialize();
             func.initialize();
             this.functions[func.name] = func;
@@ -124,11 +154,35 @@ var Library = function () {
     }, {
         key: '_addCallback',
         value: function _addCallback(cb) {
-            assert(!this.callbacks[cb.name], 'FastCallback ' + cb.name + ' already declared.');
+            assert(!this.callbacks[cb.name], 'Callback ' + cb.name + ' already declared.');
             this.initialize();
             cb.initialize();
             this.callbacks[cb.name] = cb;
             this.interface[cb.name] = cb.getFactory();
+        }
+    }, {
+        key: '_addStruct',
+        value: function _addStruct(struct) {
+            assert(!this.structs[struct.name], 'Union ' + struct.name + ' already declared.');
+            this.initialize();
+            this.structs[struct.name] = struct;
+            this.interface[struct.name] = struct.getFactory();
+        }
+    }, {
+        key: '_addUnion',
+        value: function _addUnion(union) {
+            assert(!this.unions[union.name], 'Union ' + union.name + ' already declared.');
+            this.initialize();
+            this.unions[union.name] = union;
+            this.interface[union.name] = union.getFactory();
+        }
+    }, {
+        key: '_addArray',
+        value: function _addArray(array) {
+            assert(!this.arrays[array.name], 'Array ' + array.name + ' already declared.');
+            this.initialize();
+            this.arrays[array.name] = array;
+            this.interface[array.name] = array.getFactory();
         }
     }], [{
         key: 'find',

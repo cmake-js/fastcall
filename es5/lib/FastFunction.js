@@ -1,5 +1,7 @@
 'use strict';
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -21,7 +23,7 @@ var callMode = defs.callMode;
 var FunctionDefinition = require('./FunctionDefinition');
 var util = require('util');
 var verify = require('./verify');
-var ref = require('./TooTallNates/ref');
+var ref = require('./ref-libs/ref');
 
 var FastFunction = function (_FunctionDefinition) {
     _inherits(FastFunction, _FunctionDefinition);
@@ -39,6 +41,7 @@ var FastFunction = function (_FunctionDefinition) {
         _this._vm = null;
         _this._function = null;
         _this._other = null;
+        _this._type.function = _this;
         return _this;
     }
 
@@ -128,17 +131,28 @@ var FastFunction = function (_FunctionDefinition) {
                     var _loop = function _loop() {
                         var setter = _step.value;
 
-                        if (setter.type.callback) {
-                            _this3['argSetter' + i++] = function (cb) {
-                                return setter.func(setter.type.callback.makePtr(cb));
-                            };
-                        } else {
-                            _this3['argSetter' + i++] = setter.func;
+                        if (setter.type.indirection === 2) {
+                            var _ret2 = function () {
+                                var specPtrDef = setter.type.callback || setter.type.struct || setter.type.union || setter.type.array;
+                                if (specPtrDef) {
+                                    _this3['argSetter' + i++] = function (cb) {
+                                        return setter.func(specPtrDef.makePtr(cb));
+                                    };
+                                    return {
+                                        v: 'continue'
+                                    };
+                                }
+                            }();
+
+                            if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
                         }
+                        _this3['argSetter' + i++] = setter.func;
                     };
 
                     for (var _iterator = vmArgSetters[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                        _loop();
+                        var _ret = _loop();
+
+                        if (_ret === 'continue') continue;
                     }
                 } catch (err) {
                     _didIteratorError = true;
@@ -169,8 +183,7 @@ var FastFunction = function (_FunctionDefinition) {
             var func = function func() {
                 return innerFunc.apply(ctx, arguments);
             };
-            func.function = this;
-            return func;
+            return this._initFunction(func);
         }
     }, {
         key: '_makeAsyncFunction',
@@ -220,8 +233,9 @@ var FastFunction = function (_FunctionDefinition) {
                         if (setter.type.indirection > 1) {
                             _this5['argSetter' + i++] = function (ptr, ptrs) {
                                 var _ptr = void 0;
-                                if (setter.type.callback) {
-                                    _ptr = setter.type.callback.makePtr(ptr);
+                                var specPtrDef = setter.type.callback || setter.type.struct || setter.type.union || setter.type.array;
+                                if (setter.type.indirection === 2 && specPtrDef) {
+                                    _ptr = specPtrDef.makePtr(ptr);
                                 } else {
                                     _ptr = ptr;
                                 }
@@ -269,7 +283,26 @@ var FastFunction = function (_FunctionDefinition) {
                 ctx.vm = dyncall.newCallVM(vmSize);
                 return innerFunc.apply(ctx, arguments);
             };
+            return this._initFunction(func);
+        }
+    }, {
+        key: '_initFunction',
+        value: function _initFunction(func) {
             func.function = this;
+            func.type = this.type;
+            var self = this;
+            Object.defineProperties(func, {
+                sync: {
+                    get: function get() {
+                        return self.sync();
+                    }
+                },
+                async: {
+                    get: function get() {
+                        return self.async();
+                    }
+                }
+            });
             return func;
         }
     }, {

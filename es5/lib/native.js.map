@@ -1,1 +1,1 @@
-{"version":3,"sources":["lib/native.js"],"names":["module","exports","require"],"mappings":"AAAA;;AAEAA,OAAOC,OAAP,GAAiBC,QAAQ,UAAR,EAAoB,UAApB,CAAjB","file":"native.js","sourcesContent":["'use strict';\n\nmodule.exports = require('bindings')('fastcall');"]}
+{"version":3,"sources":["../../lib/native.js"],"names":["module","exports","require"],"mappings":"AAAA;;AAEAA,OAAOC,OAAP,GAAiBC,QAAQ,UAAR,EAAoB,UAApB,CAAjB","file":"native.js","sourcesContent":["'use strict';\n\nmodule.exports = require('bindings')('fastcall');"]}
