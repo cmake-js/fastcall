@@ -428,6 +428,64 @@ describe(`ref types`, function () {
             });
         });
 
+        describe('sync', function () {
+           it('should get referenced by string syntax', function () {
+                lib
+                .array('long[] TLongArray')
+                .struct('struct TRecWithArray { TLongArray[5] values; uint index; }')
+                .array('TRecWithArray[] TRecWithArrays')
+                .function('void makeRecWithArrays(TRecWithArrays* records, long* size)')
+                .function('void incRecWithArrays(TRecWithArray* records, long size)')
+                .function('void freeRecWithArrays(TRecWithArray* records)');
+
+                testArrayFuncsSync();
+            });
+
+            it('should get referenced by node-ffi-like syntax', function () {
+                const TRecWithArray = new StructType({
+                    values: new ArrayType(ref.types.long, 5),
+                    index: 'uint',
+                });
+                const TRecWithArrays = new ArrayType(TRecWithArray);
+                
+                lib
+                .function({ makeRecWithArrays: [ 'void', [ ref.refType(ref.refType(TRecWithArray)), ref.refType('long') ]] })
+                .function({ incRecWithArrays: [ 'void', [ ref.refType(TRecWithArray), 'long' ]] })
+                .function({ freeRecWithArrays: [ 'void', [ ref.refType(TRecWithArray) ]] });
+
+                testArrayFuncsSync(TRecWithArray, TRecWithArrays);
+            });
+        });
+
+        describe('async', function () {
+           it('should get referenced by string syntax', async(function* () {
+                lib
+                .array('long[] TLongArray')
+                .struct('struct TRecWithArray { TLongArray[5] values; uint index; }')
+                .array('TRecWithArray[] TRecWithArrays')
+                .function('void makeRecWithArrays(TRecWithArrays* records, long* size)')
+                .function('void incRecWithArrays(TRecWithArray* records, long size)')
+                .function('void freeRecWithArrays(TRecWithArray* records)');
+
+                yield testArrayFuncsAsync();
+            }));
+
+            it('should get referenced by node-ffi-like syntax', async(function* () {
+                const TRecWithArray = new StructType({
+                    values: new ArrayType(ref.types.long, 5),
+                    index: 'uint',
+                });
+                const TRecWithArrays = new ArrayType(TRecWithArray);
+                
+                lib
+                .function({ makeRecWithArrays: [ 'void', [ ref.refType(ref.refType(TRecWithArray)), ref.refType('long') ]] })
+                .function({ incRecWithArrays: [ 'void', [ ref.refType(TRecWithArray), 'long' ]] })
+                .function({ freeRecWithArrays: [ 'void', [ ref.refType(TRecWithArray) ]] });
+
+                yield testArrayFuncsAsync(TRecWithArray, TRecWithArrays);
+            }));
+        });
+
         function testArrayInterface(fixed) {
             assert(_.isObject(lib.structs.TRecWithArray));
             assert(_.isFunction(lib.interface.TRecWithArray));
@@ -468,6 +526,67 @@ describe(`ref types`, function () {
             assert.equal(record.values.get(3), 3);
             assert.equal(record.values.get(4), 4);
         }
+
+        function testArrayFuncsSync(TRecWithArray, TRecWithArrays) {
+            TRecWithArray = TRecWithArray || lib.structs.TRecWithArray.type;
+            assert(_.isFunction(TRecWithArray));
+            TRecWithArrays = TRecWithArrays || lib.arrays.TRecWithArrays.type;
+            assert(_.isFunction(TRecWithArrays));
+            assert(_.isFunction(lib.interface.makeRecWithArrays))
+            assert(_.isFunction(lib.interface.incRecWithArrays));
+            assert(_.isFunction(lib.interface.freeRecWithArrays));
+            
+            const resultRef = ref.alloc(TRecWithArrays);
+            const sizeRef = ref.alloc('long');
+            
+            lib.interface.makeRecWithArrays(resultRef, sizeRef);
+            const size = sizeRef.deref();
+            assert.equal(size, 5);
+            const result = resultRef.deref();
+            assert.equal(result.length, 0);
+            result.length = 5;
+            assert.equal(result.length, 5);
+            for (let i = 0; i < size; i++) {
+                const rec = result.get(i);
+                assert.equal(rec.index, i);
+                for (let j = 0; j < 5; j++) {
+                    assert.equal(rec.values.get(j), j);
+                }
+            }
+
+            lib.interface.freeRecWithArrays(result);
+        }
+
+        var testArrayFuncsAsync = async(function* (TRecWithArray, TRecWithArrays) {
+            TRecWithArray = TRecWithArray || lib.structs.TRecWithArray.type;
+            assert(_.isFunction(TRecWithArray));
+            TRecWithArrays = TRecWithArrays || lib.arrays.TRecWithArrays.type;
+            assert(_.isFunction(TRecWithArrays));
+            assert(_.isFunction(lib.interface.makeRecWithArrays))
+            assert(_.isFunction(lib.interface.incRecWithArrays));
+            assert(_.isFunction(lib.interface.freeRecWithArrays));
+
+            const records = new TRecWithArrays([
+                {
+                    index: 4,
+                    values: [3, 4, 5, 6, 7]
+                },
+                new TRecWithArray({
+                    index: 5,
+                    values: [-3, -4, -5, -6, -7]
+                })
+            ]);
+
+            yield lib.interface.incRecWithArrays.async(records, 2);
+
+            assert.equal(records.get(0).index, 5);
+            assert.equal(records.get(1).index, 6);
+
+            for (let i = 0; i < 5; i++) {
+                assert.equal(records.get(0).values.get(i), i + 4);
+                assert.equal(records.get(1).values.get(i), -2 - i);
+            }
+        });
     });
 
     describe('complex ref-types', function () {

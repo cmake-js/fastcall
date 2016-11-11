@@ -118,7 +118,7 @@ NODE_MODULE_EXPORT int64_t getValueFromTaggedUnion(TTaggedUnion* u)
     return u->data.c;
 }
 
-NODE_MODULE_EXPORT void makeRecWithArray(TRecWithArray** records, long* size)
+NODE_MODULE_EXPORT void makeRecWithArrays(TRecWithArray** records, long* size)
 {
     *size = 5;
     *records = new TRecWithArray[*size];
@@ -126,19 +126,21 @@ NODE_MODULE_EXPORT void makeRecWithArray(TRecWithArray** records, long* size)
         for (unsigned j = 0; j < 5; j++) {
             (*records)[i].values[j] = j;
         }
+        (*records)[i].index = i;
     }
 }
 
-NODE_MODULE_EXPORT void incRecWithArray(TRecWithArray records[], long size)
+NODE_MODULE_EXPORT void incRecWithArrays(TRecWithArray records[], long size)
 {
     for (unsigned i = 0; i < size; ++i) {
         for (unsigned j = 0; j < 5; j++) {
             records[i].values[j]++;
         }
+        records[i].index++;
     }
 }
 
-NODE_MODULE_EXPORT void freeRecWithArray(TRecWithArray records[])
+NODE_MODULE_EXPORT void freeRecWithArrays(TRecWithArray records[])
 {
     delete[] records;
 }
