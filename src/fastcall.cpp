@@ -2,6 +2,7 @@
 #include "dynloadwrapper.h"
 #include "dyncallwrapper.h"
 #include "dyncallbackwrapper.h"
+#include "mutex.h"
 #include "statics.h"
 
 using namespace v8;
@@ -13,6 +14,7 @@ NAN_MODULE_INIT(InitAll)
     InitDynloadWrapper(target);
     InitDyncallWrapper(target);
     InitCallbackWrapper(target);
+    InitMutex(target);
     InitStatics(target);
 }
 

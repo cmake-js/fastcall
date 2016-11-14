@@ -342,7 +342,6 @@ NAN_METHOD(setSizeT)
 
 NAN_MODULE_INIT(fastcall::InitCallbackWrapper)
 {
-    Nan::HandleScope scope;
     auto callback = Nan::New<Object>();
     Nan::Set(target, Nan::New<String>("callback").ToLocalChecked(), callback);
     Nan::Set(callback, Nan::New<String>("newLoop").ToLocalChecked(), Nan::New<FunctionTemplate>(newLoop)->GetFunction());

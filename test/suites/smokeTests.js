@@ -117,15 +117,15 @@ describe('Library', function () {
         });
 
         describe('string declaration', function () {
-            it('should invoke "mul" with "declare"', function () {
+            it('should invoke "mul" with "function"', function () {
                 // Argument name is optional:
                 lib.function('int mul(int value, int)');
                 testMulSync('int mul(int value, int arg1)');
             });
 
-            it('should invoke "mul" with "declareSync"', function () {
+            it('should invoke "mul" with "syncFunction"', function () {
                 // Argument name is optional:
-                lib.function('int mul(int, int by)');
+                lib.syncFunction('int mul(int, int by)');
                 testMulSync('int mul(int arg0, int by)');
             });
 
@@ -280,12 +280,12 @@ describe('Library', function () {
         });
 
         describe('node-ffi style declaration', function () {
-            it('should invoke "mul" with "declare"', function () {
+            it('should invoke "mul" with "function"', function () {
                 lib.function({ mul: ['int', [ref.types.int, 'int']] });
                 return testMulAsync('int mul(int arg0, int arg1)');
             });
 
-            it('should invoke "mul" with "declareAsync"', function () {
+            it('should invoke "mul" with "asyncFunction"', function () {
                 lib.asyncFunction({ mul: ['int', [ref.types.int, 'int']] });
                 return testMulAsync('int mul(int arg0, int arg1)');
             });

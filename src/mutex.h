@@ -2,5 +2,5 @@
 #include <nan.h>
 
 namespace fastcall {
-NAN_MODULE_INIT(InitDyncallWrapper);
+NAN_MODULE_INIT(InitMutex);
 }

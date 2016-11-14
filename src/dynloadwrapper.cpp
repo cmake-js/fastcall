@@ -46,7 +46,6 @@ NAN_METHOD(findSymbol)
 
 NAN_MODULE_INIT(fastcall::InitDynloadWrapper)
 {
-    Nan::HandleScope scope;
     auto dynload = Nan::New<Object>();
     Nan::Set(target, Nan::New<String>("dynload").ToLocalChecked(), dynload);
     Nan::Set(dynload, Nan::New<String>("loadLibrary").ToLocalChecked(), Nan::New<FunctionTemplate>(loadLibrary)->GetFunction());
