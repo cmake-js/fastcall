@@ -113,13 +113,27 @@ var FastFunction = function (_FunctionDefinition) {
             for (var i = 0; i < vmArgSetters.length; i++) {
                 funcBody += 'this.argSetter' + i + '(arg' + i + ');';
             }
-            funcBody += 'return this.callerFunc();';
+            if (this.library.synchronized) {
+                funcBody += 'this.library._lock();';
+                funcBody += 'try {';
+                funcBody += 'return this.callerFunc();';
+                funcBody += '}';
+                funcBody += 'finally {';
+                funcBody += 'this.library._unlock();';
+                funcBody += '}';
+            } else {
+                if (this.library.queued) {
+                    funcBody += 'this.library._assertQueueEmpty();';
+                }
+                funcBody += 'return this.callerFunc();';
+            }
 
             var Ctx = function Ctx(fn) {
                 var _this3 = this;
 
                 _classCallCheck(this, Ctx);
 
+                this.library = fn.library;
                 this.vm = fn._vm;
                 this.setVM = dyncall.setVMAndReset;
                 var i = 0;
@@ -199,8 +213,9 @@ var FastFunction = function (_FunctionDefinition) {
             var funcArgs = _.range(vmArgSetters.length).map(function (n) {
                 return 'arg' + n;
             });
-            var funcBody = hasPtrArg ? 'var ptrs = [];' : '';
-            funcBody += 'this.setVM(this.vm);';
+            var funcBody = hasPtrArg ? 'let ptrs = [];' : '';
+            funcBody += 'const myVM = this.vm;';
+            funcBody += 'this.setVM(myVM);';
             for (var i = 0; i < vmArgSetters.length; i++) {
                 var _setter = vmArgSetters[i];
                 if (_setter.type.indirection > 1) {
@@ -209,10 +224,22 @@ var FastFunction = function (_FunctionDefinition) {
                     funcBody += 'this.argSetter' + i + '(arg' + i + ');';
                 }
             }
+
+            var finallyCode = '{';
+            if (this.library.synchronized) {
+                finallyCode += 'this.library._unlock();';
+                funcBody += 'this.library._lock();';
+            }
             if (hasPtrArg) {
-                funcBody += 'return this.callerFunc(this.vm).finally(() => ptrs = null);';
+                finallyCode += 'ptrs = null;';
+            }
+            finallyCode += '}';
+
+            var f = 'return this.callerFunc(myVM).finally(() => ' + finallyCode + ');';
+            if (this.library.queued) {
+                funcBody += 'return this.library._enqueue(() => { ' + f + ' });';
             } else {
-                funcBody += 'return this.callerFunc(this.vm);';
+                funcBody += f;
             }
 
             var Ctx = function Ctx(fn) {
@@ -220,7 +247,9 @@ var FastFunction = function (_FunctionDefinition) {
 
                 _classCallCheck(this, Ctx);
 
+                this.library = fn.library;
                 this.setVM = dyncall.setVM;
+                this.free = dyncall.free;
                 var i = 0;
                 var _iteratorNormalCompletion2 = true;
                 var _didIteratorError2 = false;
@@ -334,15 +363,22 @@ var FastFunction = function (_FunctionDefinition) {
 
             if (async) {
                 if (isPtr) {
-                    return function (vm, callback) {
-                        func(vm, _this6._ptr, function (err, result) {
-                            if (err) {
-                                return callback(err);
+                    var _ret4 = function () {
+                        var resultDerefType = ref.derefType(_this6.resultType);
+                        return {
+                            v: function v(vm, callback) {
+                                func(vm, _this6._ptr, function (err, result) {
+                                    if (err) {
+                                        return callback(err);
+                                    }
+                                    result.type = resultDerefType;
+                                    callback(null, result);
+                                });
                             }
-                            result.type = ref.derefType(_this6.resultType);
-                            callback(null, result);
-                        });
-                    };
+                        };
+                    }();
+
+                    if ((typeof _ret4 === 'undefined' ? 'undefined' : _typeof(_ret4)) === "object") return _ret4.v;
                 }
 
                 return function (vm, callback) {
@@ -351,11 +387,18 @@ var FastFunction = function (_FunctionDefinition) {
             }
 
             if (isPtr) {
-                return function () {
-                    var result = func(_this6._ptr);
-                    result.type = ref.derefType(_this6.resultType);
-                    return result;
-                };
+                var _ret5 = function () {
+                    var resultDerefType = ref.derefType(_this6.resultType);
+                    return {
+                        v: function v() {
+                            var result = func(_this6._ptr);
+                            result.type = resultDerefType;
+                            return result;
+                        }
+                    };
+                }();
+
+                if ((typeof _ret5 === 'undefined' ? 'undefined' : _typeof(_ret5)) === "object") return _ret5.v;
             }
 
             return function () {

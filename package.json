@@ -2,7 +2,7 @@
   "name": "fastcall",
   "version": "0.0.1",
   "description": "fastcall - Very fast, asynchronous, dyncall based foreign function interface library for Node.js",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/unbornchikken/fastcall.git"

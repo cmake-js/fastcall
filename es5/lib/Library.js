@@ -12,15 +12,17 @@ var async = Promise.coroutine;
 var fs = Promise.promisifyAll(require('fs'));
 var path = require('path');
 var defs = require('./defs');
-var callMode = defs.callMode;
 var FastFunction = require('./FastFunction');
 var FastCallback = require('./FastCallback');
 var FastStruct = require('./FastStruct');
 var FastUnion = require('./FastUnion');
 var FastArray = require('./FastArray');
+var verify = require('./verify');
+var queue = require('./queue');
 
 var defaultOptions = {
-    defaultCallMode: callMode.sync,
+    defaultCallMode: defs.callMode.sync,
+    syncMode: defs.syncMode.none,
     vmSize: 512
 };
 
@@ -31,11 +33,14 @@ var Library = function () {
         assert(_.isString(path) && path.length, 'Argument "path" should be a non-empty string.');
         this.path = path;
         this.options = Object.freeze(_.defaults(options, defaultOptions));
-        assert(this.options.defaultCallMode === callMode.sync || this.options.defaultCallMode === callMode.async, '"options.callMode" is invalid.');
+        assert(this.options.defaultCallMode === defs.callMode.sync || this.options.defaultCallMode === defs.callMode.async, '"options.callMode" is invalid.');
+        assert(this.options.syncMode >= defs.syncMode.none && this.options.syncMode <= defs.syncMode.queue, '"options.syncMode" is invalid.');
         this._pLib = null;
         this._initialized = false;
         this._released = false;
         this._loop = null;
+        this._mutex = null;
+        this._queue = null;
         this.functions = {};
         this.callbacks = {};
         this.structs = {};
@@ -53,6 +58,10 @@ var Library = function () {
             }
             this._pLib = native.dynload.loadLibrary(this.path);
             this._loop = native.callback.newLoop();
+            if (this.options.syncMode === defs.syncMode.lock) {
+                this._mutex = native.mutex.newMutex();
+                verify(this._mutex instanceof Buffer);
+            }
             this._initialized = true;
             return this;
         }
@@ -98,18 +107,18 @@ var Library = function () {
     }, {
         key: 'function',
         value: function _function(def) {
-            return this.options.defaultCallMode === callMode.sync ? this.syncFunction(def) : this.asyncFunction(def);
+            return this.options.defaultCallMode === defs.callMode.sync ? this.syncFunction(def) : this.asyncFunction(def);
         }
     }, {
         key: 'syncFunction',
         value: function syncFunction(def) {
-            this._addFunction(new FastFunction(this, def, callMode.sync));
+            this._addFunction(new FastFunction(this, def, defs.callMode.sync));
             return this;
         }
     }, {
         key: 'asyncFunction',
         value: function asyncFunction(def) {
-            this._addFunction(new FastFunction(this, def, callMode.async));
+            this._addFunction(new FastFunction(this, def, defs.callMode.async));
             return this;
         }
     }, {
@@ -184,6 +193,36 @@ var Library = function () {
             this.arrays[array.name] = array;
             this.interface[array.name] = array.getFactory();
         }
+    }, {
+        key: '_lock',
+        value: function _lock() {
+            native.mutex.lock(this._mutex);
+        }
+    }, {
+        key: '_unlock',
+        value: function _unlock() {
+            native.mutex.unlock(this._mutex);
+        }
+    }, {
+        key: '_assertQueueEmpty',
+        value: function _assertQueueEmpty() {
+            assert(!queue.length, 'Calling functions synchronously is forbidden while there are asynchronous functions enqueued.');
+        }
+    }, {
+        key: '_enqueue',
+        value: function _enqueue(f) {
+            return queue.next(f);
+        }
+    }, {
+        key: 'synchronized',
+        get: function get() {
+            return this.options.syncMode === defs.syncMode.lock;
+        }
+    }, {
+        key: 'queued',
+        get: function get() {
+            return this.options.syncMode === defs.syncMode.queue;
+        }
     }], [{
         key: 'find',
         value: function find(moduleDir, name) {
@@ -192,7 +231,12 @@ var Library = function () {
     }, {
         key: 'callMode',
         get: function get() {
-            return callMode;
+            return defs.callMode;
+        }
+    }, {
+        key: 'syncMode',
+        get: function get() {
+            return defs.syncMode;
         }
     }]);
 

@@ -535,6 +535,72 @@ describe('ref types', function () {
             });
         });
 
+        describe('sync', function () {
+            it('should get referenced by string syntax', function () {
+                lib.array('long[] TLongArray').struct('struct TRecWithArray { TLongArray[5] values; uint index; }').array('TRecWithArray[] TRecWithArrays').function('void makeRecWithArrays(TRecWithArrays* records, long* size)').function('void incRecWithArrays(TRecWithArray* records, long size)').function('void freeRecWithArrays(TRecWithArray* records)');
+
+                testArrayFuncsSync();
+            });
+
+            it('should get referenced by node-ffi-like syntax', function () {
+                var TRecWithArray = new StructType({
+                    values: new ArrayType(ref.types.long, 5),
+                    index: 'uint'
+                });
+                var TRecWithArrays = new ArrayType(TRecWithArray);
+
+                lib.function({ makeRecWithArrays: ['void', [ref.refType(ref.refType(TRecWithArray)), ref.refType('long')]] }).function({ incRecWithArrays: ['void', [ref.refType(TRecWithArray), 'long']] }).function({ freeRecWithArrays: ['void', [ref.refType(TRecWithArray)]] });
+
+                testArrayFuncsSync(TRecWithArray, TRecWithArrays);
+            });
+        });
+
+        describe('async', function () {
+            it('should get referenced by string syntax', async(regeneratorRuntime.mark(function _callee8() {
+                return regeneratorRuntime.wrap(function _callee8$(_context8) {
+                    while (1) {
+                        switch (_context8.prev = _context8.next) {
+                            case 0:
+                                lib.array('long[] TLongArray').struct('struct TRecWithArray { TLongArray[5] values; uint index; }').array('TRecWithArray[] TRecWithArrays').function('void makeRecWithArrays(TRecWithArrays* records, long* size)').function('void incRecWithArrays(TRecWithArray* records, long size)').function('void freeRecWithArrays(TRecWithArray* records)');
+
+                                _context8.next = 3;
+                                return testArrayFuncsAsync();
+
+                            case 3:
+                            case 'end':
+                                return _context8.stop();
+                        }
+                    }
+                }, _callee8, this);
+            })));
+
+            it('should get referenced by node-ffi-like syntax', async(regeneratorRuntime.mark(function _callee9() {
+                var TRecWithArray, TRecWithArrays;
+                return regeneratorRuntime.wrap(function _callee9$(_context9) {
+                    while (1) {
+                        switch (_context9.prev = _context9.next) {
+                            case 0:
+                                TRecWithArray = new StructType({
+                                    values: new ArrayType(ref.types.long, 5),
+                                    index: 'uint'
+                                });
+                                TRecWithArrays = new ArrayType(TRecWithArray);
+
+
+                                lib.function({ makeRecWithArrays: ['void', [ref.refType(ref.refType(TRecWithArray)), ref.refType('long')]] }).function({ incRecWithArrays: ['void', [ref.refType(TRecWithArray), 'long']] }).function({ freeRecWithArrays: ['void', [ref.refType(TRecWithArray)]] });
+
+                                _context9.next = 5;
+                                return testArrayFuncsAsync(TRecWithArray, TRecWithArrays);
+
+                            case 5:
+                            case 'end':
+                                return _context9.stop();
+                        }
+                    }
+                }, _callee9, this);
+            })));
+        });
+
         function testArrayInterface(fixed) {
             assert(_.isObject(lib.structs.TRecWithArray));
             assert(_.isFunction(lib.interface.TRecWithArray));
@@ -574,6 +640,78 @@ describe('ref types', function () {
             assert.equal(record.values.get(3), 3);
             assert.equal(record.values.get(4), 4);
         }
+
+        function testArrayFuncsSync(TRecWithArray, TRecWithArrays) {
+            TRecWithArray = TRecWithArray || lib.structs.TRecWithArray.type;
+            assert(_.isFunction(TRecWithArray));
+            TRecWithArrays = TRecWithArrays || lib.arrays.TRecWithArrays.type;
+            assert(_.isFunction(TRecWithArrays));
+            assert(_.isFunction(lib.interface.makeRecWithArrays));
+            assert(_.isFunction(lib.interface.incRecWithArrays));
+            assert(_.isFunction(lib.interface.freeRecWithArrays));
+
+            var resultRef = ref.alloc(TRecWithArrays);
+            var sizeRef = ref.alloc('long');
+
+            lib.interface.makeRecWithArrays(resultRef, sizeRef);
+            var size = sizeRef.deref();
+            assert.equal(size, 5);
+            var result = resultRef.deref();
+            assert.equal(result.length, 0);
+            result.length = 5;
+            assert.equal(result.length, 5);
+            for (var i = 0; i < size; i++) {
+                var rec = result.get(i);
+                assert.equal(rec.index, i);
+                for (var j = 0; j < 5; j++) {
+                    assert.equal(rec.values.get(j), j);
+                }
+            }
+
+            lib.interface.freeRecWithArrays(result);
+        }
+
+        var testArrayFuncsAsync = async(regeneratorRuntime.mark(function _callee10(TRecWithArray, TRecWithArrays) {
+            var records, i;
+            return regeneratorRuntime.wrap(function _callee10$(_context10) {
+                while (1) {
+                    switch (_context10.prev = _context10.next) {
+                        case 0:
+                            TRecWithArray = TRecWithArray || lib.structs.TRecWithArray.type;
+                            assert(_.isFunction(TRecWithArray));
+                            TRecWithArrays = TRecWithArrays || lib.arrays.TRecWithArrays.type;
+                            assert(_.isFunction(TRecWithArrays));
+                            assert(_.isFunction(lib.interface.makeRecWithArrays));
+                            assert(_.isFunction(lib.interface.incRecWithArrays));
+                            assert(_.isFunction(lib.interface.freeRecWithArrays));
+
+                            records = new TRecWithArrays([{
+                                index: 4,
+                                values: [3, 4, 5, 6, 7]
+                            }, new TRecWithArray({
+                                index: 5,
+                                values: [-3, -4, -5, -6, -7]
+                            })]);
+                            _context10.next = 10;
+                            return lib.interface.incRecWithArrays.async(records, 2);
+
+                        case 10:
+
+                            assert.equal(records.get(0).index, 5);
+                            assert.equal(records.get(1).index, 6);
+
+                            for (i = 0; i < 5; i++) {
+                                assert.equal(records.get(0).values.get(i), i + 4);
+                                assert.equal(records.get(1).values.get(i), -2 - i);
+                            }
+
+                        case 13:
+                        case 'end':
+                            return _context10.stop();
+                    }
+                }
+            }, _callee10, this);
+        }));
     });
 
     describe('complex ref-types', function () {
@@ -615,29 +753,29 @@ describe('ref types', function () {
                 assert.equal(result, 42);
             });
 
-            it('works asynchronously', async(regeneratorRuntime.mark(function _callee8() {
+            it('works asynchronously', async(regeneratorRuntime.mark(function _callee11() {
                 var result;
-                return regeneratorRuntime.wrap(function _callee8$(_context8) {
+                return regeneratorRuntime.wrap(function _callee11$(_context11) {
                     while (1) {
-                        switch (_context8.prev = _context8.next) {
+                        switch (_context11.prev = _context11.next) {
                             case 0:
-                                _context8.next = 2;
+                                _context11.next = 2;
                                 return lib.interface.getValueFromTaggedUnion.async({
                                     tag: 'a'.charCodeAt(0),
                                     data: { a: 5 }
                                 });
 
                             case 2:
-                                result = _context8.sent;
+                                result = _context11.sent;
 
                                 assert.equal(result, 5);
 
                             case 4:
                             case 'end':
-                                return _context8.stop();
+                                return _context11.stop();
                         }
                     }
-                }, _callee8, this);
+                }, _callee11, this);
             })));
         });
     });

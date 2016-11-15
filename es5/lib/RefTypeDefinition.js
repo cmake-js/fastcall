@@ -60,23 +60,29 @@ var RefTypeDefinition = function () {
         value: function makePtr(value) {
             var propName = this.propertyName;
             if (value) {
-                if (value[propName] === this) {
+                if (value instanceof Buffer) {
                     return value;
                 }
-                if (_.isObject(value)) {
-                    var ptr = new this.type(value).ref();
-                    ptr[propName] = this;
-                    verify(ptr.type === this.type);
-                    return ptr;
+
+                if (_.isPlainObject(value) || _.isArray(value) || _.isString(value)) {
+                    value = new this.type(value);
                 }
-                if (value instanceof Buffer) {
-                    if (value.type === undefined) {
-                        value.type = this.type;
-                        value[propName] = this;
-                        return value;
-                    }
-                    throw new TypeError('Buffer is not a ' + propName + ' pointer.');
+
+                if (value.buffer instanceof Buffer) {
+                    value = value.buffer;
+                } else if (_.isFunction(value.ref)) {
+                    value = value.ref();
                 }
+
+                if (!value.type) {
+                    value.type = this.type;
+                }
+
+                if (!value[propName]) {
+                    value[propName] = this;
+                }
+
+                return value;
             } else if (value === null) {
                 return null;
             }
@@ -96,6 +102,9 @@ var RefTypeDefinition = function () {
             if (_.isPlainObject(this._defBody)) {
                 this._defBody = this._resolveStringTypes(this._defBody);
             }
+            if (_.isString(this._defBody)) {
+                this._defBody = this._resolveStringType(this._defBody);
+            }
             return new this._FactoryType(this._defBody);
         }
     }, {
@@ -107,21 +116,27 @@ var RefTypeDefinition = function () {
             _.each(defObj, function (value, key) {
                 var type = defObj[key];
                 if (_.isString(type)) {
-                    var match = /(\w+)\s*(?:\[\s*(\d+)\s*\])?/.exec(type);
-                    if (match) {
-                        type = match[1];
-                        var def = _this2.library.findRefDeclaration(type);
-                        if (def) {
-                            type = def.type;
-                            if (match[2]) {
-                                type = def._makeTypeWithLength(match[2]);
-                            }
-                        }
-                    }
+                    type = _this2._resolveStringType(type);
                 }
                 result[key] = type;
             });
             return result;
+        }
+    }, {
+        key: '_resolveStringType',
+        value: function _resolveStringType(type) {
+            var match = /(\w+)\s*(?:\[\s*(\d+)\s*\])?/.exec(type);
+            if (match) {
+                type = match[1];
+                var def = this.library.findRefDeclaration(type);
+                if (def) {
+                    type = def.type;
+                    if (match[2]) {
+                        type = def._makeTypeWithLength(match[2]);
+                    }
+                }
+            }
+            return type;
         }
     }, {
         key: '_makeTypeWithLength',

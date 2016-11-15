@@ -208,22 +208,23 @@ function defineProperty(name, type) {
     type: type
   };
   this.fields[name] = field;
+  var cacheName = '_cache' + name;
 
   // define the getter/setter property
   var desc = { enumerable: true, configurable: true };
   desc.get = function () {
-    if (desc.cache) {
-      return desc.cache;
+    if (this[cacheName]) {
+      return this[cacheName];
     }
     debug('getting "%s" struct field (offset: %d)', name, field.offset);
     var got = ref.get(this['ref.buffer'], field.offset, type);
     if ((typeof got === 'undefined' ? 'undefined' : _typeof(got)) === 'object') {
-      desc.cache = got;
+      this[cacheName] = got;
     }
     return got;
   };
   desc.set = function (value) {
-    desc.cache = null;
+    this[cacheName] = null;
     debug('setting "%s" struct field (offset: %d)', name, field.offset, value);
     return ref.set(this['ref.buffer'], field.offset, value, type);
   };

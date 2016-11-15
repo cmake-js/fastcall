@@ -50,7 +50,7 @@ var asyncRun = async(regeneratorRuntime.mark(function _callee3(lib) {
             switch (_context3.prev = _context3.next) {
                 case 0:
                     result = 0;
-                    addNumbersAsync = lib.functions.addNumbersExp.async();
+                    addNumbersAsync = lib.interface.addNumbersExp.async;
                     _context3.next = 4;
                     return common.measureAsync('addNumbers', 3, async(regeneratorRuntime.mark(function _callee2() {
                         return regeneratorRuntime.wrap(function _callee2$(_context2) {
