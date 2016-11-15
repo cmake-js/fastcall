@@ -8,7 +8,7 @@ const ref = fastcall.ref;
 const Promise = require('bluebird');
 const async = Promise.coroutine;
 
-describe.only(`Synchronization Modes`, function () {
+describe(`Synchronization Modes`, function () {
     let libPath = null;
     let lib = null;
     before(async(function* () {
@@ -103,18 +103,31 @@ describe.only(`Synchronization Modes`, function () {
             }));
         });
 
-        describe.skip('async', function () {
+        describe('async', function () {
             it('should queue asyncronous function calls', async(function* () {
-                lib.asyncFunction('int mul(int value, int by)');
+                lib.asyncFunction('void appendChar(char* str, uint pos, char charCode)');
 
                 const promises = [];
-                let previous = 0;
-                for (let i = 0; i < 100; i++) {
-                    promises.push(() => {
-                        
-                    });
+                const strBuff = alloc(21);
+                const a = 'a'.charCodeAt(0);
+                let reference = '';
+                for (let i = 0; i < 20; i++) {
+                    promises.push(lib.interface.appendChar(strBuff, i, a + i));
+                    reference += String.fromCharCode(a + i);
                 }
+                yield Promise.all(promises);
+                const str = ref.readCString(strBuff, 0);
+                assert.equal(str, reference);
             }));
         });
     });
 });
+
+function alloc(size) {
+    if (Buffer.alloc) {
+        Buffer.alloc(size);
+    }
+    const buff = new Buffer(size);
+    buff.fill(0);
+    return buff;
+}

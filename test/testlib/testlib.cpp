@@ -144,4 +144,10 @@ NODE_MODULE_EXPORT void freeRecWithArrays(TRecWithArray records[])
 {
     delete[] records;
 }
+
+NODE_MODULE_EXPORT void appendChar(char* str, unsigned pos, char charCode)
+{
+    str[pos] = charCode;
+}
+
 }
