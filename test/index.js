@@ -23,4 +23,5 @@ if (!es5Support.fallbackToES5(exports, 'test')) {
     require('./suites/raii');
     require('./suites/refTypes');
     require('./suites/synchModes');
+    require('./suites/ffiCompatibility');
 }
