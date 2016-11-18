@@ -21,6 +21,7 @@ const ArrayType = ffi.ArrayType;
 const UnionType = ffi.UnionType;
 const StructType = ffi.StructType;
 const Library = ffi.Library;
+const Callback = ffi.Callback;
 const helpers = require('./helpers');
 const assert = require('assert');
 const _ = require('lodash');
@@ -40,6 +41,7 @@ describe('ffi compatibility', function () {
         assert(_.isFunction(UnionType));
         assert(_.isFunction(StructType));
         assert(_.isFunction(Library));
+        assert(_.isFunction(Callback));
     });
 
     describe('functions', function () {
@@ -49,20 +51,70 @@ describe('ffi compatibility', function () {
                 getString: [ 'char*', [] ]
             });
 
-            assert.equal(lib.mul(21, 2), 42);
-            assert.equal(ref.readCString(lib.getString()), 'world');
-
-            lib.release();
+            try {
+                assert.equal(lib.mul(21, 2), 42);
+                assert.equal(ref.readCString(lib.getString()), 'world');
+            }
+            finally {
+                lib.release();
+            }
         });
 
-        it('supports async', function (done) {
-            const lib = ffi.Library(libPath, {
-                mul: [ 'int', [ 'int', 'int' ]]
+        describe('async', function () {
+            it('supported explicitly', function (done) {
+                const lib = ffi.Library(libPath, {
+                    mul: [ 'int', [ 'int', 'int' ]]
+                });
+
+                try {
+                    lib.mul.async(21, 2, (err, res) => {
+                        setImmediate(() => lib.release());
+                        if (err) {
+                            done(err);
+                        }
+                        try {
+                            assert.equal(res, 42);
+                            done();
+                        }
+                        catch (err) {
+                            done(err);
+                        }
+                    });
+                }
+                finally {
+                    lib.release();
+                }
             });
 
-            lib.mul.async(21, 2, err => {
-                lib.release();
-                done(err);
+            it('supported in options', function (done) {
+                const lib = ffi.Library(
+                    libPath, 
+                    {
+                        mul: [ 'int', [ 'int', 'int' ]]
+                    },
+                    {
+                        async: true
+                    });
+
+                try {
+                    lib.mul(21, 2, (err, res) => {
+                        setImmediate(() => lib.release());
+                        if (err) {
+                            done(err);
+                        }
+                        try {
+                            assert.equal(res, 42);
+                            done();
+                        }
+                        catch (err) {
+                            done(err);
+                        }
+                    });
+                }
+                catch (err) {
+                    lib.release();
+                    done(err);
+                }
             });
         });
 
@@ -71,15 +123,70 @@ describe('ffi compatibility', function () {
                 mul: [ 'int', [ 'int', 'int' ]]
             });
 
-            assert.equal(yield lib.mul.asyncPromise(21, 2), 42);
-
-            lib.release();
+            try {
+                assert.equal(yield lib.mul.asyncPromise(21, 2), 42);
+            }
+            finally {
+                lib.release();
+            }
         }));
     });
 
     describe('callback', function () {
-        // sync
-        // async
+        describe('sync', function () {
+            it('supports ffi-style callbacks', function () {
+                const lib = ffi.Library(libPath, {
+                    makeInt: ['int', ['float', 'double', 'pointer'] ]
+                });
+
+                try {
+                    const cb = new Callback(
+                        'int', [ref.types.float, 'double'],
+                        function (float, double) {
+                            return float + double + 0.1; 
+                        });
+                    
+                    assert.equal(lib.makeInt(19.9, 2, cb), 42);
+                }
+                finally {
+                    lib.release();
+                }
+            });
+        });
+
+        describe('async', function () {
+            it('supports ffi-style callbacks', function (done) {
+                const lib = ffi.Library(libPath, {
+                    makeInt: ['int', ['float', 'double', 'pointer'] ]
+                });
+
+                try {
+                    const cb = new Callback(
+                        'int', [ref.types.float, 'double'],
+                        function (float, double) {
+                            return float + double + 0.1; 
+                        });
+
+                    lib.makeInt.async(19.9, 2, cb, (err, res) => {
+                        setImmediate(() => lib.release());
+                        if (err) {
+                            done(err);
+                        }
+                        try {
+                            assert.equal(res, 42);
+                            done();
+                        }
+                        catch (err) {
+                            done(err);
+                        }
+                    });
+                }
+                catch (err) {
+                    lib.release();
+                    done(err);
+                }
+            });
+        });
     });
 
     describe('array', function () {
