@@ -189,10 +189,43 @@ describe('ffi compatibility', function () {
         });
     });
 
-    describe('array', function () {
-    });
+    describe('array and struct', function () {
+        it('is supported', function () {
+            const TRecWithArray = new StructType({
+                values: new ArrayType(ref.types.long, 5),
+                index: 'uint',
+            });
+            const TRecWithArrays = new ArrayType(TRecWithArray);
+            const lib = ffi.Library(libPath, {
+                incRecWithArrays: [ 'void', [ ref.refType(TRecWithArray), 'long' ]]
+            });
+            
+            try {
+                const records = new TRecWithArrays([
+                    {
+                        index: 4,
+                        values: [3, 4, 5, 6, 7]
+                    },
+                    new TRecWithArray({
+                        index: 5,
+                        values: [-3, -4, -5, -6, -7]
+                    })
+                ]);
 
-    describe('struct', function () {
+                lib.incRecWithArrays(records, 2);
+
+                assert.equal(records.get(0).index, 5);
+                assert.equal(records.get(1).index, 6);
+
+                for (let i = 0; i < 5; i++) {
+                    assert.equal(records.get(0).values.get(i), i + 4);
+                    assert.equal(records.get(1).values.get(i), -2 - i);
+                }
+            }
+            finally {
+                lib.release();
+            }
+        });
     });
 
     describe('union', function () {
