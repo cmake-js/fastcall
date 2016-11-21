@@ -52,6 +52,7 @@ describe('ffi compatibility', function () {
             });
 
             try {
+                assert(_.isFunction(lib.mul));
                 assert.equal(lib.mul(21, 2), 42);
                 assert.equal(ref.readCString(lib.getString()), 'world');
             }
@@ -67,6 +68,9 @@ describe('ffi compatibility', function () {
                 });
 
                 try {
+                    assert(_.isFunction(lib.mul));
+                    assert(_.isFunction(lib.mul.async));
+                    assert(_.isFunction(lib.mul.asyncPromise));
                     lib.mul.async(21, 2, (err, res) => {
                         setImmediate(() => lib.release());
                         if (err) {
@@ -81,8 +85,9 @@ describe('ffi compatibility', function () {
                         }
                     });
                 }
-                finally {
+                catch (err) {
                     lib.release();
+                    done(err);
                 }
             });
 
@@ -97,6 +102,9 @@ describe('ffi compatibility', function () {
                     });
 
                 try {
+                    assert(_.isFunction(lib.mul));
+                    assert(_.isUndefined(lib.mul.async));
+                    assert(_.isFunction(lib.mul.asyncPromise));
                     lib.mul(21, 2, (err, res) => {
                         setImmediate(() => lib.release());
                         if (err) {
@@ -124,6 +132,9 @@ describe('ffi compatibility', function () {
             });
 
             try {
+                assert(_.isFunction(lib.mul));
+                assert(_.isFunction(lib.mul.async));
+                assert(_.isFunction(lib.mul.asyncPromise));
                 assert.equal(yield lib.mul.asyncPromise(21, 2), 42);
             }
             finally {
@@ -140,13 +151,21 @@ describe('ffi compatibility', function () {
                 });
 
                 try {
+                    let v = 0.1;
                     const cb = new Callback(
                         'int', [ref.types.float, 'double'],
                         function (float, double) {
-                            return float + double + 0.1; 
+                            return float + double + v; 
                         });
                     
+                    assert(_.isFunction(lib.makeInt));
+                    assert(_.isFunction(lib.makeInt.async));
+                    assert(_.isFunction(lib.makeInt.asyncPromise));
+                    assert.deepEqual(_.keys(lib._library.callbacks), []);
                     assert.equal(lib.makeInt(19.9, 2, cb), 42);
+                    v += 0.1;
+                    assert.equal(lib.makeInt(19.9, 2, cb), 44);
+                    assert.deepEqual(_.keys(lib._library.callbacks), ['FFICallback0']);
                 }
                 finally {
                     lib.release();
@@ -167,6 +186,10 @@ describe('ffi compatibility', function () {
                             return float + double + 0.1; 
                         });
 
+                    assert(_.isFunction(lib.makeInt));
+                    assert(_.isFunction(lib.makeInt.async));
+                    assert(_.isFunction(lib.makeInt.asyncPromise));
+                    assert.deepEqual(_.keys(lib._library.callbacks), []);
                     lib.makeInt.async(19.9, 2, cb, (err, res) => {
                         setImmediate(() => lib.release());
                         if (err) {
@@ -174,6 +197,7 @@ describe('ffi compatibility', function () {
                         }
                         try {
                             assert.equal(res, 42);
+                            assert.deepEqual(_.keys(lib._library.callbacks), ['FFICallback0']);
                             done();
                         }
                         catch (err) {
@@ -189,7 +213,7 @@ describe('ffi compatibility', function () {
         });
     });
 
-    describe('array and struct', function () {
+    describe('array of structs', function () {
         it('is supported', function () {
             const TRecWithArray = new StructType({
                 values: new ArrayType(ref.types.long, 5),
@@ -199,6 +223,8 @@ describe('ffi compatibility', function () {
             const lib = ffi.Library(libPath, {
                 incRecWithArrays: [ 'void', [ ref.refType(TRecWithArray), 'long' ]]
             });
+            assert.deepEqual(_.keys(lib._library.structs), ['StructType0']);
+            assert.deepEqual(_.keys(lib._library.arrays), []);
             
             try {
                 const records = new TRecWithArrays([
@@ -213,6 +239,8 @@ describe('ffi compatibility', function () {
                 ]);
 
                 lib.incRecWithArrays(records, 2);
+                assert.deepEqual(_.keys(lib._library.structs), ['StructType0']);
+                assert.deepEqual(_.keys(lib._library.arrays), []);
 
                 assert.equal(records.get(0).index, 5);
                 assert.equal(records.get(1).index, 6);
@@ -228,6 +256,54 @@ describe('ffi compatibility', function () {
         });
     });
 
-    describe('union', function () {
+    describe('tagged union', function () {
+        it('is supported', function () {
+            const TUnion = new UnionType({
+                a: 'short',
+                b: 'int64',
+                c: 'long'
+            });
+            const TTaggedUnion = new StructType({
+                tag: 'char',
+                data: TUnion
+            });
+            const lib = ffi.Library(libPath, {
+                getValueFromTaggedUnion: [ 'int64', [ ref.refType(TTaggedUnion) ]]
+            });
+            assert.deepEqual(_.keys(lib._library.unions), []);
+            assert.deepEqual(_.keys(lib._library.structs), ['StructType0']);
+
+            try {
+                let struct = new TTaggedUnion({
+                    tag: 'b'.charCodeAt(0),
+                    data: { b: 42 }
+                });
+
+                assert(_.isObject(struct));
+                assert.equal(struct.tag, 'b'.charCodeAt(0));
+                assert.equal(struct.data.b, 42);
+
+                let result = lib.getValueFromTaggedUnion(struct.ref());
+                assert.equal(result, 42);
+
+                struct = new TTaggedUnion({
+                    tag: 'b'.charCodeAt(0),
+                    data: new TUnion({ b: 42 })
+                });
+
+                assert(_.isObject(struct));
+                assert.equal(struct.tag, 'b'.charCodeAt(0));
+                assert.equal(struct.data.b, 42);
+
+                result = lib.getValueFromTaggedUnion(struct.ref());
+                assert.equal(result, 42);
+
+                assert.deepEqual(_.keys(lib._library.unions), []);  
+                assert.deepEqual(_.keys(lib._library.structs), ['StructType0']);
+            }
+            finally {
+                lib.release();
+            }
+        });
     });
 });
