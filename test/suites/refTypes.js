@@ -408,39 +408,66 @@ describe(`ref types`, function () {
         });
 
         describe('free length', function () {
-            it('could be created by plain object definition', function () {
-                const result = lib
-                .array({ TLongArray: 'long' })
-                .struct({
-                    TRecWithArray: {
-                        values: 'TLongArray',
-                        index: 'uint'
-                    }
+            describe('with square brackets', function () {
+                it('could be created by plain object definition', function () {
+                    const result = lib
+                    .array({ TLongArray: 'long' })
+                    .struct({
+                        TRecWithArray: {
+                            values: 'TLongArray[]',
+                            index: 'uint'
+                        }
+                    });
+
+                    assert.equal(result, lib);
+                    testArrayInterface();
                 });
 
-                assert.equal(result, lib);
-                testArrayInterface();
-            });
+                it('should supports C union like syntax', function () {
+                    const result = lib
+                    .array('long[] TLongArray')
+                    .struct('struct TRecWithArray { TLongArray[] values; uint index; }');
 
-            it('could be created from ArrayType', function () {
-                const TLongArray = new ArrayType(ref.types.long);
-                const TRecWithArray = new StructType({
-                    values: TLongArray,
-                    index: 'uint',
+                    assert.equal(result, lib);
+                    testArrayInterface();
                 });
-                const result = lib.array({ TLongArray }).struct({ TRecWithArray });
-
-                assert.equal(result, lib);
-                testArrayInterface();
             });
 
-            it('should supports C union like syntax', function () {
-                const result = lib
-                .array('long[] TLongArray')
-                .struct('struct TRecWithArray { TLongArray values; uint index; }');
+            describe('without square brackets', function () {
+                it('could be created by plain object definition', function () {
+                    const result = lib
+                    .array({ TLongArray: 'long' })
+                    .struct({
+                        TRecWithArray: {
+                            values: 'TLongArray',
+                            index: 'uint'
+                        }
+                    });
 
-                assert.equal(result, lib);
-                testArrayInterface();
+                    assert.equal(result, lib);
+                    testArrayInterface();
+                });
+
+                it('could be created from ArrayType', function () {
+                    const TLongArray = new ArrayType(ref.types.long);
+                    const TRecWithArray = new StructType({
+                        values: TLongArray,
+                        index: 'uint',
+                    });
+                    const result = lib.array({ TLongArray }).struct({ TRecWithArray });
+
+                    assert.equal(result, lib);
+                    testArrayInterface();
+                });
+
+                it('should supports C union like syntax', function () {
+                    const result = lib
+                    .array('long[] TLongArray')
+                    .struct('struct TRecWithArray { TLongArray values; uint index; }');
+
+                    assert.equal(result, lib);
+                    testArrayInterface();
+                });
             });
         });
 
