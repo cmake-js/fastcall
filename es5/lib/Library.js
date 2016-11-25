@@ -1,3 +1,19 @@
+/*
+Copyright 2016 Gábor Mező (gabor.mezo@outlook.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -18,7 +34,11 @@ var FastStruct = require('./FastStruct');
 var FastUnion = require('./FastUnion');
 var FastArray = require('./FastArray');
 var verify = require('./verify');
+var a = verify.a;
+var ert = verify.ert;
 var queue = require('./queue');
+var NameFactory = require('./NameFactory');
+var Parser = require('./Parser');
 
 var defaultOptions = {
     defaultCallMode: defs.callMode.sync,
@@ -41,6 +61,7 @@ var Library = function () {
         this._loop = null;
         this._mutex = null;
         this._queue = null;
+        this._nameFactory = new NameFactory();
         this.functions = {};
         this.callbacks = {};
         this.structs = {};
@@ -60,7 +81,7 @@ var Library = function () {
             this._loop = native.callback.newLoop();
             if (this.options.syncMode === defs.syncMode.lock) {
                 this._mutex = native.mutex.newMutex();
-                verify(this._mutex instanceof Buffer);
+                a && ert(this._mutex instanceof Buffer);
             }
             this._initialized = true;
             return this;
@@ -103,6 +124,21 @@ var Library = function () {
             native.dynload.freeLibrary(this._pLib);
             this._released = true;
             return this;
+        }
+    }, {
+        key: 'declare',
+        value: function declare(str) {
+            return new Parser(this).parseMultiline(str, null);
+        }
+    }, {
+        key: 'declareSync',
+        value: function declareSync(str) {
+            return new Parser(this).parseMultiline(str, defs.callMode.sync);
+        }
+    }, {
+        key: 'declareAsync',
+        value: function declareAsync(str) {
+            return new Parser(this).parseMultiline(str, defs.callMode.async);
         }
     }, {
         key: 'function',
@@ -212,6 +248,11 @@ var Library = function () {
         key: '_enqueue',
         value: function _enqueue(f) {
             return queue.next(f);
+        }
+    }, {
+        key: 'makeName',
+        value: function makeName(prefix) {
+            return this._nameFactory.makeName(prefix);
         }
     }, {
         key: 'synchronized',

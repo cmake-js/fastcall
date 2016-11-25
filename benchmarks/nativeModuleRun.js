@@ -32,19 +32,47 @@ module.exports = async(function* () {
 });
 
 function syncRun(module) {
-    let result = 0;
+    let result;
+
     const addNumbers = module.addNumbers;
     common.measure('addNumbers', 3, () => {
         result = addNumbers(addNumbers(5.5, 5), addNumbers(1.1, 1));
     });
-    assert(result === 5.5 + 5 + 1 + 1);
+    assert.equal(result, 5.5 + 5 + 1 + 1);
+
+    const concat = module.concat;
+    common.measure('concat', 1, () => {
+        result = concat("Hello,", " world!");
+    });
+    assert.equal(result, "Hello, world!");
+
+    const cb = (a, b) => a + b;
+    const makeInt = module.makeInt;
+    common.measure('callback', 3, () => {
+        result = makeInt(makeInt(5.5, 5.1, cb), makeInt(1.1, 1.8, cb), cb);
+    });
+    assert.equal(result, 5 + 5 + 1 + 1);
 }
 
 var asyncRun = async(function* (module) {
-    let result = 0;
+    let result;
+
     const addNumbersAsync =  Promise.promisify(module.addNumbersAsync);
     yield common.measureAsync('addNumbers', 3, async(function* () {
         result = yield addNumbersAsync(yield addNumbersAsync(5.5, 5), yield addNumbersAsync(1.1, 1));
     }));
-    assert(result === 5.5 + 5 + 1 + 1);
+    assert.equal(result, 5.5 + 5 + 1 + 1);
+
+    const concatAsync = Promise.promisify(module.concatAsync);
+    yield common.measureAsync('concat', 1, async(function* () {
+        result = yield concatAsync("Hello,", " world!");
+    }));
+    assert.equal(result, "Hello, world!");
+
+    const cb = (a, b) => a + b;
+    const makeIntAsync = Promise.promisify(module.makeIntAsync);
+    yield common.measureAsync('callback', 3, async(function* () {
+        result = yield makeIntAsync(yield makeIntAsync(5.5, 5.1, cb), yield makeIntAsync(1.1, 1.8, cb), cb);
+    }));
+    assert.equal(result, 5 + 5 + 1 + 1);
 });

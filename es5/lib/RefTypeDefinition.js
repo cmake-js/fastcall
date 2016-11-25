@@ -1,3 +1,19 @@
+/*
+Copyright 2016 Gábor Mező (gabor.mezo@outlook.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -7,39 +23,33 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var _ = require('lodash');
 var assert = require('assert');
 var verify = require('./verify');
+var a = verify.a;
+var ert = verify.ert;
 var ref = require('./ref-libs/ref');
 var Parser = require('./Parser');
+var rex = require('./rex');
 
 var RefTypeDefinition = function () {
-    function RefTypeDefinition(args) {
+    function RefTypeDefinition(library, propertyName, def) {
         _classCallCheck(this, RefTypeDefinition);
 
-        verify(args);
+        a && ert(_.isObject(library), 'Argument "library" is not an object.');
+        a && ert(_.isString(propertyName), 'Argument "propertyName" is not a string.');
+        this.library = library;
+        this.propertyName = propertyName;
 
-        assert(_.isObject(args.library), '"library" is not an object.');
-        verify(_.isString(args.propertyName), '"args.propertyName" is not a string.');
-        this.library = args.library;
-        this.propertyName = args.propertyName;
-        this._FactoryType = args.FactoryType;
+        var parser = new Parser(library);
+        var parsed = parser.parseRefType(def, propertyName);
+        a && ert(_.isObject(parsed));
+        a && ert(parsed.body);
+        a && ert(_.isFunction(parsed.factoryType));
+        a && ert(parsed.type);
+        a && ert(_.isString(parsed.name) && parsed.name.length);
 
-        if (_.isString(args.def)) {
-            var parsed = this._parse(args.def);
-            this.name = parsed.name;
-            this._defBody = parsed.defBody;
-            this._type = this._typeFactory();
-        } else {
-            this.name = _.keys(args.def)[0];
-            assert(_.isString(this.name), '"def" is invalid.');
-            this._defBody = args.def[this.name];
-
-            if (_.isFunction(this._defBody)) {
-                this._type = this._defBody;
-            } else if (_.isObject(this._defBody) || _.isString(this._defBody)) {
-                this._type = this._typeFactory();
-            } else {
-                assert(false, '"def" is invalid.');
-            }
-        }
+        this.name = parsed.name;
+        this._body = parsed.body;
+        this._factoryType = parsed.factoryType;
+        this._type = parsed.type;
         this._type[this.propertyName] = this;
     }
 
@@ -74,76 +84,32 @@ var RefTypeDefinition = function () {
                     value = value.ref();
                 }
 
-                if (!value.type) {
-                    value.type = this.type;
-                }
-
-                if (!value[propName]) {
-                    value[propName] = this;
-                }
-
-                return value;
-            } else if (value === null) {
-                return null;
-            }
-            throw new TypeError('Cannot make ' + propName + ' from: ' + value);
-        }
-    }, {
-        key: '_parse',
-        value: function _parse(str) {
-            var parser = new Parser(this.library);
-            return parser.parseFields(str, this.propertyName);
-        }
-    }, {
-        key: '_typeFactory',
-        value: function _typeFactory() {
-            verify(_.isFunction(this._FactoryType), '"args.FactoryType" is not a function.');
-            verify(this._defBody);
-            if (_.isPlainObject(this._defBody)) {
-                this._defBody = this._resolveStringTypes(this._defBody);
-            }
-            if (_.isString(this._defBody)) {
-                this._defBody = this._resolveStringType(this._defBody);
-            }
-            return new this._FactoryType(this._defBody);
-        }
-    }, {
-        key: '_resolveStringTypes',
-        value: function _resolveStringTypes(defObj) {
-            var _this2 = this;
-
-            var result = {};
-            _.each(defObj, function (value, key) {
-                var type = defObj[key];
-                if (_.isString(type)) {
-                    type = _this2._resolveStringType(type);
-                }
-                result[key] = type;
-            });
-            return result;
-        }
-    }, {
-        key: '_resolveStringType',
-        value: function _resolveStringType(type) {
-            var match = /(\w+)\s*(?:\[\s*(\d+)\s*\])?/.exec(type);
-            if (match) {
-                type = match[1];
-                var def = this.library.findRefDeclaration(type);
-                if (def) {
-                    type = def.type;
-                    if (match[2]) {
-                        type = def._makeTypeWithLength(match[2]);
+                if (_.isObject(value)) {
+                    if (value.type === undefined) {
+                        value.type = this.type;
                     }
+
+                    if (value[propName] === undefined) {
+                        value[propName] = this;
+                    }
+
+                    if (value[propName] === this) {
+                        return value;
+                    }
+
+                    throw new TypeError('Buffer is not a ' + propName + ' pointer.');
                 }
+            } else if (value === null) {
+                return ref.NULL;
             }
-            return type;
+            throw new TypeError('Cannot make ' + propName + ' from: ' + util.inspect(value));
         }
     }, {
         key: '_makeTypeWithLength',
         value: function _makeTypeWithLength(len) {
             len = _.isString(len) ? Number.parseInt(len) : len;
-            var itemType = this._defBody;
-            var FactoryType = this._FactoryType;
+            var itemType = this._body;
+            var FactoryType = this._factoryType;
             assert(len > 0 && itemType && _.isFunction(FactoryType), 'Invalid array type definition.');
             return new FactoryType(itemType, len);
         }

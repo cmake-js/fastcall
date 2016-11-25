@@ -31,11 +31,23 @@ module.exports = async(function* () {
 });
 
 function syncRun(lib) {
-    const ms = lib.interface.measureNativeNumberSyncTest(config.iterations);
+    let ms = lib.interface.measureNativeNumberSyncTest(config.iterations);
     common.showResult('addNumbers', 3, ms);
+
+    ms = lib.interface.measureNativeStringSyncTest(config.iterations);
+    common.showResult('concat', 1, ms);
+
+    ms = lib.interface.measureNativeCallbackSyncTest(config.iterations);
+    common.showResult('callback', 3, ms);
 }
 
 function asyncRun(lib) {
-    const ms = lib.interface.measureNativeNumberAsyncTest(config.iterations);
+    let ms = lib.interface.measureNativeNumberAsyncTest(config.iterations);
     common.showResult('addNumbers', 3, ms);
+
+    ms = lib.interface.measureNativeStringAsyncTest(config.iterations);
+    common.showResult('concat', 1, ms);
+
+    ms = lib.interface.measureNativeCallbackAsyncTest(config.iterations);
+    common.showResult('callback', 3, ms);
 }

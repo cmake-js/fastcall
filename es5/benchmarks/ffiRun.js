@@ -1,3 +1,19 @@
+/*
+Copyright 2016 Gábor Mező (gabor.mezo@outlook.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 'use strict';
 
 var Promise = require('bluebird');
@@ -6,6 +22,8 @@ var imports = require('./imports');
 var config = require('./config');
 var assert = require('assert');
 var common = require('./common');
+var fastcall = require('../lib');
+var ref = fastcall.ref;
 
 module.exports = async(regeneratorRuntime.mark(function _callee() {
     var lib;
@@ -35,22 +53,42 @@ module.exports = async(regeneratorRuntime.mark(function _callee() {
 }));
 
 function syncRun(lib) {
-    var result = 0;
+    var result = void 0;
+
+    var addNumbers = lib.addNumbersExp;
     common.measure('addNumbers', 3, function () {
-        result = lib.addNumbersExp(lib.addNumbersExp(5.5, 5), lib.addNumbersExp(1.1, 1));
+        result = addNumbers(addNumbers(5.5, 5), addNumbers(1.1, 1));
     });
-    assert(result === 5.5 + 5 + 1 + 1);
+    assert.equal(result, 5.5 + 5 + 1 + 1);
+
+    common.measure('concat', 1, function () {
+        var str1 = ref.allocCString("Hello,");
+        var str2 = ref.allocCString(" world!");
+        var out = new Buffer(100);
+        lib.concatExp(str1, str2, out, out.length);
+        result = ref.readCString(out);
+    });
+    assert.equal(result, "Hello, world!");
+
+    var cb = lib.TMakeIntFunc(function (a, b) {
+        return a + b;
+    });
+    var makeInt = lib.makeIntExp;
+    common.measure('callback', 3, function () {
+        result = makeInt(makeInt(5.5, 5.1, cb, null), makeInt(1.1, 1.8, cb, null), cb, null);
+    });
+    assert.equal(result, 5 + 5 + 1 + 1);
 }
 
-var asyncRun = async(regeneratorRuntime.mark(function _callee3(lib) {
-    var result, addNumbersAsync;
-    return regeneratorRuntime.wrap(function _callee3$(_context3) {
+var asyncRun = async(regeneratorRuntime.mark(function _callee5(lib) {
+    var result, addNumbersAsync, concatAsync, cb, makeIntAsync;
+    return regeneratorRuntime.wrap(function _callee5$(_context5) {
         while (1) {
-            switch (_context3.prev = _context3.next) {
+            switch (_context5.prev = _context5.next) {
                 case 0:
-                    result = 0;
+                    result = void 0;
                     addNumbersAsync = Promise.promisify(lib.addNumbersExp.async);
-                    _context3.next = 4;
+                    _context5.next = 4;
                     return common.measureAsync('addNumbers', 3, async(regeneratorRuntime.mark(function _callee2() {
                         return regeneratorRuntime.wrap(function _callee2$(_context2) {
                             while (1) {
@@ -81,13 +119,79 @@ var asyncRun = async(regeneratorRuntime.mark(function _callee3(lib) {
                     })));
 
                 case 4:
-                    assert(result === 5.5 + 5 + 1 + 1);
+                    assert.equal(result, 5.5 + 5 + 1 + 1);
 
-                case 5:
+                    concatAsync = Promise.promisify(lib.concatExp.async);
+                    _context5.next = 8;
+                    return common.measureAsync('concat', 1, async(regeneratorRuntime.mark(function _callee3() {
+                        var str1, str2, out;
+                        return regeneratorRuntime.wrap(function _callee3$(_context3) {
+                            while (1) {
+                                switch (_context3.prev = _context3.next) {
+                                    case 0:
+                                        str1 = ref.allocCString("Hello,");
+                                        str2 = ref.allocCString(" world!");
+                                        out = new Buffer(100);
+                                        _context3.next = 5;
+                                        return concatAsync(str1, str2, out, out.length);
+
+                                    case 5:
+                                        result = ref.readCString(out);
+
+                                    case 6:
+                                    case 'end':
+                                        return _context3.stop();
+                                }
+                            }
+                        }, _callee3, this);
+                    })));
+
+                case 8:
+                    assert.equal(result, "Hello, world!");
+
+                    cb = lib.TMakeIntFunc(function (a, b) {
+                        return a + b;
+                    });
+                    makeIntAsync = Promise.promisify(lib.makeIntExp.async);
+                    _context5.next = 13;
+                    return common.measureAsync('callback', 3, async(regeneratorRuntime.mark(function _callee4() {
+                        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+                            while (1) {
+                                switch (_context4.prev = _context4.next) {
+                                    case 0:
+                                        _context4.next = 2;
+                                        return makeIntAsync(5.5, 5.1, cb, null);
+
+                                    case 2:
+                                        _context4.t0 = _context4.sent;
+                                        _context4.next = 5;
+                                        return makeIntAsync(1.1, 1.8, cb, null);
+
+                                    case 5:
+                                        _context4.t1 = _context4.sent;
+                                        _context4.t2 = cb;
+                                        _context4.next = 9;
+                                        return makeIntAsync(_context4.t0, _context4.t1, _context4.t2, null);
+
+                                    case 9:
+                                        result = _context4.sent;
+
+                                    case 10:
+                                    case 'end':
+                                        return _context4.stop();
+                                }
+                            }
+                        }, _callee4, this);
+                    })));
+
+                case 13:
+                    assert.equal(result, 5 + 5 + 1 + 1);
+
+                case 14:
                 case 'end':
-                    return _context3.stop();
+                    return _context5.stop();
             }
         }
-    }, _callee3, this);
+    }, _callee5, this);
 }));
 //# sourceMappingURL=ffiRun.js.map

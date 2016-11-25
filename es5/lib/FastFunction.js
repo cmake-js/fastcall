@@ -1,3 +1,19 @@
+/*
+Copyright 2016 Gábor Mező (gabor.mezo@outlook.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -23,6 +39,8 @@ var callMode = defs.callMode;
 var FunctionDefinition = require('./FunctionDefinition');
 var util = require('util');
 var verify = require('./verify');
+var a = verify.a;
+var ert = verify.ert;
 var ref = require('./ref-libs/ref');
 
 var FastFunction = function (_FunctionDefinition) {
@@ -213,8 +231,8 @@ var FastFunction = function (_FunctionDefinition) {
             var funcArgs = _.range(vmArgSetters.length).map(function (n) {
                 return 'arg' + n;
             });
-            var funcBody = hasPtrArg ? 'let ptrs = [];' : '';
-            funcBody += 'const myVM = this.vm;';
+            var funcBody = hasPtrArg ? 'var ptrs = [];' : '';
+            funcBody += 'var myVM = this.vm;';
             funcBody += 'this.setVM(myVM);';
             for (var i = 0; i < vmArgSetters.length; i++) {
                 var _setter = vmArgSetters[i];
@@ -359,7 +377,7 @@ var FastFunction = function (_FunctionDefinition) {
             }
 
             var func = dyncall[name];
-            verify(_.isFunction(func));
+            a && ert(_.isFunction(func));
 
             if (async) {
                 if (isPtr) {

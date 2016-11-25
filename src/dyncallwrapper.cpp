@@ -32,8 +32,8 @@ using namespace fastcall;
 namespace {
 
 DCCallVM* vm = nullptr;
-
 static v8::Local<v8::Value> workerArgs[2] = { Nan::Null(), Nan::Null() };
+uv_loop_t* defLoop = nullptr;
 
 template <typename T>
 struct CallAsyncWorker {
@@ -62,7 +62,7 @@ struct CallAsyncWorker {
 
     void Start()
     {
-        int r = uv_queue_work(uv_default_loop(), &work, Call, Finished);
+        int r = uv_queue_work(defLoop, &work, Call, Finished);
         assert(!r);
     }
 
@@ -703,6 +703,8 @@ NAN_METHOD(callSizeTAsync)
 
 NAN_MODULE_INIT(fastcall::InitDyncallWrapper)
 {
+    defLoop = uv_default_loop();
+
     auto dyncall = Nan::New<Object>();
     Nan::Set(target, Nan::New<String>("dyncall").ToLocalChecked(), dyncall);
     Nan::Set(dyncall, Nan::New<String>("newCallVM").ToLocalChecked(), Nan::New<FunctionTemplate>(newCallVM)->GetFunction());

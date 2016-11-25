@@ -256,6 +256,7 @@ function getter(index) {
   if (buffer.length < end) {
     debug('reinterpreting buffer from %d to %d', buffer.length, end);
     buffer = _ref.reinterpret(buffer, end);
+    this._length = end / size;
   }
   return _ref.get(buffer, offset, baseType);
 }

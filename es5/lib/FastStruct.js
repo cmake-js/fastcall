@@ -1,3 +1,19 @@
+/*
+Copyright 2016 Gábor Mező (gabor.mezo@outlook.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -8,8 +24,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var _ = require('lodash');
 var assert = require('assert');
-var verify = require('./verify');
-var StructType = require('./ref-libs/struct');
 var RefTypeDefinition = require('./RefTypeDefinition');
 
 var FastStruct = function (_RefTypeDefinition) {
@@ -18,12 +32,7 @@ var FastStruct = function (_RefTypeDefinition) {
     function FastStruct(library, def) {
         _classCallCheck(this, FastStruct);
 
-        return _possibleConstructorReturn(this, (FastStruct.__proto__ || Object.getPrototypeOf(FastStruct)).call(this, {
-            library: library,
-            FactoryType: StructType,
-            def: def,
-            propertyName: 'struct'
-        }));
+        return _possibleConstructorReturn(this, (FastStruct.__proto__ || Object.getPrototypeOf(FastStruct)).call(this, library, 'struct', def));
     }
 
     return FastStruct;

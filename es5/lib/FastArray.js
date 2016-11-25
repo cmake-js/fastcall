@@ -1,6 +1,20 @@
-'use strict';
+/*
+Copyright 2016 Gábor Mező (gabor.mezo@outlook.com)
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -10,10 +24,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var _ = require('lodash');
 var assert = require('assert');
-var verify = require('./verify');
-var ArrayType = require('./ref-libs/array');
 var RefTypeDefinition = require('./RefTypeDefinition');
-var Parser = require('./Parser');
 
 var FastArray = function (_RefTypeDefinition) {
     _inherits(FastArray, _RefTypeDefinition);
@@ -21,21 +32,8 @@ var FastArray = function (_RefTypeDefinition) {
     function FastArray(library, def) {
         _classCallCheck(this, FastArray);
 
-        return _possibleConstructorReturn(this, (FastArray.__proto__ || Object.getPrototypeOf(FastArray)).call(this, {
-            library: library,
-            FactoryType: ArrayType,
-            def: def,
-            propertyName: 'array'
-        }));
+        return _possibleConstructorReturn(this, (FastArray.__proto__ || Object.getPrototypeOf(FastArray)).call(this, library, 'array', def));
     }
-
-    _createClass(FastArray, [{
-        key: '_parse',
-        value: function _parse(str) {
-            var parser = new Parser(this.library);
-            return parser.parseArray(str);
-        }
-    }]);
 
     return FastArray;
 }(RefTypeDefinition);

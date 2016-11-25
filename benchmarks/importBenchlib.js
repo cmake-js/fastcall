@@ -44,7 +44,7 @@ exports.fastcallWay = async(function* () {
     if (fastcallLib === null) {
         const libPath = yield findLib();
         fastcallLib = new Library(libPath)
-        //.callback('int TMakeIntFunc(float, double, void*)')
+        .callback('int TMakeIntFunc(float, double, void*)')
         .function('double measureNativeNumberSyncTest(uint iterations)')
         .function('double measureNativeStringSyncTest(uint iterations)')
         .function('double measureNativeCallbackSyncTest(uint iterations)')
@@ -52,8 +52,8 @@ exports.fastcallWay = async(function* () {
         .function('double measureNativeStringAsyncTest(uint iterations)')
         .function('double measureNativeCallbackAsyncTest(uint iterations)')
         .function('double addNumbersExp(float floatValue, int intValue)')
-        //.function('void concatExp(char* str1, char* str2, char* result, uint resultSize)')
-        //.function('int makeIntExp(float floatValue, double doubleValue, TMakeIntFunc func, void* context)');
+        .function('void concatExp(char* str1, char* str2, char* result, uint resultSize)')
+        .function('int makeIntExp(float floatValue, double doubleValue, TMakeIntFunc func, void* context)');
     }
     return fastcallLib;
 });

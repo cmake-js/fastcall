@@ -1,3 +1,19 @@
+/*
+Copyright 2016 Gábor Mező (gabor.mezo@outlook.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 'use strict';
 
 var Promise = require('bluebird');
@@ -31,23 +47,39 @@ module.exports = async(regeneratorRuntime.mark(function _callee() {
 }));
 
 function syncRun(module) {
-    var result = 0;
+    var result = void 0;
+
     var addNumbers = module.addNumbers;
     common.measure('addNumbers', 3, function () {
         result = addNumbers(addNumbers(5.5, 5), addNumbers(1.1, 1));
     });
-    assert(result === 5.5 + 5 + 1 + 1);
+    assert.equal(result, 5.5 + 5 + 1 + 1);
+
+    var concat = module.concat;
+    common.measure('concat', 1, function () {
+        result = concat("Hello,", " world!");
+    });
+    assert.equal(result, "Hello, world!");
+
+    var cb = function cb(a, b) {
+        return a + b;
+    };
+    var makeInt = module.makeInt;
+    common.measure('callback', 3, function () {
+        result = makeInt(makeInt(5.5, 5.1, cb), makeInt(1.1, 1.8, cb), cb);
+    });
+    assert.equal(result, 5 + 5 + 1 + 1);
 }
 
-var asyncRun = async(regeneratorRuntime.mark(function _callee3(module) {
-    var result, addNumbersAsync;
-    return regeneratorRuntime.wrap(function _callee3$(_context3) {
+var asyncRun = async(regeneratorRuntime.mark(function _callee5(module) {
+    var result, addNumbersAsync, concatAsync, cb, makeIntAsync;
+    return regeneratorRuntime.wrap(function _callee5$(_context5) {
         while (1) {
-            switch (_context3.prev = _context3.next) {
+            switch (_context5.prev = _context5.next) {
                 case 0:
-                    result = 0;
+                    result = void 0;
                     addNumbersAsync = Promise.promisify(module.addNumbersAsync);
-                    _context3.next = 4;
+                    _context5.next = 4;
                     return common.measureAsync('addNumbers', 3, async(regeneratorRuntime.mark(function _callee2() {
                         return regeneratorRuntime.wrap(function _callee2$(_context2) {
                             while (1) {
@@ -78,13 +110,76 @@ var asyncRun = async(regeneratorRuntime.mark(function _callee3(module) {
                     })));
 
                 case 4:
-                    assert(result === 5.5 + 5 + 1 + 1);
+                    assert.equal(result, 5.5 + 5 + 1 + 1);
 
-                case 5:
+                    concatAsync = Promise.promisify(module.concatAsync);
+                    _context5.next = 8;
+                    return common.measureAsync('concat', 1, async(regeneratorRuntime.mark(function _callee3() {
+                        return regeneratorRuntime.wrap(function _callee3$(_context3) {
+                            while (1) {
+                                switch (_context3.prev = _context3.next) {
+                                    case 0:
+                                        _context3.next = 2;
+                                        return concatAsync("Hello,", " world!");
+
+                                    case 2:
+                                        result = _context3.sent;
+
+                                    case 3:
+                                    case 'end':
+                                        return _context3.stop();
+                                }
+                            }
+                        }, _callee3, this);
+                    })));
+
+                case 8:
+                    assert.equal(result, "Hello, world!");
+
+                    cb = function cb(a, b) {
+                        return a + b;
+                    };
+
+                    makeIntAsync = Promise.promisify(module.makeIntAsync);
+                    _context5.next = 13;
+                    return common.measureAsync('callback', 3, async(regeneratorRuntime.mark(function _callee4() {
+                        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+                            while (1) {
+                                switch (_context4.prev = _context4.next) {
+                                    case 0:
+                                        _context4.next = 2;
+                                        return makeIntAsync(5.5, 5.1, cb);
+
+                                    case 2:
+                                        _context4.t0 = _context4.sent;
+                                        _context4.next = 5;
+                                        return makeIntAsync(1.1, 1.8, cb);
+
+                                    case 5:
+                                        _context4.t1 = _context4.sent;
+                                        _context4.t2 = cb;
+                                        _context4.next = 9;
+                                        return makeIntAsync(_context4.t0, _context4.t1, _context4.t2);
+
+                                    case 9:
+                                        result = _context4.sent;
+
+                                    case 10:
+                                    case 'end':
+                                        return _context4.stop();
+                                }
+                            }
+                        }, _callee4, this);
+                    })));
+
+                case 13:
+                    assert.equal(result, 5 + 5 + 1 + 1);
+
+                case 14:
                 case 'end':
-                    return _context3.stop();
+                    return _context5.stop();
             }
         }
-    }, _callee3, this);
+    }, _callee5, this);
 }));
 //# sourceMappingURL=nativeModuleRun.js.map

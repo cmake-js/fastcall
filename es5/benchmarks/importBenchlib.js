@@ -1,3 +1,19 @@
+/*
+Copyright 2016 Gábor Mező (gabor.mezo@outlook.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 'use strict';
 
 var Promise = require('bluebird');
@@ -64,11 +80,7 @@ exports.fastcallWay = async(regeneratorRuntime.mark(function _callee2() {
                 case 3:
                     libPath = _context2.sent;
 
-                    fastcallLib = new Library(libPath)
-                    //.callback('int TMakeIntFunc(float, double, void*)')
-                    .function('double measureNativeNumberSyncTest(uint iterations)').function('double measureNativeStringSyncTest(uint iterations)').function('double measureNativeCallbackSyncTest(uint iterations)').function('double measureNativeNumberAsyncTest(uint iterations)').function('double measureNativeStringAsyncTest(uint iterations)').function('double measureNativeCallbackAsyncTest(uint iterations)').function('double addNumbersExp(float floatValue, int intValue)');
-                    //.function('void concatExp(char* str1, char* str2, char* result, uint resultSize)')
-                    //.function('int makeIntExp(float floatValue, double doubleValue, TMakeIntFunc func, void* context)');
+                    fastcallLib = new Library(libPath).callback('int TMakeIntFunc(float, double, void*)').function('double measureNativeNumberSyncTest(uint iterations)').function('double measureNativeStringSyncTest(uint iterations)').function('double measureNativeCallbackSyncTest(uint iterations)').function('double measureNativeNumberAsyncTest(uint iterations)').function('double measureNativeStringAsyncTest(uint iterations)').function('double measureNativeCallbackAsyncTest(uint iterations)').function('double addNumbersExp(float floatValue, int intValue)').function('void concatExp(char* str1, char* str2, char* result, uint resultSize)').function('int makeIntExp(float floatValue, double doubleValue, TMakeIntFunc func, void* context)');
 
                 case 5:
                     return _context2.abrupt('return', fastcallLib);

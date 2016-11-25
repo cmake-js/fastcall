@@ -21,6 +21,8 @@ const imports = require('./imports');
 const config = require('./config');
 const assert = require('assert');
 const common = require('./common');
+const fastcall = require('../lib');
+const ref = fastcall.ref;
 
 module.exports = async(function* () {
     const lib = yield imports.importBenchlib.ffiWay();
@@ -32,18 +34,54 @@ module.exports = async(function* () {
 });
 
 function syncRun(lib) {
-    let result = 0;
+    let result;
+
+    const addNumbers = lib.addNumbersExp;
     common.measure('addNumbers', 3, () => {
-        result = lib.addNumbersExp(lib.addNumbersExp(5.5, 5), lib.addNumbersExp(1.1, 1));
+        result = addNumbers(addNumbers(5.5, 5), addNumbers(1.1, 1));
     });
-    assert(result === 5.5 + 5 + 1 + 1);
+    assert.equal(result, 5.5 + 5 + 1 + 1);
+
+    common.measure('concat', 1, () => {
+        const str1 = ref.allocCString("Hello,");
+        const str2 = ref.allocCString(" world!");
+        const out = new Buffer(100);
+        lib.concatExp(str1, str2, out, out.length);
+        result = ref.readCString(out);
+    });
+    assert.equal(result, "Hello, world!");
+
+    const cb = lib.TMakeIntFunc((a, b) => a + b);
+    const makeInt = lib.makeIntExp;
+    common.measure('callback', 3, () => {
+        result = makeInt(makeInt(5.5, 5.1, cb, null), makeInt(1.1, 1.8, cb, null), cb, null);
+    });
+    assert.equal(result, 5 + 5 + 1 + 1);
 }
 
 var asyncRun = async(function* (lib) {
-    let result = 0;
+    let result;
+
     const addNumbersAsync =  Promise.promisify(lib.addNumbersExp.async);
     yield common.measureAsync('addNumbers', 3, async(function* () {
         result = yield addNumbersAsync(yield addNumbersAsync(5.5, 5), yield addNumbersAsync(1.1, 1));
     }));
-    assert(result === 5.5 + 5 + 1 + 1);
+    assert.equal(result, 5.5 + 5 + 1 + 1);
+
+    const concatAsync =  Promise.promisify(lib.concatExp.async);
+    yield common.measureAsync('concat', 1, async(function* () {
+        const str1 = ref.allocCString("Hello,");
+        const str2 = ref.allocCString(" world!");
+        const out = new Buffer(100);
+        yield concatAsync(str1, str2, out, out.length);
+        result = ref.readCString(out);
+    }));
+    assert.equal(result, "Hello, world!");
+
+    const cb = lib.TMakeIntFunc((a, b) => a + b);
+    const makeIntAsync = Promise.promisify(lib.makeIntExp.async);
+    yield common.measureAsync('callback', 3, async(function* () {
+        result = yield makeIntAsync(yield makeIntAsync(5.5, 5.1, cb, null), yield makeIntAsync(1.1, 1.8, cb, null), cb, null);
+    }));
+    assert.equal(result, 5 + 5 + 1 + 1);
 });

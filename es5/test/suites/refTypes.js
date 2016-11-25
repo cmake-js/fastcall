@@ -1,3 +1,19 @@
+/*
+Copyright 2016 Gábor Mező (gabor.mezo@outlook.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 'use strict';
 
 var fastcall = require('../../lib');
@@ -503,35 +519,58 @@ describe('ref types', function () {
         });
 
         describe('free length', function () {
-            it('could be created by plain object definition', function () {
-                var result = lib.array({ TLongArray: 'long' }).struct({
-                    TRecWithArray: {
-                        values: 'TLongArray',
+            describe('with square brackets', function () {
+                it('could be created by plain object definition', function () {
+                    var result = lib.array({ TLongArray: 'long' }).struct({
+                        TRecWithArray: {
+                            values: 'TLongArray[]',
+                            index: 'uint'
+                        }
+                    });
+
+                    assert.equal(result, lib);
+                    testArrayInterface();
+                });
+
+                it('should supports C union like syntax', function () {
+                    var result = lib.array('long[] TLongArray').struct('struct TRecWithArray { TLongArray[] values; uint index; }');
+
+                    assert.equal(result, lib);
+                    testArrayInterface();
+                });
+            });
+
+            describe('without square brackets', function () {
+                it('could be created by plain object definition', function () {
+                    var result = lib.array({ TLongArray: 'long' }).struct({
+                        TRecWithArray: {
+                            values: 'TLongArray',
+                            index: 'uint'
+                        }
+                    });
+
+                    assert.equal(result, lib);
+                    testArrayInterface();
+                });
+
+                it('could be created from ArrayType', function () {
+                    var TLongArray = new ArrayType(ref.types.long);
+                    var TRecWithArray = new StructType({
+                        values: TLongArray,
                         index: 'uint'
-                    }
+                    });
+                    var result = lib.array({ TLongArray: TLongArray }).struct({ TRecWithArray: TRecWithArray });
+
+                    assert.equal(result, lib);
+                    testArrayInterface();
                 });
 
-                assert.equal(result, lib);
-                testArrayInterface();
-            });
+                it('should supports C union like syntax', function () {
+                    var result = lib.array('long[] TLongArray').struct('struct TRecWithArray { TLongArray values; uint index; }');
 
-            it('could be created from ArrayType', function () {
-                var TLongArray = new ArrayType(ref.types.long);
-                var TRecWithArray = new StructType({
-                    values: TLongArray,
-                    index: 'uint'
+                    assert.equal(result, lib);
+                    testArrayInterface();
                 });
-                var result = lib.array({ TLongArray: TLongArray }).struct({ TRecWithArray: TRecWithArray });
-
-                assert.equal(result, lib);
-                testArrayInterface();
-            });
-
-            it('should supports C union like syntax', function () {
-                var result = lib.array('long[] TLongArray').struct('struct TRecWithArray { TLongArray values; uint index; }');
-
-                assert.equal(result, lib);
-                testArrayInterface();
             });
         });
 
