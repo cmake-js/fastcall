@@ -42,23 +42,20 @@ char V8ThreadCallbackHandler(DCArgs* args, DCValue* result, CallbackUserData* cb
 
 char OtherThreadCallbackHandler(DCArgs* args, DCValue* result, CallbackUserData* cbUserData)
 {
-    cbUserData->ToAsync();
-    assert(cbUserData->threading);
-
-    std::unique_lock<std::mutex> ulock(cbUserData->threading->lock);
+    std::unique_lock<std::mutex> ulock(cbUserData->lock);
 
     auto task = [args, result, cbUserData]() {
         V8ThreadCallbackHandler(args, result, cbUserData);
 
         {
-            std::unique_lock<std::mutex> ulock(cbUserData->threading->lock);
-            cbUserData->threading->cond.notify_one();
+            std::unique_lock<std::mutex> ulock(cbUserData->lock);
+            cbUserData->cond.notify_one();
         }
     };
 
     cbUserData->loop->DoInMainLoop(std::move(task));
 
-    cbUserData->threading->cond.wait(ulock);
+    cbUserData->cond.wait(ulock);
 
     return cbUserData->resultTypeCode;
 }
