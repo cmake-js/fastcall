@@ -23,4 +23,6 @@ NAN_MODULE_INIT(InitStatics);
 v8::Local<v8::Value> Require(const char* name);
 
 bool IsV8Thread();
+
+NAN_METHOD(makeStringBuffer);
 }

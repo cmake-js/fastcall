@@ -42,6 +42,7 @@ uv_thread_t mainThreadHandle;
 NAN_MODULE_INIT(fastcall::InitStatics)
 {
     savedTarget.Reset(target);
+    Nan::Set(target, Nan::New<String>("makeStringBuffer").ToLocalChecked(), Nan::New<FunctionTemplate>(makeStringBuffer)->GetFunction());
 #ifdef WIN32
     mainThreadId = GetCurrentThreadId();
 #else
@@ -71,4 +72,30 @@ bool fastcall::IsV8Thread()
     auto currThread = (uv_thread_t)uv_thread_self();
     return pthread_equal(currThread, mainThreadHandle);
 #endif
+}
+
+NAN_METHOD(fastcall::makeStringBuffer)
+{
+    auto val = info[0];
+    
+    if (Buffer::HasInstance(val)) {
+        return info.GetReturnValue().Set(val);
+    }
+
+    if (val->IsNumber()) {
+        auto num = val->Uint32Value();
+        return info.GetReturnValue().Set(Nan::NewBuffer(num).ToLocalChecked());
+    }
+
+    if (val->IsString()) {
+        auto v8Str = val->ToString();
+        char* str = strdup(*Nan::Utf8String(val));
+        return info.GetReturnValue().Set(
+            Nan::NewBuffer(
+                str,
+                v8Str->Length(),
+                [](char *data, void *hint) { free(data); },
+                nullptr
+            ).ToLocalChecked());
+    }
 }

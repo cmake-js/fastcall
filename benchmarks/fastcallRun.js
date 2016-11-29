@@ -49,8 +49,8 @@ function syncRun(lib) {
 
     const concat = lib.interface.concatExp;
     common.measure('concat', 1, () => {
-        const str1 = ref.allocCString('Hello,');
-        const str2 = ref.allocCString(' world!');
+        const str1 = fastcall.makeStringBuffer('Hello,');
+        const str2 = fastcall.makeStringBuffer(' world!');
         const out = new Buffer(100);
         concat(str1, str2, out, out.length);
         result = ref.readCString(out);
@@ -76,8 +76,8 @@ var asyncRun = async(function* (lib) {
 
     const concatAsync =  lib.interface.concatExp.async;
     yield common.measureAsync('concat', 1, async(function* () {
-        const str1 = ref.allocCString('Hello,');
-        const str2 = ref.allocCString(' world!');
+        const str1 = fastcall.makeStringBuffer('Hello,');
+        const str2 = fastcall.makeStringBuffer(' world!');
         const out = new Buffer(100);
         yield concatAsync(str1, str2, out, out.length);
         result = ref.readCString(out);
