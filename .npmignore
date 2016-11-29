@@ -1,5 +1,3 @@
-deps/ref*
-benchmarks
 .vscode
 .babelrc
 .eslintrc
