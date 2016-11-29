@@ -28,16 +28,10 @@ inline void* GetPointer(v8::Local<v8::Value> val)
     using namespace node;
     using namespace std;
 
-    Nan::HandleScope scope;
-
-    if (val->IsNull() || val->IsUndefined()) {
+    if (!Buffer::HasInstance(val)) {
         return nullptr;
     }
-    auto obj = val.As<Object>();
-    if (!Buffer::HasInstance(obj)) {
-        throw logic_error("Value is not a pointer.");
-    }
-    return reinterpret_cast<void*>(Buffer::Data(obj));
+    return reinterpret_cast<void*>(Buffer::Data(val));
 }
 
 inline int8_t GetInt8(v8::Local<v8::Value> val)

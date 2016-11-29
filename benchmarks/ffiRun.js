@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 'use strict';
+const _ = require('lodash');
 const Promise = require('bluebird');
 const async = Promise.coroutine;
 const imports = require('./imports');
@@ -27,10 +28,14 @@ const ref = fastcall.ref;
 module.exports = async(function* () {
     const lib = yield imports.importBenchlib.ffiWay();
 
-    console.log('--- sync ---');
-    syncRun(lib);
-    console.log('--- async ---');
-    yield asyncRun(lib);
+    if (_.includes(config.modes, 'sync')) {
+        console.log('--- sync ---');
+        syncRun(lib);
+    }
+    if (_.includes(config.modes, 'async')) {
+        console.log('--- async ---');
+        yield asyncRun(lib);
+    }
 });
 
 function syncRun(lib) {

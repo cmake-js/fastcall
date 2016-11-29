@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 'use strict';
+const _ = require('lodash');
 const Promise = require('bluebird');
 const async = Promise.coroutine;
 const imports = require('./imports');
@@ -25,10 +26,14 @@ const common = require('./common');
 module.exports = async(function* () {
     const module = imports.importBenchmod();
 
-    console.log('--- sync ---');
-    syncRun(module);
-    console.log('--- async ---');
-    yield asyncRun(module);
+    if (_.includes(config.modes, 'sync')) {
+        console.log('--- sync ---');
+        syncRun(module);
+    }
+    if (_.includes(config.modes, 'async')) {
+        console.log('--- async ---');
+        yield asyncRun(module);
+    }
 });
 
 function syncRun(module) {

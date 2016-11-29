@@ -1,20 +1,21 @@
 /*
 Copyright 2016 Gábor Mező (gabor.mezo@outlook.com)
 
-Licensed under the Apache License, Version 2.0 (the "License");
+Licensed under the Apache License, Version 2.0 (the 'License');
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
+distributed under the License is distributed on an 'AS IS' BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
 
 'use strict';
+const _ = require('lodash');
 const Promise = require('bluebird');
 const async = Promise.coroutine;
 const imports = require('./imports');
@@ -27,10 +28,14 @@ const ref = fastcall.ref;
 module.exports = async(function* () {
     const lib = yield imports.importBenchlib.fastcallWay();
 
-    console.log('--- sync ---');
-    syncRun(lib);
-    console.log('--- async ---');
-    yield asyncRun(lib);
+    if (_.includes(config.modes, 'sync')) {
+        console.log('--- sync ---');
+        syncRun(lib);
+    }
+    if (_.includes(config.modes, 'async')) {
+        console.log('--- async ---');
+        yield asyncRun(lib);
+    }
 });
 
 function syncRun(lib) {
@@ -44,13 +49,13 @@ function syncRun(lib) {
 
     const concat = lib.interface.concatExp;
     common.measure('concat', 1, () => {
-        const str1 = ref.allocCString("Hello,");
-        const str2 = ref.allocCString(" world!");
+        const str1 = ref.allocCString('Hello,');
+        const str2 = ref.allocCString(' world!');
         const out = new Buffer(100);
         concat(str1, str2, out, out.length);
         result = ref.readCString(out);
     });
-    assert.equal(result, "Hello, world!");
+    assert.equal(result, 'Hello, world!');
 
     const cb = lib.interface.TMakeIntFunc((a, b) => a + b);
     const makeInt = lib.interface.makeIntExp;
@@ -71,13 +76,13 @@ var asyncRun = async(function* (lib) {
 
     const concatAsync =  lib.interface.concatExp.async;
     yield common.measureAsync('concat', 1, async(function* () {
-        const str1 = ref.allocCString("Hello,");
-        const str2 = ref.allocCString(" world!");
+        const str1 = ref.allocCString('Hello,');
+        const str2 = ref.allocCString(' world!');
         const out = new Buffer(100);
         yield concatAsync(str1, str2, out, out.length);
         result = ref.readCString(out);
     }));
-    assert.equal(result, "Hello, world!");
+    assert.equal(result, 'Hello, world!');
 
     const cb = lib.interface.TMakeIntFunc((a, b) => a + b);
     const makeIntAsync = lib.interface.makeIntExp.async;

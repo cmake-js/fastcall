@@ -18,5 +18,6 @@ limitations under the License.
 
 module.exports = {
     iterations: 100000,
-    tests: ['native', 'native-module', 'ffi', 'fastcall']
+    tests: ['_native', '_native-module', '_ffi', 'fastcall'],
+    modes: ['sync', '_async']
 };

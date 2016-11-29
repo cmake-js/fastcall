@@ -61,7 +61,7 @@ inline v8::Local<v8::Object> Wrap(T* object, Nan::FreeCallback freeFunction)
 
     return
         Nan::NewBuffer(
-           reinterpret_cast<char*>(object),
+            reinterpret_cast<char*>(object),
             0,
             freeFunction,
             nullptr)
