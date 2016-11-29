@@ -17,5 +17,6 @@ limitations under the License.
 'use strict';
 
 module.exports = {
-    iterations: 100000
+    iterations: 100000,
+    tests: ['native', 'native-module', 'ffi', 'fastcall']
 };
