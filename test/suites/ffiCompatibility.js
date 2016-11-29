@@ -221,7 +221,7 @@ describe('ffi compatibility', function () {
             });
             const TRecWithArrays = new ArrayType(TRecWithArray);
             const lib = ffi.Library(libPath, {
-                incRecWithArrays: [ 'void', [ ref.refType(TRecWithArray), 'long' ]]
+                incRecWithArrays: [ 'void', [ TRecWithArrays, 'long' ]]
             });
             assert.deepEqual(_.keys(lib._library.structs), ['StructType0']);
             assert.deepEqual(_.keys(lib._library.arrays), []);

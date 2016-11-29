@@ -479,7 +479,7 @@ describe(`ref types`, function () {
                 .array('TRecWithArray[] TRecWithArrays')
                 .function('void makeRecWithArrays(TRecWithArrays* records, long* size)')
                 .function('void incRecWithArrays(TRecWithArray* records, long size)')
-                .function('void freeRecWithArrays(TRecWithArray* records)');
+                .function('void freeRecWithArrays(TRecWithArrays records)');
 
                 testArrayFuncsSync();
             });
@@ -492,9 +492,9 @@ describe(`ref types`, function () {
                 const TRecWithArrays = new ArrayType(TRecWithArray);
                 
                 lib
-                .function({ makeRecWithArrays: [ 'void', [ ref.refType(ref.refType(TRecWithArray)), ref.refType('long') ]] })
-                .function({ incRecWithArrays: [ 'void', [ ref.refType(TRecWithArray), 'long' ]] })
-                .function({ freeRecWithArrays: [ 'void', [ ref.refType(TRecWithArray) ]] });
+                .function({ makeRecWithArrays: [ 'void', [ ref.refType(TRecWithArrays), ref.refType('long') ]] })
+                .function({ incRecWithArrays: [ 'void', [ TRecWithArrays, 'long' ]] })
+                .function({ freeRecWithArrays: [ 'void', [ TRecWithArrays ]] });
 
                 testArrayFuncsSync(TRecWithArray, TRecWithArrays);
             });
@@ -507,7 +507,7 @@ describe(`ref types`, function () {
                 .struct('struct TRecWithArray { TLongArray[5] values; uint index; }')
                 .array('TRecWithArray[] TRecWithArrays')
                 .function('void makeRecWithArrays(TRecWithArrays* records, long* size)')
-                .function('void incRecWithArrays(TRecWithArray* records, long size)')
+                .function('void incRecWithArrays(TRecWithArrays records, long size)')
                 .function('void freeRecWithArrays(TRecWithArray* records)');
 
                 yield testArrayFuncsAsync();
@@ -521,8 +521,8 @@ describe(`ref types`, function () {
                 const TRecWithArrays = new ArrayType(TRecWithArray);
                 
                 lib
-                .function({ makeRecWithArrays: [ 'void', [ ref.refType(ref.refType(TRecWithArray)), ref.refType('long') ]] })
-                .function({ incRecWithArrays: [ 'void', [ ref.refType(TRecWithArray), 'long' ]] })
+                .function({ makeRecWithArrays: [ 'void', [ ref.refType(TRecWithArrays), ref.refType('long') ]] })
+                .function({ incRecWithArrays: [ 'void', [ TRecWithArrays, 'long' ]] })
                 .function({ freeRecWithArrays: [ 'void', [ ref.refType(TRecWithArray) ]] });
 
                 yield testArrayFuncsAsync(TRecWithArray, TRecWithArrays);
