@@ -1,14 +1,14 @@
 /*
 Copyright 2016 Gábor Mező (gabor.mezo@outlook.com)
 
-Licensed under the Apache License, Version 2.0 (the "License");
+Licensed under the Apache License, Version 2.0 (the 'License');
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
+distributed under the License is distributed on an 'AS IS' BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
@@ -16,6 +16,7 @@ limitations under the License.
 
 'use strict';
 
+var _ = require('lodash');
 var Promise = require('bluebird');
 var async = Promise.coroutine;
 var imports = require('./imports');
@@ -38,8 +39,16 @@ module.exports = async(regeneratorRuntime.mark(function _callee() {
                     lib = _context.sent;
 
 
-                    console.log('--- sync ---');
-                    syncRun(lib);
+                    if (_.includes(config.modes, 'sync')) {
+                        console.log('--- sync ---');
+                        syncRun(lib);
+                    }
+
+                    if (!_.includes(config.modes, 'async')) {
+                        _context.next = 8;
+                        break;
+                    }
+
                     console.log('--- async ---');
                     _context.next = 8;
                     return asyncRun(lib);
@@ -63,13 +72,13 @@ function syncRun(lib) {
 
     var concat = lib.interface.concatExp;
     common.measure('concat', 1, function () {
-        var str1 = ref.allocCString("Hello,");
-        var str2 = ref.allocCString(" world!");
+        var str1 = fastcall.makeStringBuffer('Hello,');
+        var str2 = fastcall.makeStringBuffer(' world!');
         var out = new Buffer(100);
         concat(str1, str2, out, out.length);
         result = ref.readCString(out);
     });
-    assert.equal(result, "Hello, world!");
+    assert.equal(result, 'Hello, world!');
 
     var cb = lib.interface.TMakeIntFunc(function (a, b) {
         return a + b;
@@ -130,8 +139,8 @@ var asyncRun = async(regeneratorRuntime.mark(function _callee5(lib) {
                             while (1) {
                                 switch (_context3.prev = _context3.next) {
                                     case 0:
-                                        str1 = ref.allocCString("Hello,");
-                                        str2 = ref.allocCString(" world!");
+                                        str1 = fastcall.makeStringBuffer('Hello,');
+                                        str2 = fastcall.makeStringBuffer(' world!');
                                         out = new Buffer(100);
                                         _context3.next = 5;
                                         return concatAsync(str1, str2, out, out.length);
@@ -148,7 +157,7 @@ var asyncRun = async(regeneratorRuntime.mark(function _callee5(lib) {
                     })));
 
                 case 8:
-                    assert.equal(result, "Hello, world!");
+                    assert.equal(result, 'Hello, world!');
 
                     cb = lib.interface.TMakeIntFunc(function (a, b) {
                         return a + b;

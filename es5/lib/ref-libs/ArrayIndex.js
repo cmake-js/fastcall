@@ -31,6 +31,26 @@ Object.defineProperties(ArrayIndex.prototype, {
         this[ArrayIndex.lengthChanged](value);
       }
     }
+  },
+  '0': {
+    get: notSupported,
+    set: notSupported
+  },
+  '1': {
+    get: notSupported,
+    set: notSupported
+  },
+  '2': {
+    get: notSupported,
+    set: notSupported
+  },
+  '3': {
+    get: notSupported,
+    set: notSupported
+  },
+  '4': {
+    get: notSupported,
+    set: notSupported
   }
 });
 
@@ -58,6 +78,10 @@ ArrayIndex.prototype.toString = function () {
 ArrayIndex.get = 'get';
 ArrayIndex.set = 'set';
 ArrayIndex.lengthChanged = '_lengthChanged';
+
+function notSupported() {
+  throw new Error('Accessing ArrayType by index is not supported. Use methods of "get()" and "set()" for this purpose.');
+}
 
 module.exports = ArrayIndex;
 //# sourceMappingURL=ArrayIndex.js.map

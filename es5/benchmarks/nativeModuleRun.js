@@ -16,6 +16,7 @@ limitations under the License.
 
 'use strict';
 
+var _ = require('lodash');
 var Promise = require('bluebird');
 var async = Promise.coroutine;
 var imports = require('./imports');
@@ -32,8 +33,16 @@ module.exports = async(regeneratorRuntime.mark(function _callee() {
                     module = imports.importBenchmod();
 
 
-                    console.log('--- sync ---');
-                    syncRun(module);
+                    if (_.includes(config.modes, 'sync')) {
+                        console.log('--- sync ---');
+                        syncRun(module);
+                    }
+
+                    if (!_.includes(config.modes, 'async')) {
+                        _context.next = 6;
+                        break;
+                    }
+
                     console.log('--- async ---');
                     _context.next = 6;
                     return asyncRun(module);

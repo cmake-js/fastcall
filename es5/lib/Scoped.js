@@ -33,17 +33,35 @@ var Scoped = function () {
     _createClass(Scoped, [{
         key: '_dispose',
         value: function _dispose() {
-            if (_.isFunction(this.dispose)) {
-                this.dispose();
-            }
-            if (_.isFunction(this.close)) {
-                this.close();
-            }
+            dispose(this);
         }
     }]);
 
     return Scoped;
 }();
+
+Scoped.Legacy = function () {
+    scope._add(this);
+};
+
+Scoped.Legacy.prototype._dispose = function () {
+    dispose(this);
+};
+
+function dispose(obj) {
+    if (_.isFunction(obj.free)) {
+        return obj.free();
+    }
+    if (_.isFunction(obj.release)) {
+        return obj.release();
+    }
+    if (_.isFunction(obj.close)) {
+        return obj.close();
+    }
+    if (_.isFunction(obj.dispose)) {
+        return obj.dispose();
+    }
+}
 
 module.exports = scope.Scoped = Scoped;
 //# sourceMappingURL=Scoped.js.map

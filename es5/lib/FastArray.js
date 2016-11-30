@@ -32,7 +32,10 @@ var FastArray = function (_RefTypeDefinition) {
     function FastArray(library, def) {
         _classCallCheck(this, FastArray);
 
-        return _possibleConstructorReturn(this, (FastArray.__proto__ || Object.getPrototypeOf(FastArray)).call(this, library, 'array', def));
+        var _this = _possibleConstructorReturn(this, (FastArray.__proto__ || Object.getPrototypeOf(FastArray)).call(this, library, 'array', def));
+
+        _this._type.code = 'p';
+        return _this;
     }
 
     return FastArray;

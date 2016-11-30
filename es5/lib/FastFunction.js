@@ -42,6 +42,7 @@ var verify = require('./verify');
 var a = verify.a;
 var ert = verify.ert;
 var ref = require('./ref-libs/ref');
+var refHelpers = require('./refHelpers');
 
 var FastFunction = function (_FunctionDefinition) {
     _inherits(FastFunction, _FunctionDefinition);
@@ -163,28 +164,30 @@ var FastFunction = function (_FunctionDefinition) {
                     var _loop = function _loop() {
                         var setter = _step.value;
 
-                        if (setter.type.indirection === 2) {
-                            var _ret2 = function () {
-                                var specPtrDef = setter.type.callback || setter.type.struct || setter.type.union || setter.type.array;
-                                if (specPtrDef) {
-                                    _this3['argSetter' + i++] = function (cb) {
-                                        return setter.func(specPtrDef.makePtr(cb));
-                                    };
-                                    return {
-                                        v: 'continue'
-                                    };
-                                }
-                            }();
-
-                            if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
+                        var specPtrDef = setter.type.callback || setter.type.struct || setter.type.union || setter.type.array;
+                        if (specPtrDef) {
+                            _this3['argSetter' + i++] = function (value) {
+                                setter.func(specPtrDef.makePtr(value));
+                            };
+                        } else if (refHelpers.isArrayType(setter.type)) {
+                            _this3['argSetter' + i++] = function (value) {
+                                setter.func(FastFunction._makeArrayPtr(value));
+                            };
+                        } else if (refHelpers.isFunctionType(setter.type)) {
+                            _this3['argSetter' + i++] = function (value) {
+                                setter.func(fn._makeCallbackPtr(value));
+                            };
+                        } else if (refHelpers.isStringType(setter.type)) {
+                            _this3['argSetter' + i++] = function (value) {
+                                setter.func(fn._makeStringPtr(value));
+                            };
+                        } else {
+                            _this3['argSetter' + i++] = setter.func;
                         }
-                        _this3['argSetter' + i++] = setter.func;
                     };
 
                     for (var _iterator = vmArgSetters[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                        var _ret = _loop();
-
-                        if (_ret === 'continue') continue;
+                        _loop();
                     }
                 } catch (err) {
                     _didIteratorError = true;
@@ -226,7 +229,7 @@ var FastFunction = function (_FunctionDefinition) {
                 return _this4._findVMSetterFunc(arg.type);
             });
             var hasPtrArg = Boolean(_(vmArgSetters).filter(function (setter) {
-                return setter.type.indirection > 1;
+                return refHelpers.isPointerType(setter.type);
             }).head());
             var funcArgs = _.range(vmArgSetters.length).map(function (n) {
                 return 'arg' + n;
@@ -236,7 +239,7 @@ var FastFunction = function (_FunctionDefinition) {
             funcBody += 'this.setVM(myVM);';
             for (var i = 0; i < vmArgSetters.length; i++) {
                 var _setter = vmArgSetters[i];
-                if (_setter.type.indirection > 1) {
+                if (refHelpers.isPointerType(_setter.type)) {
                     funcBody += 'this.argSetter' + i + '(arg' + i + ', ptrs);';
                 } else {
                     funcBody += 'this.argSetter' + i + '(arg' + i + ');';
@@ -277,18 +280,40 @@ var FastFunction = function (_FunctionDefinition) {
                     var _loop2 = function _loop2() {
                         var setter = _step2.value;
 
-                        if (setter.type.indirection > 1) {
-                            _this5['argSetter' + i++] = function (ptr, ptrs) {
-                                var _ptr = void 0;
+                        if (refHelpers.isPointerType(setter.type)) {
+                            (function () {
                                 var specPtrDef = setter.type.callback || setter.type.struct || setter.type.union || setter.type.array;
-                                if (setter.type.indirection === 2 && specPtrDef) {
-                                    _ptr = specPtrDef.makePtr(ptr);
+                                if (specPtrDef) {
+                                    _this5['argSetter' + i++] = function (value, ptrs) {
+                                        var ptr = specPtrDef.makePtr(value);
+                                        ptrs.push(ptr);
+                                        setter.func(ptr);
+                                    };
+                                } else if (refHelpers.isArrayType(setter.type)) {
+                                    _this5['argSetter' + i++] = function (value, ptrs) {
+                                        var ptr = FastFunction._makeArrayPtr(value);
+                                        ptrs.push(ptr);
+                                        setter.func(ptr);
+                                    };
+                                } else if (refHelpers.isFunctionType(setter.type)) {
+                                    _this5['argSetter' + i++] = function (value, ptrs) {
+                                        var ptr = fn._makeCallbackPtr(value);
+                                        ptrs.push(ptr);
+                                        setter.func(ptr);
+                                    };
+                                } else if (refHelpers.isStringType(setter.type)) {
+                                    _this5['argSetter' + i++] = function (value, ptrs) {
+                                        var ptr = fn._makeStringPtr(value);
+                                        ptrs.push(ptr);
+                                        setter.func(ptr);
+                                    };
                                 } else {
-                                    _ptr = ptr;
+                                    _this5['argSetter' + i++] = function (value, ptrs) {
+                                        ptrs.push(value);
+                                        setter.func(value);
+                                    };
                                 }
-                                ptrs.push(_ptr);
-                                setter.func(_ptr);
-                            };
+                            })();
                         } else {
                             _this5['argSetter' + i++] = setter.func;
                         }
@@ -422,6 +447,42 @@ var FastFunction = function (_FunctionDefinition) {
             return function () {
                 return func(_this6._ptr);
             };
+        }
+    }, {
+        key: '_makeCallbackPtr',
+        value: function _makeCallbackPtr(value) {
+            if (value === null) {
+                return null;
+            }
+            if (value._makePtr) {
+                return value._makePtr(this.library);
+            }
+            assert(value instanceof Buffer, 'Argument is not a Buffer.');
+            return value;
+        }
+    }, {
+        key: '_makeStringPtr',
+        value: function _makeStringPtr(value) {
+            if (value === null) {
+                return null;
+            }
+            if (_.isString(value)) {
+                return native.makeStringBuffer(value);
+            }
+            assert(value instanceof Buffer, 'Argument is not a Buffer.');
+            return value;
+        }
+    }], [{
+        key: '_makeArrayPtr',
+        value: function _makeArrayPtr(value) {
+            if (value === null) {
+                return null;
+            }
+            if (value.buffer) {
+                return value.buffer;
+            }
+            assert(value instanceof Buffer, 'Argument is not a Buffer.');
+            return value;
         }
     }]);
 

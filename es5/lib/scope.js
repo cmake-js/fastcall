@@ -66,6 +66,9 @@ scope.escape = function (value) {
     return escape(value);
 };
 
+scope.begin = begin;
+scope.end = end;
+
 var layers = [];
 
 function begin() {

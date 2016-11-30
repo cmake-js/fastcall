@@ -34,6 +34,7 @@ var typeCode = require('./typeCode');
 var FunctionParser = require('./FunctionParser');
 var RefTypeParser = require('./RefTypeParser');
 var MultilineParser = require('./MultilineParser');
+var refHelpers = require('./refHelpers');
 
 var Parser = function () {
     function Parser(library) {
@@ -114,22 +115,28 @@ var Parser = function () {
                             _type = def._makeTypeWithLength(match.length);
                         }
                         var starCount = countStars(match.stars);
-                        if (isInteface) {
-                            assert(starCount, 'Using struct or unions by value on function interfaces is not supported.');
-                        }
                         for (var i = 0; i < starCount; i++) {
                             _type = ref.refType(_type);
                         }
-                        if (starCount) {
-                            _type.code = typeCode.getForType(_type);
+                        if (isInteface) {
+                            assert(_type.indirection > 1 || refHelpers.isArrayType(_type), 'Using struct or unions by value on function interfaces is not supported.');
                         }
-                        _type[def.propertyName] = def;
+                        if (starCount) {
+                            if (_type.code === undefined) {
+                                _type.code = typeCode.getForType(_type);
+                            }
+                            if (_type[def.propertyName] === undefined) {
+                                _type[def.propertyName] = def;
+                            }
+                        }
                         return _type;
                     }
                 }
             }
             var type = ref.coerceType(value);
-            type.code = typeCode.getForType(type);
+            if (type.code === undefined) {
+                type.code = typeCode.getForType(type);
+            }
             this._ensureRegistered(type);
             return type;
 
@@ -169,16 +176,19 @@ var Parser = function () {
         key: '_ensureRegistered',
         value: function _ensureRegistered(type) {
             var rootType = type;
-            while (rootType.indirection > 1) {
-                rootType = ref.derefType(rootType);
+            while (rootType.indirection > 1 || refHelpers.isArrayType(rootType)) {
+                if (rootType.indirection > 1) {
+                    rootType = ref.derefType(rootType);
+                } else {
+                    rootType = rootType.type;
+                }
             }
             var regBy = null;
-            var typeStr = String(rootType);
-            if (typeStr === '[StructType]') {
+            if (refHelpers.isStructType(rootType)) {
                 regBy = 'struct';
-            } else if (typeStr === '[UnionType]') {
+            } else if (refHelpers.isUnionType(rootType)) {
                 regBy = 'union';
-            } else if (typeStr === '[ArrayType]') {
+            } else if (refHelpers.isArrayType(rootType)) {
                 regBy = 'array';
             }
 

@@ -27,5 +27,8 @@ if (!es5Support.fallbackToES5(exports, 'lib')) {
     exports.Scoped = require('./Scoped');
     exports.Library = require('./Library');
     exports.ffi = require('./ffi');
+
+    var native = require('./native');
+    exports.makeStringBuffer = native.makeStringBuffer;
 };
 //# sourceMappingURL=index.js.map

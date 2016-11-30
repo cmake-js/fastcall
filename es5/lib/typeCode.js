@@ -19,16 +19,17 @@ limitations under the License.
 var _ = require('lodash');
 var assert = require('assert');
 var ref = require('./ref-libs/ref');
+var refHelpers = require('./refHelpers');
 
 exports.getForType = getForType;
 
 function getForType(type) {
     type = ref.coerceType(type);
 
-    var indirection = _.isObject(type) ? type.indirection : 0;
-    var name = _.isString(type) ? type : type.name;
+    var indirection = type.indirection;
+    var name = type.name;
 
-    if (indirection > 1) {
+    if (refHelpers.isPointerType(type)) {
         return 'p';
     }
     switch (name) {

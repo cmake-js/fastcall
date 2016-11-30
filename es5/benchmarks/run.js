@@ -16,6 +16,7 @@ limitations under the License.
 
 'use strict';
 
+var _ = require('lodash');
 var Promise = require('bluebird');
 var async = Promise.coroutine;
 var nativeRun = require('./nativeRun');
@@ -23,6 +24,7 @@ var nativeModuleRun = require('./nativeModuleRun');
 var fastcallRun = require('./fastcallRun');
 var ffiRun = require('./ffiRun');
 var imports = require('./imports');
+var config = require('./config');
 
 var run = async(regeneratorRuntime.mark(function _callee() {
     return regeneratorRuntime.wrap(function _callee$(_context) {
@@ -31,28 +33,58 @@ var run = async(regeneratorRuntime.mark(function _callee() {
                 case 0:
                     _context.prev = 0;
 
-                    // console.log('--- Native ---');
-                    // yield nativeRun();
-                    // console.log('\n--- Native Module ---');
-                    // yield nativeModuleRun();
-                    // console.log('\n--- (node-)ffi ---');
-                    // yield ffiRun();
+                    if (!_.includes(config.tests, 'native')) {
+                        _context.next = 5;
+                        break;
+                    }
+
+                    console.log('--- Native ---');
+                    _context.next = 5;
+                    return nativeRun();
+
+                case 5:
+                    if (!_.includes(config.tests, 'native-module')) {
+                        _context.next = 9;
+                        break;
+                    }
+
+                    console.log('\n--- Native Module ---');
+                    _context.next = 9;
+                    return nativeModuleRun();
+
+                case 9:
+                    if (!_.includes(config.tests, 'ffi')) {
+                        _context.next = 13;
+                        break;
+                    }
+
+                    console.log('\n--- (node-)ffi ---');
+                    _context.next = 13;
+                    return ffiRun();
+
+                case 13:
+                    if (!_.includes(config.tests, 'fastcall')) {
+                        _context.next = 17;
+                        break;
+                    }
+
                     console.log('\n--- fastcall ---');
-                    _context.next = 4;
+                    _context.next = 17;
                     return fastcallRun();
 
-                case 4:
-                    _context.prev = 4;
+                case 17:
+                    _context.prev = 17;
 
                     imports.importBenchlib.close();
-                    return _context.finish(4);
+                    process.exit(0);
+                    return _context.finish(17);
 
-                case 7:
+                case 21:
                 case 'end':
                     return _context.stop();
             }
         }
-    }, _callee, this, [[0,, 4, 7]]);
+    }, _callee, this, [[0,, 17, 21]]);
 }));
 
 run();

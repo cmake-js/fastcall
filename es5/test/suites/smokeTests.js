@@ -664,5 +664,17 @@ describe('Library', function () {
             }, _callee7, this);
         }));
     });
+
+    describe('types', function () {
+        it('supports 64 bit integers', function () {
+            var lib = new Library(libPath);
+            lib.declare('short uint64ToShort(uint64 val)');
+            var uint64ToShort = lib.interface.uint64ToShort;
+            assert(_.isFunction(uint64ToShort));
+            assert.strictEqual(uint64ToShort(0), 0);
+            assert.strictEqual(uint64ToShort(16), 16);
+            assert.strictEqual(uint64ToShort("42"), 42);
+        });
+    });
 });
 //# sourceMappingURL=smokeTests.js.map

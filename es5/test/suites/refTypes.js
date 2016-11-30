@@ -485,6 +485,41 @@ describe('ref types', function () {
     });
 
     describe('Array', function () {
+        it('should throw for not supported indexing', function () {
+            var IntArray = new ArrayType('int');
+            var arr = new IntArray([1, 2, 3]);
+            assert.throws(function () {
+                return arr[0];
+            });
+            assert.throws(function () {
+                return arr[1];
+            });
+            assert.throws(function () {
+                return arr[2];
+            });
+            assert.throws(function () {
+                return arr[3];
+            });
+            assert.throws(function () {
+                return arr[4];
+            });
+            assert.throws(function () {
+                return arr[0] = 0;
+            });
+            assert.throws(function () {
+                return arr[1] = 0;
+            });
+            assert.throws(function () {
+                return arr[2] = 0;
+            });
+            assert.throws(function () {
+                return arr[3] = 0;
+            });
+            assert.throws(function () {
+                return arr[4] = 0;
+            });
+        });
+
         describe('fixed length', function () {
             it('could be created by plain object definition', function () {
                 var result = lib.array({ TLongArray: 'long' }).struct({
@@ -576,7 +611,7 @@ describe('ref types', function () {
 
         describe('sync', function () {
             it('should get referenced by string syntax', function () {
-                lib.array('long[] TLongArray').struct('struct TRecWithArray { TLongArray[5] values; uint index; }').array('TRecWithArray[] TRecWithArrays').function('void makeRecWithArrays(TRecWithArrays* records, long* size)').function('void incRecWithArrays(TRecWithArray* records, long size)').function('void freeRecWithArrays(TRecWithArray* records)');
+                lib.array('long[] TLongArray').struct('struct TRecWithArray { TLongArray[5] values; uint index; }').array('TRecWithArray[] TRecWithArrays').function('void makeRecWithArrays(TRecWithArrays* records, long* size)').function('void incRecWithArrays(TRecWithArray* records, long size)').function('void freeRecWithArrays(TRecWithArrays records)');
 
                 testArrayFuncsSync();
             });
@@ -588,7 +623,7 @@ describe('ref types', function () {
                 });
                 var TRecWithArrays = new ArrayType(TRecWithArray);
 
-                lib.function({ makeRecWithArrays: ['void', [ref.refType(ref.refType(TRecWithArray)), ref.refType('long')]] }).function({ incRecWithArrays: ['void', [ref.refType(TRecWithArray), 'long']] }).function({ freeRecWithArrays: ['void', [ref.refType(TRecWithArray)]] });
+                lib.function({ makeRecWithArrays: ['void', [ref.refType(TRecWithArrays), ref.refType('long')]] }).function({ incRecWithArrays: ['void', [TRecWithArrays, 'long']] }).function({ freeRecWithArrays: ['void', [TRecWithArrays]] });
 
                 testArrayFuncsSync(TRecWithArray, TRecWithArrays);
             });
@@ -600,7 +635,7 @@ describe('ref types', function () {
                     while (1) {
                         switch (_context8.prev = _context8.next) {
                             case 0:
-                                lib.array('long[] TLongArray').struct('struct TRecWithArray { TLongArray[5] values; uint index; }').array('TRecWithArray[] TRecWithArrays').function('void makeRecWithArrays(TRecWithArrays* records, long* size)').function('void incRecWithArrays(TRecWithArray* records, long size)').function('void freeRecWithArrays(TRecWithArray* records)');
+                                lib.array('long[] TLongArray').struct('struct TRecWithArray { TLongArray[5] values; uint index; }').array('TRecWithArray[] TRecWithArrays').function('void makeRecWithArrays(TRecWithArrays* records, long* size)').function('void incRecWithArrays(TRecWithArrays records, long size)').function('void freeRecWithArrays(TRecWithArray* records)');
 
                                 _context8.next = 3;
                                 return testArrayFuncsAsync();
@@ -626,7 +661,7 @@ describe('ref types', function () {
                                 TRecWithArrays = new ArrayType(TRecWithArray);
 
 
-                                lib.function({ makeRecWithArrays: ['void', [ref.refType(ref.refType(TRecWithArray)), ref.refType('long')]] }).function({ incRecWithArrays: ['void', [ref.refType(TRecWithArray), 'long']] }).function({ freeRecWithArrays: ['void', [ref.refType(TRecWithArray)]] });
+                                lib.function({ makeRecWithArrays: ['void', [ref.refType(TRecWithArrays), ref.refType('long')]] }).function({ incRecWithArrays: ['void', [TRecWithArrays, 'long']] }).function({ freeRecWithArrays: ['void', [ref.refType(TRecWithArray)]] });
 
                                 _context9.next = 5;
                                 return testArrayFuncsAsync(TRecWithArray, TRecWithArrays);
