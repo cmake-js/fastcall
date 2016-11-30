@@ -5,7 +5,7 @@ fastcall - Fast, dyncall based foreign function interface library for Node.js.
 # Why?
 
 Because writing native modules is an annoying work with an underdocumented, 
-hard to debug C++ API that no one ever wants to do.
+hard to debug C++ API that no one ever wants to touch. :)
 
 Writing native module is about wrapping a native library's C API 
 to JavaScript in almost all cases. However shared libraries and their methods could
