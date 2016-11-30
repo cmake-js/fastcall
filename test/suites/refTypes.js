@@ -370,6 +370,21 @@ describe(`ref types`, function () {
     });
 
     describe('Array', function () {
+        it('should throw for not supported indexing', function () {
+            const IntArray = new ArrayType('int');
+            const arr = new IntArray([1, 2, 3]);
+            assert.throws(() => arr[0]);
+            assert.throws(() => arr[1]);
+            assert.throws(() => arr[2]);
+            assert.throws(() => arr[3]);
+            assert.throws(() => arr[4]);
+            assert.throws(() => arr[0] = 0);
+            assert.throws(() => arr[1] = 0);
+            assert.throws(() => arr[2] = 0);
+            assert.throws(() => arr[3] = 0);
+            assert.throws(() => arr[4] = 0);
+        });
+
         describe('fixed length', function () {
             it('could be created by plain object definition', function () {
                 const result = lib

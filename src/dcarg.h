@@ -25,6 +25,11 @@ inline void dcArgUInt8(DCCallVM* vm, unsigned char p)
     dcArgChar(vm, reinterpret_cast<char&>(p));
 }
 
+inline void dcArgBoolean(DCCallVM* vm, bool p)
+{
+    dcArgChar(vm, (char)p);
+}
+
 #define dcCallInt8 dcCallChar
 
 #define dcArgInt16 dcArgShort

@@ -66,7 +66,7 @@ NAN_METHOD(makePtr)
 NAN_METHOD(argBool)
 {
     auto args = Unwrap<DCArgs>(info[0]);
-    info.GetReturnValue().Set(Nan::New((bool)dcbArgBool(args)));
+    info.GetReturnValue().Set(Nan::New(dcbArgBoolean(args)));
 }
 
 NAN_METHOD(argChar)
@@ -346,7 +346,7 @@ NAN_METHOD(setULongLong)
 NAN_METHOD(setBool)
 {
     auto value = Unwrap<DCValue>(info[0]);
-    value->B = GetBool(info[1]);
+    value->C = GetBool(info[1]);
 }
 
 NAN_METHOD(setSizeT)

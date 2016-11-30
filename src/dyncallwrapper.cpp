@@ -173,7 +173,7 @@ NAN_METHOD(reset)
 
 NAN_METHOD(argBool)
 {
-    dcArgBool(vm, info[0]->BooleanValue());
+    dcArgBoolean(vm, info[0]->BooleanValue());
 }
 
 NAN_METHOD(argChar)
@@ -214,7 +214,8 @@ NAN_METHOD(argDouble)
 NAN_METHOD(argPointer)
 {
     try {
-        dcArgPointer(vm, GetPointer(info[0]));
+        void* ptr = GetPointer(info[0]);
+        dcArgPointer(vm, ptr);
     }
     catch (exception& ex) {
         Nan::ThrowTypeError(ex.what());
@@ -316,7 +317,7 @@ NAN_METHOD(callVoidAsync)
 
 NAN_METHOD(callBool)
 {
-    auto result = dcCallBool(vm, UnwrapPointer(info[0]));
+    auto result = dcCallBoolean(vm, UnwrapPointer(info[0]));
     info.GetReturnValue().Set(Nan::New(result));
 }
 
@@ -325,7 +326,7 @@ NAN_METHOD(callBoolAsync)
     CallAsync<bool>(
         info,
         [](DCCallVM* vm, DCpointer funcPtr) {
-            return (bool)dcCallBool(vm, funcPtr);
+            return dcCallBoolean(vm, funcPtr);
         },
         [](bool value) {
             return Local<Value>(Nan::New(value));

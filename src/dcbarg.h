@@ -27,6 +27,12 @@ inline unsigned char dcbArgUInt8(DCArgs* args)
     return reinterpret_cast<unsigned char&>(tmp);
 }
 
+inline bool dcbArgBoolean(DCArgs* args)
+{
+    char tmp = dcbArgChar(args);
+    return (bool)tmp;
+}
+
 #define dcCallInt8 dcCallChar
 
 #define dcbArgInt16 dcbArgShort

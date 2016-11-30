@@ -485,4 +485,16 @@ describe('Library', function () {
             assert.equal(result, Math.floor((1.1 + 2.2) * 2));
         });
     });
+
+    describe('types', function () {
+        it('supports 64 bit integers', function () {
+            const lib = new Library(libPath);
+            lib.declare('short uint64ToShort(uint64 val)');
+            const uint64ToShort = lib.interface.uint64ToShort;
+            assert(_.isFunction(uint64ToShort));
+            assert.strictEqual(uint64ToShort(0), 0);
+            assert.strictEqual(uint64ToShort(16), 16);
+            assert.strictEqual(uint64ToShort("42"), 42);
+        });
+    });
 });

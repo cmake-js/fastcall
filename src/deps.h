@@ -21,7 +21,7 @@ limitations under the License.
 #include <dyncall_callback.h>
 #include <dynload.h>
 #include <string>
-#include <string.h>
+#include <cstring>
 #include <functional>
 #include <exception>
 #include <vector>

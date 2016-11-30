@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include <nan.h>
+#include "deps.h"
+
+using namespace std;
 
 const char world[] = "world";
 const double numbers[] = { 1.1, 2.2, 3.3 };
@@ -44,6 +46,12 @@ struct TRecWithArray
 {
     long values[5];
     unsigned index;
+};
+
+struct ImageFormat
+{
+    unsigned imageChannelOrder;
+    unsigned imageChannelDataType;
 };
 
 extern "C" {
@@ -164,6 +172,38 @@ NODE_MODULE_EXPORT void freeRecWithArrays(TRecWithArray records[])
 NODE_MODULE_EXPORT void appendChar(char* str, unsigned pos, char charCode)
 {
     str[pos] = charCode;
+}
+
+NODE_MODULE_EXPORT bool isArrayNull(int* arr)
+{
+    return arr == nullptr;
+}
+
+NODE_MODULE_EXPORT short uint64ToShort(uint64_t val)
+{
+    return (short)val;
+}
+
+NODE_MODULE_EXPORT int clGetSupportedImageFormats(void* context, uint64_t flags, unsigned type, unsigned size, ImageFormat formats[], unsigned* outSize)
+{
+    if (outSize) {
+        *outSize = flags;
+    }
+    return type + size;
+}
+
+NODE_MODULE_EXPORT char readChar(char* str, unsigned pos)
+{
+    return str[pos];
+}
+
+NODE_MODULE_EXPORT void concatStrings(char* strings[], unsigned length, char* output)
+{
+    string out;
+    for (unsigned i = 0; i < length; i++) {
+        out += strings[i];
+    }
+    memcpy(output, out.c_str(), out.length());
 }
 
 }

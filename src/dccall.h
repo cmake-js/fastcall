@@ -24,6 +24,12 @@ inline uint8_t dcCallUInt8(DCCallVM* vm, void* f)
     return reinterpret_cast<uint8_t&>(tmp);
 }
 
+inline bool dcCallBoolean(DCCallVM* vm, void* f)
+{
+    int8_t tmp = dcCallInt8(vm, f);
+    return (bool)tmp;
+}
+
 inline uint16_t dcCallUInt16(DCCallVM* vm, void* f)
 {
     int16_t tmp = dcCallInt16(vm, f);
