@@ -17,7 +17,7 @@ There is an excellent and popular dynamic binding library for Node.js:
 [node-ffi](https://github.com/node-ffi/node-ffi). Then why we need another one could ask?
 For performance! There is a good 100x-1000x
 method call performance overhead when using [node-ffi](https://github.com/node-ffi/node-ffi)
-compared to hand made C++ native module, which is unaccetable in most cases.
+compared to hand made C++ native module, which is unacceptable in most cases.
 
 # About
 
