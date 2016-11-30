@@ -35,6 +35,7 @@ struct Queue {
         assert(locker);
 
         int result = uv_async_init(loop, handle, ProcessItems);
+        uv_unref((uv_handle_t*)handle);
         handle->data = static_cast<void*>(this);
         assert(!result);
     }
