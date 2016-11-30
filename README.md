@@ -11,7 +11,7 @@ Writing native module is about wrapping a native library's C API
 to JavaScript in almost all cases. However shared libraries and their methods could
 get loaded under a process' address space dynamically, and that dynamic binding
 could get implemented in pure JavaScript. So, there is no need to write native modules 
-for that purpose.
+for that purpose if we have something like that stuff.
 
 There is an excellent and popular dynamic binding library for Node.js:
 [node-ffi](https://github.com/node-ffi/node-ffi). Then why we need another one could ask?
