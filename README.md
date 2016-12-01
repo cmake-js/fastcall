@@ -137,7 +137,7 @@ util.inherits(Stuff, Disposable.Legacy);
 
 ### automatic cleanup (GC)
 
-When there is no alive references exist for your objects, they gets disposed automatically once Node.js' GC cycle kicks in. There is nothing else to do there. :) (Reporting approximate memory usage would help in this case, though.)
+When there is no alive references exist for your objects, they gets disposed automatically once Node.js' GC cycle kicks in (`lib.releaseStuff(handle)` would get called from the above example). There is nothing else to do there. :) (Reporting approximate memory usage would help in this case, though.)
 
 ### scopes
 
@@ -239,7 +239,7 @@ This lookup is **recursive**, and apply for `scope.escape()`'s argument, so you 
 
 **Async:**
 
-If a scope's function returns a Promise (any then-able object will do) then it turns to an asynchronous scope, it also returns a Promise. Same rules apply like synchronous scopes.
+If a scope's function returns a Promise (any then-able object will do) then it turns to an asynchronous scope, it also returns a Promise. Same rules apply like with synchronous scopes.
 
 ```js
 const result = scope(() => 
@@ -267,6 +267,67 @@ const result = yield scope.async(function* () {
 
 Way much nicer, eh? It does exactly the same thing.
 
+## fastcall.Library
+
+Central part of **fastcall** is the `Library`. That's where you can load shared libraries to Node.js' address spaces, and there you could access its functions and declared types.
+
+```js
+class Library {
+	constructor(libPath, options);
+
+	release();
+
+	declare(); declareSync(); declareAsync();
+	
+	function(); syncFunction(); asyncFunction();
+	
+	struct();
+
+	union();
+
+	array();
+
+	callback();
+	
+	get structs();
+	
+	get unions();
+	
+	get arrays();
+	
+	get callbacks();
+	
+	get interface();
+}
+```
+
+**Constructor:**
+
+- `libPath`: path of the shared library to load. There is no magical platform dependent extension guess system, you should provide the correct library paths on each supported platforms (`os` module would help). For example, for OpenCL, you gotta pass `OpenCL.dll` on Windows, and `libOpenCL.so` on Linux, and so on.
+- `options`: optional object with optional properties of:
+	- `options.defaultCallMode`: either `Library.callMode.sync`, which means synchronous functions will get created, or `Library.callMode.async` which means asynchronous functions will get created by default
+	- `options.syncMode`: either `Library.syncMode.lock`, which means asynchronous function invocations will get serialized with a thread locks, or `Library.syncMode.queue` which means asynchronous function invocations will get serialized with a queue (more on that later)
+
+**Methods:**
+
+- `release`: release loaded shared library's resources (please note that `Library` is not a `Disposable` because you'll need to call this method in very rare situations)
+- `declare`: parses and process a declaration string. Its methods are declared with the default call mode
+- `declareSync`: parses and process a declaration string. Its methods are declared as synchronous
+- `declareAsync`: parses and process a declaration string. Its methods are declared as asynchronous
+- `function`: declares a function with the default call mode
+- `syncFunction`: declares a synchronous function
+- `asyncFunction`: declares an asynchronous function
+- `struct`: declares a structure
+- `union`: declares an union
+- `array`: declares an array
+- `callback`: declares a callback
+
+**Properties:**
+
+- `structs`: declared structures
+- `unions`: declared unions
+- `array`: declared arrays
+
 ## ref
 
 ### ArrayType
@@ -274,11 +335,5 @@ Way much nicer, eh? It does exactly the same thing.
 ### StructType
 
 ### UnionType
-
-## Functions
-
-### sync
-
-### async
 
 ## node-ffi compatible interface
