@@ -465,6 +465,7 @@ const result = lib.interface.mul(42, 42);
 ```
 
 **Sync and async**:
+
 About sync and async modes please refer for [fastcall.Library](#fastcalllibrary)'s documentation.
 
 If a function is async, it runs in a **separate thread**, and the result is a Bluebird Promise.
@@ -491,6 +492,7 @@ assert.strictEqual(mulAsync, mulSync.async.async.sync.async);
 You get the idea.
 
 **Concurrency and thread safety:**
+
 By default, a library's asynchronous functions are running in parallel distributed in libuv's thread pool. So they are not thread safe.
 
 For thread safety there are two options could be passed to [fastcall.Library](#fastcalllibrary)'s constructor: `syncMode.lock` and `syncMode.queue`.
