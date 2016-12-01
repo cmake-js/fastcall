@@ -16,7 +16,7 @@ limitations under the License.
 
 'use strict';
 
-var _marked = [enumScoped].map(regeneratorRuntime.mark);
+var _marked = [enumDisposable].map(regeneratorRuntime.mark);
 
 var _ = require('lodash');
 var verify = require('./verify');
@@ -53,8 +53,8 @@ function scope(body) {
     }
 }
 
-scope._add = function (scoped) {
-    add(scoped);
+scope._add = function (disposable) {
+    add(disposable);
 };
 
 scope.async = function (body) {
@@ -84,9 +84,9 @@ function end() {
 
         try {
             for (var _iterator = last.values()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                var scoped = _step.value;
+                var disposable = _step.value;
 
-                scoped._dispose();
+                disposable.dispose();
             }
         } catch (err) {
             _didIteratorError = true;
@@ -105,14 +105,14 @@ function end() {
     }
 }
 
-function add(scoped, layer) {
+function add(disposable, layer) {
     if (verify.enabled) {
-        var Scoped = scope.Scoped;
-        a && ert(scoped instanceof Scoped);
+        var Disposable = scope.Disposable;
+        a && ert(disposable instanceof Disposable);
     }
     var currentLayer = layer || (layers.length ? layers[layers.length - 1] : null);
     if (currentLayer) {
-        currentLayer.add(scoped);
+        currentLayer.add(disposable);
     }
 }
 
@@ -134,12 +134,12 @@ function escape(result, propagate) {
         var _iteratorError2 = undefined;
 
         try {
-            for (var _iterator2 = enumScoped(result)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                var scoped = _step2.value;
+            for (var _iterator2 = enumDisposable(result)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                var disposable = _step2.value;
 
-                currentLayer.delete(scoped);
+                currentLayer.delete(disposable);
                 if (prevLayer) {
-                    prevLayer.add(scoped);
+                    prevLayer.add(disposable);
                 }
             }
         } catch (err) {
@@ -159,16 +159,16 @@ function escape(result, propagate) {
     }
 }
 
-function enumScoped(result) {
-    var Scoped, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, item, _iteratorNormalCompletion4, _didIteratorError4, _iteratorError4, _iterator4, _step4, _item, key;
+function enumDisposable(result) {
+    var Disposable, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, item, _iteratorNormalCompletion4, _didIteratorError4, _iteratorError4, _iterator4, _step4, _item, key;
 
-    return regeneratorRuntime.wrap(function enumScoped$(_context) {
+    return regeneratorRuntime.wrap(function enumDisposable$(_context) {
         while (1) {
             switch (_context.prev = _context.next) {
                 case 0:
-                    Scoped = scope.Scoped;
+                    Disposable = scope.Disposable;
 
-                    if (!(result instanceof Scoped)) {
+                    if (!(result instanceof Disposable)) {
                         _context.next = 6;
                         break;
                     }
@@ -199,7 +199,7 @@ function enumScoped(result) {
                     }
 
                     item = _step3.value;
-                    return _context.delegateYield(enumScoped(item), 't0', 15);
+                    return _context.delegateYield(enumDisposable(item), 't0', 15);
 
                 case 15:
                     _iteratorNormalCompletion3 = true;
@@ -263,7 +263,7 @@ function enumScoped(result) {
                     }
 
                     _item = _step4.value;
-                    return _context.delegateYield(enumScoped(_item), 't2', 43);
+                    return _context.delegateYield(enumDisposable(_item), 't2', 43);
 
                 case 43:
                     _iteratorNormalCompletion4 = true;
@@ -329,7 +329,7 @@ function enumScoped(result) {
                         break;
                     }
 
-                    return _context.delegateYield(enumScoped(result[key]), 't6', 68);
+                    return _context.delegateYield(enumDisposable(result[key]), 't6', 68);
 
                 case 68:
                     _context.next = 64;

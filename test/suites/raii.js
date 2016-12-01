@@ -21,13 +21,11 @@ const Promise = require('bluebird');
 const async = Promise.coroutine;
 const fastcall = require('../../lib');
 const scope = fastcall.scope;
-const Scoped = fastcall.Scoped;
+const Disposable = fastcall.Disposable;
 
-class Disposable extends Scoped {
-    constructor(dispose) {
-        assert(_.isFunction(dispose));
-        super();
-        this.dispose = dispose;
+class Tester extends Disposable {
+    constructor(disposeFunction, memUse) {
+        super(disposeFunction, memUse);
     }
 }
 
@@ -36,6 +34,10 @@ function doAsync(f) {
 }
 
 describe('RAII scope', function () {
+    before(function () {
+        assert(global.gc, 'GC is not enabled.');
+    });
+
     describe('sync', function () {
         it('should propagate value to parent scope', function () {
             let disposed = false;
@@ -43,7 +45,7 @@ describe('RAII scope', function () {
             scope(() => {
                 scope(() => {
                     assert(!disposed);
-                    const value = new Disposable(dispose);
+                    const value = new Tester(dispose);
                     assert(!disposed);
                     return value;
                 });
@@ -58,7 +60,7 @@ describe('RAII scope', function () {
             scope(() => {
                 const result = scope(() => {
                     assert(!disposed);
-                    const value = new Disposable(dispose);
+                    const value = new Tester(dispose);
                     assert(!disposed);
                     return value;
                 });
@@ -74,7 +76,7 @@ describe('RAII scope', function () {
             scope(() => {
                 scope(() => {
                     assert(!disposed);
-                    const value = new Disposable(dispose);
+                    const value = new Tester(dispose);
                     assert(!disposed);
                     return [value];
                 });
@@ -89,7 +91,7 @@ describe('RAII scope', function () {
             scope(() => {
                 scope(() => {
                     assert(!disposed);
-                    const value = new Disposable(dispose);
+                    const value = new Tester(dispose);
                     assert(!disposed);
                     return { value };
                 });
@@ -104,7 +106,7 @@ describe('RAII scope', function () {
             scope(() => {
                 scope(() => {
                     assert(!disposed);
-                    const value = new Disposable(dispose);
+                    const value = new Tester(dispose);
                     assert(!disposed);
                     return [{ value }, { value }];
                 });
@@ -122,7 +124,7 @@ describe('RAII scope', function () {
                 yield scope.async(function* () {
                     yield scope.async(function* () {
                         assert(!disposed);
-                        const value = new Disposable(dispose);
+                        const value = new Tester(dispose);
                         assert(!disposed);
                         yield Promise.delay(1);
                         return value;
@@ -131,6 +133,37 @@ describe('RAII scope', function () {
                 });
                 assert(disposed);
             });
+        });
+    });
+
+    describe('dispose', function () {
+        it('GC should call dispose method', function () {
+            let counter = 0;
+            const dispose = () => counter++;
+            let value2;
+            const f = () => {
+                const value = new Tester(dispose);
+                gc();
+                assert(!counter);
+                value2 = value;
+                value2 = new Tester(dispose, 42);
+                assert(!counter);
+                gc();
+            };
+            let value3 = new Tester(dispose);
+
+            f();
+            assert(!counter);
+            gc();
+            assert.equal(counter, 1);
+            value2 = null;
+            gc();
+            assert.equal(counter, 2);
+            value3.dispose();
+            assert.equal(counter, 3);
+            value3 = null;
+            gc();
+            assert.equal(counter, 3);
         });
     });
 });

@@ -24,7 +24,7 @@ if (!es5Support.fallbackToES5(exports, 'lib')) {
     exports.UnionType = require('./ref-libs/union');
     exports.ArrayType = require('./ref-libs/array');
     exports.scope = require('./scope');
-    exports.Scoped = require('./Scoped');
+    exports.Disposable = require('./Disposable');
     exports.Library = require('./Library');
     exports.ffi = require('./ffi');
 

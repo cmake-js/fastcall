@@ -14,19 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-'use strict';
-var es5Support = require('./es5Support');
+#pragma once
+#include <nan.h>
 
-if (!es5Support.fallbackToES5(exports, 'lib')) {
-    exports.ref = require('./ref-libs/ref');
-    exports.StructType = require('./ref-libs/struct');
-    exports.UnionType = require('./ref-libs/union');
-    exports.ArrayType = require('./ref-libs/array');
-    exports.scope = require('./scope');
-    exports.Disposable = require('./Disposable');
-    exports.Library = require('./Library');
-    exports.ffi = require('./ffi');
-
-    var native = require('./native');
-    exports.makeStringBuffer = native.makeStringBuffer;
-};
+namespace fastcall {
+NAN_MODULE_INIT(InitWeak);
+}

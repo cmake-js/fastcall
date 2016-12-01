@@ -19,6 +19,7 @@ limitations under the License.
 #include "dyncallwrapper.h"
 #include "dyncallbackwrapper.h"
 #include "mutex.h"
+#include "weak.h"
 #include "statics.h"
 
 using namespace v8;
@@ -31,6 +32,7 @@ NAN_MODULE_INIT(InitAll)
     InitDyncallWrapper(target);
     InitCallbackWrapper(target);
     InitMutex(target);
+    InitWeak(target);
     InitStatics(target);
 }
 

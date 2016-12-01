@@ -261,7 +261,6 @@ describe('ffi compatibility', function () {
 
         it('accepts non nulls', function () {
             var res = lib.isArrayNull(new IntArray([1, 2, 3]));
-            console.log(res);
             assert(!res);
         });
 
