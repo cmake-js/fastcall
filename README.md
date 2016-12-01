@@ -414,7 +414,7 @@ const arr = outArr.unref();
 const len = outLen.unref();
 // arr is an IntArray with length of 0
 // but we know that after the pointer
-// there is a len number of element elements,
+// there are a len number of element elements,
 // so we can do:
 
 for (let i = 0; i < len; i++) {
