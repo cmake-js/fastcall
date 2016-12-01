@@ -1,6 +1,29 @@
-# fastcall
+# TOC
 
-*TOC*
+<!-- TOC -->
+
+- [TOC](#toc)
+- [Why?](#why)
+- [About](#about)
+    - [Features](#features)
+    - [Requirements](#requirements)
+    - [Install](#install)
+- [Benchmarks](#benchmarks)
+- [Documentation and Tutorials](#documentation-and-tutorials)
+    - [RAII](#raii)
+        - [Disposable](#disposable)
+        - [automatic cleanup (GC)](#automatic-cleanup-gc)
+        - [scopes](#scopes)
+    - [fastcall.Library](#fastcalllibrary)
+        - [ref](#ref)
+        - [declaring functions](#declaring-functions)
+        - [declaring structs](#declaring-structs)
+        - [declaring unions](#declaring-unions)
+        - [declaring arrays](#declaring-arrays)
+        - [declaring anything :)](#declaring-anything-)
+    - [node-ffi compatible interface](#node-ffi-compatible-interface)
+
+<!-- /TOC -->
 
 # Why?
 
@@ -289,6 +312,8 @@ class Library {
 
 	callback();
 	
+	get functions();
+	
 	get structs();
 	
 	get unions();
@@ -324,16 +349,178 @@ class Library {
 
 **Properties:**
 
-- `structs`: declared structures
-- `unions`: declared unions
-- `array`: declared arrays
+- `functions`: declared functions (metadata)
+- `structs`: declared structures (metadata)
+- `unions`: declared unions (metadata)
+- `arrays`: declared arrays (metadata)
+- `callbacks`: declared callbacks (metadata)
 
-## ref
+### ref
 
-### ArrayType
+Let's take a look at [ref](http://tootallnate.github.io/ref/) before going into the details (credits for [TooTallNate](https://github.com/TooTallNate)). **ref** is a native type system with pointers and other types those are required to address C based interfaces of native shared libraries. It also has a native interface compatible types for [structs](https://github.com/TooTallNate/ref-struct), [unions](https://github.com/TooTallNate/ref-union) and [arrays](https://github.com/TooTallNate/ref-array).
 
-### StructType
+In **fastcall** there is a **bundled versions** of [ref](https://github.com/TooTallNate/ref), [ref-array](https://github.com/TooTallNate/ref-array), [ref-struct](https://github.com/TooTallNate/ref-struct) and [ref-union](https://github.com/TooTallNate/ref-union). Those are 100% compatible with the originals, they are there because I didn't wanted to have a [CMake.js](https://github.com/cmake-js/cmake-js) based module to depend on anything node-gyp based stuff. Bundled versions are built with [CMake.js](https://github.com/cmake-js/cmake-js). The only exception is [ref-array](https://github.com/TooTallNate/ref-array), **fastcall**'s version contains some interface breaking changes for the sake of a way much better performance.
 
-### UnionType
+```js
+const fastcall = require('fastcall');
+
+// 100% ref@latest built with CMake.js:
+const ref = fastcall.ref;
+
+// 100% ref-struct@latest
+const StructType = fastcall.StructType;
+
+// 100% ref-union@latest
+const UnionType = fastcall.UnionType;
+
+// modified ref-struct@latest
+const ArrayType = fastcall.ArrayType;
+```
+
+**ref-array changes**:
+
+See the original FAQ there: https://github.com/TooTallNate/ref-array
+
+There is two huge performance bottleneck exists in this module. The first is the price of array indexer syntax:
+
+```js
+const IntArray = new ArrayType('int');
+const arr = new IntArray(5);
+arr[1] = 1;
+arr[0] = arr[1] + 1;
+```
+
+Those [0] and [1] are implemented by defining Object properties named "0" and "1" respectively. For supporting a length of 100, there will be 100 properties created on the fly. On the other hand those indexing numbers gets converted to string on each access.
+
+Because of that, **fastcall**s version uses `get` and `set` method for indexing:
+
+```js
+const IntArray = new ArrayType('int');
+const arr = new IntArray(5);
+arr.set(1, 1);
+arr.set(0, arr.get(1) + 1);
+```
+Not that nice, but way much faster than the original. 
+
+The other is the continous reinterpretation of a dynamically sized array.
+
+```js
+const IntArray = new ArrayType('int');
+const outArr = ref.refType(IntArray);
+const outLen = ref.refType('uint');
+
+myLib.getIntegers(outArr, outLen);
+const arr = outArr.unref();
+const len = outLen.unref();
+// arr is an IntArray with length of 0
+// but we know that after the pointer
+// there is a len number of element elements,
+// so we can do:
+
+for (let i = 0; i < len; i++) {
+	console.log(arr[i]);
+}
+```
+
+So far so good, but in each iteration `arr` will gets [reinterpreted](http://tootallnate.github.io/ref/#exports-reinterpret) to a new Buffer with a size that would provide access to an item of index `i`. That's slow.
+
+In **fastcall**'s version array's length is writable, so you can do:
+
+```js
+arr.length = len;
+for (let i = 0; i < len; i++) {
+	console.log(arr.get(i));
+}
+```
+Which means only one reinterpret, and this is a lot of faster than the original.
+
+Unfortunately those are huge interface changes, that's why it might not make it in a PR.
+
+### declaring functions
+
+The interface uses [ref and co.](#ref) for its ABI.
+
+For declaring functions, you can go with a [node-ffi](https://github.com/node-ffi/node-ffi/wiki/Node-FFI-Tutorial) like syntax, or with a C like syntax.
+
+Examples:
+
+```js
+const fastcall = require('fastcall');
+const Library = fastcall.Library;
+const ref = fastcall.ref;
+
+const lib = new Library('bimbo.dll')
+.function('int mul(int, int)') // arg. names could be omitted
+.function('int add(int value1, int)')
+.function('int sub(int value1, int value2)')
+.function({ div: ['int', ['int', 'int']] })
+.function('void foo(void* ptr, int** outIntPtr)')
+.function({ poo: ['pointer', [ref.types.int, ref.refType(ref.types.float)]] });
+```
+
+Declared functions are accessible on the lib's interface:
+
+```js
+const result = lib.interface.mul(42, 42);
+```
+
+**Sync and async**:
+About sync and async modes please refer for [fastcall.Library](#fastcalllibrary)'s documentation.
+
+If a function is async, it runs in a **separate thread**, and the result is a Bluebird Promise.
+
+```js
+const lib = new Library(...)
+.asyncFunction('int mul(int, int)');
+
+lib.interface.mul(42, 42)
+.then(result => console.log(result));
+```
+
+You can always switch between a function's sync and async modes: 
+
+```js
+const lib = new Library(...)
+.function('int mul(int, int)');
+
+const mulAsync = library.interface.mul.async;
+const mulSync = mulAsync.sync;
+assert.strictEqual(mulSync, library.interface.mul);
+assert.strictEqual(mulAsync, mulSync.async.async.sync.async);
+```
+You get the idea.
+
+**Concurrency and thread safety:**
+By default, a library's asynchronous functions are running in parallel distributed in libuv's thread pool. So they are not thread safe.
+
+For thread safety there are two options could be passed to [fastcall.Library](#fastcalllibrary)'s constructor: `syncMode.lock` and `syncMode.queue`.
+
+With lock, a simple mutex will be used for synchronization. With queue, all of library's asynchronous calls are enqueued, and only one could execute at once. The former is a bit slower, but that allows synchronization between synchronous calls of the given library. However the latter will throw an exception if a synchronous function gets called while there is an asynchronous invocation is in progress.
+
+**Metadata:**
+
+In case of:
+
+```js
+const lib = new Library(...)
+.function('int mul(int value1, int value2)');
+```
+
+`lib.functions.mul` gives the same metadata object's instance as `lib.interface.mul.function`.
+
+**- properties:**
+
+- `resultType`: ref type of the function's result
+- `args`: is an array of argument objects, with properties of
+	- `name`: name of the argument (arg[n] when the name was omitted)
+	- `type`: ref type of the given argument
+
+### declaring structs
+
+### declaring unions
+
+### declaring arrays
+
+### declaring anything :)
 
 ## node-ffi compatible interface
