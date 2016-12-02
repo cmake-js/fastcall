@@ -32,7 +32,7 @@ Because writing native modules is an annoying work with an under-documented, har
 Writing native module is about wrapping a native library's C API to JavaScript in almost all cases. However shared libraries and their methods could get loaded under a process' address space dynamically, and that dynamic binding could get implemented in pure JavaScript. So, there is no need to write native modules for that purpose if we have something like that stuff.
 
 There is an excellent and popular dynamic binding library for Node.js:
-[node-ffi](https://github.com/node-ffi/node-ffi). Then why we need another one could ask? For performance! There is a good 100x-1000x
+[node-ffi](https://github.com/node-ffi/node-ffi). Then why we need another one could ask? For performance! There is a good 30x-40x
 method call performance overhead when using [node-ffi](https://github.com/node-ffi/node-ffi) compared to hand made C++ native module, which is unacceptable in most cases.
 
 # About
@@ -66,7 +66,7 @@ npm install --save fastcall
 
 # Benchmarks
 
-*TODO*
+![Results](https://raw.githubusercontent.com/cmake-js/fastcall/master/benchmarkresult.png)
 
 # Documentation and Tutorials
 
