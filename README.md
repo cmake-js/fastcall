@@ -17,11 +17,11 @@
     - [fastcall.Library](#fastcalllibrary)
         - [ref](#ref)
         - [declaring functions](#declaring-functions)
-        - [declaring structs](#declaring-structs)
-        - [declaring unions](#declaring-unions)
+        - [declaring structs and unions](#declaring-structs-and-unions)
         - [declaring arrays](#declaring-arrays)
-        - [declaring anything :)](#declaring-anything-)
+        - [declaring everything :)](#declaring-everything-)
     - [node-ffi compatible interface](#node-ffi-compatible-interface)
+- [Showcase](#showcase)
 
 <!-- /TOC -->
 
@@ -45,6 +45,7 @@ method call performance overhead when using [node-ffi](https://github.com/node-f
 - based on TooTallNate's popular [ref](http://tootallnate.github.io/ref/) module
 - has an almost 100% [node-ffi](https://github.com/node-ffi/node-ffi) compatible interface, could work as a drop-in replacement of [node-ffi](https://github.com/node-ffi/node-ffi)
 - RAII: supports deterministic scopes and automatic GC cleanup
+- supports thread synchronization of asynchronous functions
 
 ## Requirements
 
@@ -512,17 +513,220 @@ const lib = new Library(...)
 
 **- properties:**
 
+- `name`: function's name
 - `resultType`: ref type of the function's result
 - `args`: is an array of argument objects, with properties of
 	- `name`: name of the argument (arg[n] when the name was omitted)
 	- `type`: ref type of the given argument
 
-### declaring structs
+**- methods**
 
-### declaring unions
+- `toString`: gives function's C like syntax
+
+### declaring structs and unions
+
+Easy as goblin pie. (Note: struct interface is [ref-struct](#ref) based.)
+
+You can go with the traditional (node-ffi) way:
+
+```js
+const fastcall = require('fastcall');
+const StructType = fastcall.StructType;
+
+// Let's say you have a library with a function of:
+// float dist(Point* p1, Pint* p2);
+
+const Point = new StructType({
+	x: 'int',
+	y: 'int'
+});
+
+const lib = new Library(...)
+.function({ dist: ['float', [ref.refType(Point), ref.refType(Point)]] });
+
+const point1 = new Point({ x: 42, y: 42 });
+const point2 = new Point({ x: 43, y: 43 });
+const dist = lib.interface.dist(point1.ref(), point2.ref());
+```
+
+But there is a better option. You can declare struct on library interfaces, and this way, **fastcall** will understand JavaScript structures on method interfaces.
+
+Declaring structures:
+
+```js
+// object syntax
+lib.struct({
+	Point: {
+		x: 'int',
+		y: 'int'
+	}
+});
+
+// C like syntax
+lib.struct('struct Point { int x; int y; }');
+```
+
+After this the structure is accessible on library's `structs` property:
+
+```js
+const pointMetadata = lib.structs.Point;
+```
+
+**metadata properties**:
+
+- `name`: struct's name
+- `type`: struct's ref type (exactly like `Point` in the first example)
+
+The real benefit is that, by this way - because the *library knows about your structure* - you can do the following:
+
+```js
+lib.function({ dist: ['float', ['Point*', 'Point*']] });
+
+// --- OR ---
+
+lib.function('float dist(Point* point1, Point* point2)');
+
+// --- THEN ---
+
+const result = 
+	lib.interface.mul({ x: 42, y: 42 }, { x: 43, y: 43 });
+```
+
+Way much nicer and simpler syntax like the original, ain't it?
+
+**About unions:**
+
+Declaring unions is exactly the same, except 'union' used instead of 'struct' on appropriate places. (Note: struct interface is [ref-union](#ref) based.)
+
+```js
+lib
+.union('union U { int x, float y }')
+.function('float pickFloatPart(U* u)');
+
+const f = lib.interface.pickFloatPart({ y: 42.2 });
+
+// f is 42.2
+```
 
 ### declaring arrays
 
-### declaring anything :)
+Declaring arrays is not much different than declaring structures and unions. There is one difference: arrays with fixed length are supported.
+
+```c
+// C code:
+
+// a struct using fixed length array
+struct S5 {
+	int fiveInts[5];
+};
+
+// a astruct using an arbitrary length array
+struct SA {
+	int ints[]; // or: int* ints;
+};
+
+// example functions:
+
+// prints five values
+void printS5(S5* s);
+
+// print length number of values
+// length is a parameter, because SA knows nothing about
+// the length of SA.ints
+void printSA(SA* s, int length); 
+```
+
+Access those in **fastcall**:
+
+```js
+lib
+.array('int[] IntArray') // arbitrary length
+.struct('struct S5 { IntArray[5] ints; }')
+.struct('struct SA { IntArray[] ints; }') // or: IntArray ints
+.function('void printS5(S5* s)')
+.function('void printSA(SA* s, int len)');
+
+lib.interface.printS5({ ints: [1, 2, 3, 4, 5] });
+lib.interface.printSA({ ints: [1, 2, 3] }, 3);
+```
+
+Of course object syntax is available too:
+
+```js
+lib
+.array({ IntArray: 'int' }) // arbitrary length
+.struct({ S5: { ints: 'IntArray[5]' } })
+.struct({ SA: { ints: 'IntArray' } })
+.function({ printS5: ['void', ['IntArray[5]']] })
+.function({ printSA: ['void', ['IntArray', 'int']] });
+```
+
+After this the array is accessible on library's `arrays` property:
+
+```js
+const intArrayMetadata = lib.arrays.IntArray;
+```
+
+**metadata properties**:
+
+- `name`: array's name
+- `length`: number if fixed length, null if arbitrary
+- `type`: array's ref type
+
+Of course you can declare fixed length arrays directly:
+
+```js
+lib.array('int[4] IntArray4');
+```
+
+And any fixed or arbitrary length array type could get resized on usage:
+
+```js
+lib
+.struct('struct S5 { IntArray4[5] ints; }')
+.struct('struct SA { IntArray4[] ints; }')
+```
+
+### declaring everything :)
+
+[fastcall.Library](#fastcalllibrary)'s `declare`, `declareSync` and `declareAsync` methods could declare every type of stuff at once.
+
+So the array example could be written like:
+
+```js
+lib.declare('int[] IntArray;' + 
+	'struct S5 { IntArray[5] ints; };' +
+	'struct SA { IntArray[] ints; };' +
+	'void printS5(S5* s);' +
+	'void printSA(SA* s, int len);');
+```
 
 ## node-ffi compatible interface
+
+If you happen to have a node-ffi based module, you can switch to **fastcall** with a minimal effort, because there is a node-ffi compatible interface available:
+
+```js
+const fastcall = require('fastcall');
+
+// in
+const ffi = fastcall.ffi;
+
+// you'll have
+ffi.Library
+ffi.Function
+ffi.Callback
+ffi.StructType // == fastcall.StructType (ref-struct)
+ffi.UnionType // == fastcall.UnionType (ref-union)
+ffi.ArrayType // == fastcall.ArrayType (ref-array)
+```
+
+Works exactly like [node-ffi](https://github.com/node-ffi/node-ffi) and [ref](#ref) modules. However there are some minor exceptions:
+
+- only `async` option supported in library options
+- **fastcall**'s version of Library doesn't add default extensions and prefixes to shared library names, so `"OpenCL"` won't turn magically to `"OpenCL.dll"` on windows or `"libOpenCL.so"` on Linux
+- **fastcall**'s version of [ref-array is modified slightly to have better performance than the original](#ref)
+
+# Showcase
+
+- [NOOOCL](https://github.com/unbornchikken/NOOOCL): I have recently ported NOOOCL from node-ffi to **fastcall**. It took only a hour or so thanks to **fastcall**'s node-ffi compatible interface. Take a look at its source code to have a better idea how ref and **fastcall** works together in a legacy code.
+- [ArrayFire.js](https://github.com/arrayfire/arrayfire-js): as soon as I finish writing this documentation, I'm gonna start to work on a brand new, **fastcall** based ArrayFire.js version. That will get implemented with **fastcall** from strach, so eventually you can take a look its source code for hints and ideas of using this library.
