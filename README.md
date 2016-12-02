@@ -20,6 +20,8 @@
         - [declaring structs and unions](#declaring-structs-and-unions)
         - [declaring arrays](#declaring-arrays)
         - [declaring everything :)](#declaring-everything-)
+        - [callbacks](#callbacks)
+        - [pointer factories](#pointer-factories)
     - [node-ffi compatible interface](#node-ffi-compatible-interface)
 - [Showcase](#showcase)
 
@@ -66,7 +68,30 @@ npm install --save fastcall
 
 # Benchmarks
 
+To run benchmarks, type:
+
+```bash
+node benchmarks
+```
+
+Results:
+
 ![Results](https://raw.githubusercontent.com/cmake-js/fastcall/master/benchmarkresult.png)
+
+There are 3 tests with synchronous and asynchronous versions:
+
+- **addNumbers**: simple addition, intended to test method call performance
+- **concat**: string concatenation, intended to test method call performance when JavaScript string to C string marshaling required which is costly.
+- **callback**: simple addition with callbacks, intended to test how fast native code can call JavaScript side functions
+
+All tests implemented in:
+
+- **native**: C++ code. Assuming method call cost is almost zero and there is no need for marshaling its numbers shows the run time of test method bodies
+- **native module**: [Nan](https://github.com/nodejs/nan) based native module in C++. This is the reference, there is no way to be anything faster than this. **fastcall**'s aim is to get its performance as close as possible to this, so the overhead ratio got counted according to this
+- **node-ffi**: binding with node-ffi in pure JavaScript
+- **fastcall**: binding with **fastcall** in pure JavaScript
+
+Yeah, there is a room for improvement at **fastcall** side. Improving marshaling and callback performance is the main target of the following releases.
 
 # Documentation and Tutorials
 
@@ -700,6 +725,71 @@ lib.declare('int[] IntArray;' +
 	'void printS5(S5* s);' +
 	'void printSA(SA* s, int len);');
 ```
+
+### callbacks
+
+You can create native pointers for arbitrary JavaScript functions, and by this way you can use JavaScript functions for native callbacks.
+
+```C
+// C code
+
+typedef int (*TMakeIntFunc)(float, double);
+
+int bambino(float fv, double dv, TMakeIntFunc func)
+{
+    return (int)func(fv, dv) * 2;
+}
+```
+
+To drive this, you need a callback and a function on your **fastcall** based library defined. It could get declared by object syntax:
+
+```js
+lib
+.callback({ TMakeIntFunc: ['int', ['float', 'double']] })
+.function({ bambino: ['int', ['float', 'double', 'TMakeIntFunc']] });
+
+const result = lib.interface.bambino(19.9, 1.1, (a, b) => a + b);
+// result is 42
+```
+
+Or with a familiar, C like syntax:
+
+```js
+lib
+.declare('int (*TMakeIntFunc)(float, double);' +
+	'int bambino(float fv, double dv, TMakeIntFunc func)');
+
+const result = lib.interface.bambino(19.9, 1.1, (a, b) => a + b);
+// result is 42
+```
+
+Callback's metadata are accessible on library's `callbacks` property:
+
+```js
+const TMakeIntFuncMetadata = lib.callbacks.TMakeIntFunc;
+```
+
+**- metadata properties:**
+
+- `name`: callbacks's name
+- `resultType`: ref type of the callbacks's result
+- `args`: is an array of argument objects, with properties of
+	- `name`: name of the argument (arg[n] when the name was omitted)
+	- `type`: ref type of the given argument
+
+**- methods**
+
+- `toString`: gives callbacks C like syntax
+
+### pointer factories
+
+If you wanna use you callbacks, structs, unions or arrays more than once without being changed, you can create a pointer for them, and with those, method call performance will be significantly faster.
+
+For example:
+
+```js
+
+``` 
 
 ## node-ffi compatible interface
 
