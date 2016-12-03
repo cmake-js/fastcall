@@ -3,8 +3,8 @@
 <!-- TOC -->
 
 - [TOC](#toc)
-- [Why?](#why)
 - [About](#about)
+- [Why?](#why)
     - [Features](#features)
     - [Requirements](#requirements)
     - [Install](#install)
@@ -28,17 +28,15 @@
 
 <!-- /TOC -->
 
-# Why?
+# About
 
-Writing native module is about wrapping a native library's C based API to JavaScript, in almost all cases. However, shared libraries and their functions could get loaded under a process' address space dynamically, and that dynamic binding could get implemented in pure JavaScript with a right npm module by hand. So, there is no need to write native modules for that purpose in C++, with Nan and black magic.
+**fastcall** is a foreign function interface library which aim is to provide an easy to use, 100% JavaScript based method for developers to use native shared libraries in Node.js, without needing to touch anything in C++ and without sacrificing too much performance. It's designed with performance and simplicity in mind, an it has comparable function call overhead with hand made C++ native modules. See the [benchmarks](#benchmarks).
+
+# Why?
 
 There is a a popular dynamic binding library for Node.js:
 [node-ffi](https://github.com/node-ffi/node-ffi). Then why we need another one could ask? For performance! There is a good 20x-40x
 function call performance overhead when using [node-ffi](https://github.com/node-ffi/node-ffi) compared to hand made C++ native module, which is unacceptable in most cases (see the [benchmarks](#benchmarks)).
-
-# About
-
-**fastcall** is a JavaScript foreign function interface library. It's designed with performance and simplicity in mind, an it has comparable function call overhead with hand made C++ native modules. See the [benchmarks](#benchmarks).
 
 ## Features
 
