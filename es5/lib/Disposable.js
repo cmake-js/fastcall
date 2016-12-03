@@ -82,7 +82,7 @@ function watch(obj, disposeFunction) {
 }
 
 function assertDisposeFunction(disposeFunction) {
-    assert(_.isFunction(disposeFunction) || disposeFunction === null, 'Missing disposeFunction argument. This functiion is intended to make ' + 'another function that should release native resources. Please note that this dispose method has no ' + 'parameters, and only allowed to capture native handles from the source object, not a reference of the source itself, ' + 'because that would prevent garbage collection! Refer to fastcall readme at Github for more information.');
+    assert(_.isFunction(disposeFunction) || disposeFunction === null, 'Missing disposeFunction argument. This functiion should release native resources. Please note that this dispose method has no ' + 'parameters, and only allowed to capture native handles from the source object, not a reference of the source itself, ' + 'because that would prevent garbage collection! Refer to fastcall readme at Github for more information.');
 }
 
 function doDispose(obj) {

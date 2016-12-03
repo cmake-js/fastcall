@@ -24,29 +24,28 @@
         - [pointer factories](#pointer-factories)
     - [node-ffi compatible interface](#node-ffi-compatible-interface)
 - [Showcase](#showcase)
+- [License](#license)
 
 <!-- /TOC -->
 
 # Why?
 
-Because writing native modules is an annoying work with an under-documented, hard to debug C++ API that no one ever wants to touch. :)
+Writing native module is about wrapping a native library's C based API to JavaScript, in almost all cases. However, shared libraries and their functions could get loaded under a process' address space dynamically, and that dynamic binding could get implemented in pure JavaScript with a right npm module by hand. So, there is no need to write native modules for that purpose in C++, with Nan and black magic.
 
-Writing native module is about wrapping a native library's C API to JavaScript in almost all cases. However shared libraries and their methods could get loaded under a process' address space dynamically, and that dynamic binding could get implemented in pure JavaScript. So, there is no need to write native modules for that purpose if we have something like that stuff.
-
-There is an excellent and popular dynamic binding library for Node.js:
-[node-ffi](https://github.com/node-ffi/node-ffi). Then why we need another one could ask? For performance! There is a good 30x-40x
-method call performance overhead when using [node-ffi](https://github.com/node-ffi/node-ffi) compared to hand made C++ native module, which is unacceptable in most cases.
+There is a a popular dynamic binding library for Node.js:
+[node-ffi](https://github.com/node-ffi/node-ffi). Then why we need another one could ask? For performance! There is a good 20x-40x
+function call performance overhead when using [node-ffi](https://github.com/node-ffi/node-ffi) compared to hand made C++ native module, which is unacceptable in most cases (see the [benchmarks](#benchmarks)).
 
 # About
 
-**fastcall** is a JavaScript foreign function interface library. It's designed with performance and simplicity in mind, an it has comparable method call overhead with hand made C++ native modules. See the [benchmarks](#benchmarks).
+**fastcall** is a JavaScript foreign function interface library. It's designed with performance and simplicity in mind, an it has comparable function call overhead with hand made C++ native modules. See the [benchmarks](#benchmarks).
 
 ## Features
 
 - uses [CMake.js](https://github.com/cmake-js/cmake-js) as of its build system (has no Python 2 dependency)
-- based on TooTallNate's popular [ref](http://tootallnate.github.io/ref/) module
+- based on TooTallNate's excellent [ref](http://tootallnate.github.io/ref/) module and its counterparts ([ref-struct](https://github.com/TooTallNate/ref-struct), [ref-array](https://github.com/TooTallNate/ref-array) and [ref-union](https://github.com/TooTallNate/ref-union)), it doesn't try to reinvent the wheel
 - has an almost 100% [node-ffi](https://github.com/node-ffi/node-ffi) compatible interface, could work as a drop-in replacement of [node-ffi](https://github.com/node-ffi/node-ffi)
-- RAII: supports deterministic scopes and automatic GC cleanup
+- RAII: supports deterministic scopes and automatic, GC based cleanup
 - supports thread synchronization of asynchronous functions
 
 ## Requirements
@@ -80,35 +79,35 @@ Results:
 
 There are 3 tests with synchronous and asynchronous versions:
 
-- **addNumbers**: simple addition, intended to test method call performance
-- **concat**: string concatenation, intended to test method call performance when JavaScript string to C string marshaling required which is costly.
+- **addNumbers**: simple addition, intended to test function call performance
+- **concat**: string concatenation, intended to test function call performance when JavaScript string to C string marshaling required, which is costly.
 - **callback**: simple addition with callbacks, intended to test how fast native code can call JavaScript side functions
 
 All tests implemented in:
 
-- **native**: C++ code. Assuming method call cost is almost zero and there is no need for marshaling its numbers shows the run time of test method bodies
-- **native module**: [Nan](https://github.com/nodejs/nan) based native module in C++. This is the reference, there is no way to be anything faster than this. **fastcall**'s aim is to get its performance as close as possible to this, so the overhead ratio got counted according to this
+- **native**: C++ code. Assuming function call's cost is almost zero and there is no need for marshaling, its numbers shows the run time of test function bodies
+- **native module**: [Nan](https://github.com/nodejs/nan) based native module in C++. This is the reference, there is no way to be anything to be faster than this. **fastcall**'s aim is to get its performance as close as possible to this, so the overhead ratio got counted according to its numbers
 - **node-ffi**: binding with node-ffi in pure JavaScript
 - **fastcall**: binding with **fastcall** in pure JavaScript
 
-Yeah, there is a room for improvement at **fastcall** side. Improving marshaling and callback performance is the main target of the following releases.
+Yeah, there is a room for improvement at **fastcall** side. Improving marshaling and callback performance is the main target of the future development.
 
 # Documentation and Tutorials
 
 ## RAII
-Native resources must get freed somehow. We can rely on Node.js' garbage collector for this task, but that would only work if our native code's held resources are memory blocks. For other resources it is more appropriate to free them manually, for example in try ... finally blocks. However there are more complex cases.
+Native resources must get freed somehow. We can rely on Node.js' garbage collector for this task, but that would only work if our native code's held resources are memory blocks. For other resources it is more appropriate to free them manually, for example in try ... finally blocks. However, there are more complex cases.
 
-Let's say we have a math library that works on the GPU with vectors and matrices. A complex formula will create a bunch of temporary vectors and matrices, that will hold a lot memory on the GPU. In this case, we cannot rely on garbage collector of course because that knows nothing about VRAM. Decorating our formula with try ... finally blocks would be a horrible idea in this complex case, just think about it:
+Let's say we have a math library that works on the GPU with vectors and matrices. A complex formula will create a bunch of temporary vectors and matrices, that will hold a lot memory on the GPU. In this case, we cannot rely on garbage collector of course, because that knows nothing about VRAM. Decorating our formula with try ... finally blocks would be a horrible idea in this complex case, just think about it:
 
 ```js
-const vec1 = [1, 2, 3];
-const vec2 = [4, 5, 6];
+const vec1 = lib.vec([1, 2, 3]);
+const vec2 = lib.vec([4, 5, 6]);
 const result = lib.pow(lib.mul(vec1, vec2), lib.abs(lib.add(vec1, vec2)));
 
 // would be something like:
 
-const vec1 = [1, 2, 3];
-const vec2 = [4, 5, 6];
+const vec1 = lib.vec([1, 2, 3]);
+const vec2 = lib.vec([4, 5, 6]);
 let tmpAdd = null, tmpAbs = null, tmpMul = null;
 let result;
 try {
@@ -133,14 +132,14 @@ For accessing **fastcall**'s RAII features you need a class that inherits from `
 
 ```js
 class Disposable {
-	constructor(disposeMethod, aproxAllocatedMemory);
+	constructor(disposeFunction, aproxAllocatedMemory);
 	dispose();
 }
 ```
 
-- `disposeMethod`: could be null or a function. If null, then `Disposable` does nothing. A function should release your object's native resources. Please note that this dispose method has no parameters, and only allowed to capture native handles from the source object, not a reference of the source itself because that would prevent garbage collection!
-- `dispose()`: will invoke `disposeMethod` manually (for the mentioned try ... catch use cases). Subsequent calls does nothing. You can override this method for implementing custom disposing logic, just don't forget to call its prototype's dispose() if your class have native references.
-- `aproxAllocatedMemory`: in bytes. You could inform Node.js' GC about your native object's memory usage (calls [Nan::AdjustExternalMemory()](https://github.com/nodejs/nan/blob/master/doc/v8_internals.md#api_nan_adjust_external_memory)). Will be considered only if it's a positive number.
+- `disposeFunction`: could be null or a function. If null, then `Disposable` doesn't dispose anything. If a function, then it should release your object's native resources. Please note that this function has no parameters, and only allowed to capture native handles from the source object, not a reference of the source itself because that would prevent garbage collection! More on this later, please keep reading!
+- `dispose()`: will invoke `disposeFunction` manually (for the mentioned try ... catch use cases). Subsequent calls does nothing. You can override this method for implementing custom disposing logic, just don't forget to call its prototype's dispose() if you passed a `disposeFunction` to `super`.
+- `aproxAllocatedMemory`: in bytes. You could inform Node.js' GC about your object's native memory usage (calls [Nan::AdjustExternalMemory()](https://github.com/nodejs/nan/blob/master/doc/v8_internals.md#api_nan_adjust_external_memory)). Will get considered only if it's a positive number.
 
 Example:
 
@@ -214,10 +213,10 @@ Kinda C++ braces.
 
 **Rules:**
 
-- scope only affects objects whose classes inherits from `Disposable`, we refer them as *disposables*
+- scope only affects objects whose classes inherits from `Disposable`, we refer them as *disposables* from now on
 - scope will affect implicitly created disposables also (like that hidden temporary result of the inner `fuseStuff` call of the above example) 
 - all disposables gets disposed on the end of the scope, except returned ones
-- returned disposables are propagated to parent scope, if there is one - if there isn't a parent, they escape (see below) 
+- returned disposables are propagated to parent scope, if there is one - if there isn't a parent, they *escape* (see below) 
 
 **Escaping and compound disposables:**
 
@@ -228,7 +227,7 @@ class MyClass extends Disposable {
 	constructor() {
 		// MyClass is disposable but has no
 		// direct native references,
-		// so its disposeMethod is null
+		// so its disposeFunction is null
 		super(null);
 		
 		this.stuff1 = null;
@@ -264,7 +263,9 @@ scope(() => {
 	// so they has nothing to do with the current scope.
 });
 // However poo got created in the above scope, 
-// so it gets disposed at the end, and MyClass.stuff1 and MyClass.stuff2 gets disposed at that point because of the overridden dispose().
+// so it gets disposed at the end, 
+// and MyClass.stuff1 and MyClass.stuff2 gets disposed at that point 
+// because of the overridden dispose().
 ```
 
 **Result:**
@@ -277,18 +278,18 @@ const result = scope(() => {
 });
 // result is the new Stuff
 ```
-Rules of propagation is described above. Propagation also happens when the function exists by:
+Rules of propagation is described above. Propagation also happens when the function returns with:
 
 - an array of disposables
 - a plain objects holding disposables in its values
 - Map of disposables
 - Set of disposables
 
-This lookup is **recursive**, and apply for `scope.escape()`'s argument, so you can escape and array of Map of disposables for example with one call.
+This lookup is **recursive**, and apply for `scope.escape()`'s argument, so you can escape an array of Map of disposables for example with a single `scope.escape()` call.
 
 **Async:**
 
-If a scope's function returns a Promise (any then-able object will do) then it turns to an asynchronous scope, it also returns a Promise. Same rules apply like with synchronous scopes.
+If a scope's function returns a promise (any then-able object will do) then it turns to an asynchronous scope, it also returns a promise. Same rules apply like with synchronous scopes.
 
 ```js
 const result = scope(() => 
@@ -318,7 +319,7 @@ Way much nicer, eh? It does exactly the same thing.
 
 ## fastcall.Library
 
-Central part of **fastcall** is the `Library`. That's where you can load shared libraries to Node.js' address spaces, and there you could access its functions and declared types.
+Central part of **fastcall** is the `Library` class. With that you can load shared libraries to Node.js' address spaces, and could access its functions and declared types.
 
 ```js
 class Library {
@@ -356,15 +357,15 @@ class Library {
 
 - `libPath`: path of the shared library to load. There is no magical platform dependent extension guess system, you should provide the correct library paths on each supported platforms (`os` module would help). For example, for OpenCL, you gotta pass `OpenCL.dll` on Windows, and `libOpenCL.so` on Linux, and so on.
 - `options`: optional object with optional properties of:
-	- `options.defaultCallMode`: either `Library.callMode.sync`, which means synchronous functions will get created, or `Library.callMode.async` which means asynchronous functions will get created by default
-	- `options.syncMode`: either `Library.syncMode.lock`, which means asynchronous function invocations will get serialized with a thread locks, or `Library.syncMode.queue` which means asynchronous function invocations will get serialized with a queue (more on that later)
+	- `defaultCallMode`: either the default `Library.callMode.sync`, which means synchronous functions will get created, or `Library.callMode.async` which means asynchronous functions will get created by default
+	- `syncMode`: either the default `Library.syncMode.lock`, which means asynchronous function invocations will get synchronized with a **library global mutex**, or `Library.syncMode.queue` which means asynchronous function invocations will get synchronized with a **library global call queue** (more on that later)
 
 **Methods:**
 
 - `release`: release loaded shared library's resources (please note that `Library` is not a `Disposable` because you'll need to call this method in very rare situations)
-- `declare`: parses and process a declaration string. Its methods are declared with the default call mode
-- `declareSync`: parses and process a declaration string. Its methods are declared as synchronous
-- `declareAsync`: parses and process a declaration string. Its methods are declared as asynchronous
+- `declare`: parses and process a declaration string. Its functions are declared with the default call mode
+- `declareSync`: parses and process a declaration string. Its functions are declared as synchronous
+- `declareAsync`: parses and process a declaration string. Its functions are declared as asynchronous
 - `function`: declares a function with the default call mode
 - `syncFunction`: declares a synchronous function
 - `asyncFunction`: declares an asynchronous function
@@ -574,7 +575,7 @@ const point2 = new Point({ x: 43, y: 43 });
 const dist = lib.interface.dist(point1.ref(), point2.ref());
 ```
 
-But there is a better option. You can declare struct on library interfaces, and this way, **fastcall** will understand JavaScript structures on method interfaces.
+But there is a better option. You can declare struct on library interfaces, and this way, **fastcall** will understand JavaScript structures on function interfaces.
 
 Declaring structures:
 
@@ -714,7 +715,7 @@ lib
 
 ### declaring everything :)
 
-[fastcall.Library](#fastcalllibrary)'s `declare`, `declareSync` and `declareAsync` methods could declare every type of stuff at once.
+[fastcall.Library](#fastcalllibrary)'s `declare`, `declareSync` and `declareAsync` functions could declare every type of stuff at once.
 
 So the array example could be written like:
 
@@ -783,13 +784,81 @@ const TMakeIntFuncMetadata = lib.callbacks.TMakeIntFunc;
 
 ### pointer factories
 
-If you wanna use you callbacks, structs, unions or arrays more than once without being changed, you can create a pointer for them, and with those, method call performance will be significantly faster.
+If you wanna use you callbacks, structs, unions or arrays more than once (in a loop, for example), without being changed, you can create a ([ref](#ref)) pointer from them, and with those, function call performance will be significantly faster. Callback, struct, union and array factories are just functions on library's property: `interface`.
 
 For example:
 
 ```js
+// ref-struct way
 
-``` 
+const StructType = require('fastcall').StructType; // or require('ref-struct')
+const MyStruct = new StructType({ a: 'int', b: 'double' });
+
+const struct = new MyStruct({ a: 1, b: 1.1 });
+const ptr = struct.ref(); // ptr instanceof Buffer
+
+lib.interface.printStruct(ptr);
+
+// fastcall way
+
+lib.declare('struct StructType { int a; double b; }');
+
+const ptr = lib.interface.StructType({ a: 1, b: 1.1 }); 
+// ptr instanceof Buffer
+
+// You can create the modifyable struct instance of course
+// by using the metadata property: type
+
+const structMetadata = lib.structs.StructType;
+const struct = structMetadata.type({ a: 1, b: 1.1 });
+// ...
+struct.a = 2;
+struct.b = 0.1;
+// ...
+const ptr = struct.ref();
+// or
+const ptr = lib.interface.StructType(struct);
+```
+
+Or with callbacks:
+
+```js
+lib.declare('void (*CB)(int)');
+
+const callbackPtr = lib.interface.CB(x => x * x);
+// callbackPtr instanceof Buffer
+
+lib.interface.someNativeFunctionWithCallback(42, callbackPtr);
+// that's a slightly faster than:
+lib.interface.someNativeFunctionWithCallback(42, x => x * x);
+```
+
+**string pointers**:
+
+For converting JavaScript string to ([ref](#ref)) pointers back and forth there are [ref.allocCString()](http://tootallnate.github.io/ref/#exports-allocCString) and [ref.readCString()](http://tootallnate.github.io/ref/#extensions-readCString) methods available. 
+
+However for converting JavaScript strings to native-side **read-only** strings there is a much faster alternative available in **fastcall**: 
+
+`fastcall.makeStringBuffer([string] str)`
+
+Example:
+
+```js
+const fastcall = require('fastcall');
+// ...
+
+lib.declare('void print(char* str)');
+
+const ptr = fastcall.makeStringBuffer(
+	'Sárgarigó, madárfészek, ' + 
+	'az a legszebb, aki részeg');
+
+lib.interface.print(ptr);
+// that's faster than writing:
+lib.interface.print(
+	'Sárgarigó, madárfészek, ' + 
+	'az a legszebb, aki részeg');
+```
 
 ## node-ffi compatible interface
 
@@ -813,6 +882,7 @@ ffi.ArrayType // == fastcall.ArrayType (ref-array)
 Works exactly like [node-ffi](https://github.com/node-ffi/node-ffi) and [ref](#ref) modules. However there are some minor exceptions:
 
 - only `async` option supported in library options
+- `asyncPromise` property is available in functions along with `async`, you don't have to rely `Promise.promisify()` like features
 - **fastcall**'s version of Library doesn't add default extensions and prefixes to shared library names, so `"OpenCL"` won't turn magically to `"OpenCL.dll"` on windows or `"libOpenCL.so"` on Linux
 - **fastcall**'s version of [ref-array is modified slightly to have better performance than the original](#ref)
 
@@ -820,3 +890,21 @@ Works exactly like [node-ffi](https://github.com/node-ffi/node-ffi) and [ref](#r
 
 - [NOOOCL](https://github.com/unbornchikken/NOOOCL): I have recently ported NOOOCL from node-ffi to **fastcall**. It took only a hour or so thanks to **fastcall**'s node-ffi compatible interface. Take a look at its source code to have a better idea how ref and **fastcall** works together in a legacy code.
 - [ArrayFire.js](https://github.com/arrayfire/arrayfire-js): as soon as I finish writing this documentation, I'm gonna start to work on a brand new, **fastcall** based ArrayFire.js version. That will get implemented with **fastcall** from strach, so eventually you can take a look its source code for hints and ideas of using this library.
+
+# License
+
+```
+Copyright 2016 Gábor Mező (gabor.mezo@outlook.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
