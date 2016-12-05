@@ -4,7 +4,7 @@
 
 - [TOC](#toc)
 - [About](#about)
-- [Why?](#why)
+    - [Why?](#why)
     - [Features](#features)
     - [Requirements](#requirements)
     - [Install](#install)
@@ -32,7 +32,7 @@
 
 **fastcall** is a foreign function interface library which aim is to provide an easy to use, 100% JavaScript based method for developers to use native shared libraries in Node.js, without needing to touch anything in C++ and without sacrificing too much performance. It's designed with performance and simplicity in mind, an it has comparable function call overhead with hand made C++ native modules. See the [benchmarks](#benchmarks).
 
-# Why?
+## Why?
 
 There is a a popular dynamic binding library for Node.js:
 [node-ffi](https://github.com/node-ffi/node-ffi). Then why we need another one could ask? For performance! There is a good 20x-40x
