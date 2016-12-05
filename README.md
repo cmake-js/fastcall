@@ -100,6 +100,8 @@ Central part of **fastcall** is the `Library` class. With that you can load shar
 class Library {
 	constructor(libPath, options);
 
+	isSymbolExists(name);
+
 	release();
 
 	declare(); declareSync(); declareAsync();
@@ -137,6 +139,7 @@ class Library {
 
 **Methods:**
 
+- `isSymbolExists`: returns true if the specified symbol exists in the library
 - `release`: release loaded shared library's resources (please note that `Library` is not a `Disposable` because you'll need to call this method in very rare situations)
 - `declare`: parses and process a declaration string. Its functions are declared with the default call mode
 - `declareSync`: parses and process a declaration string. Its functions are declared as synchronous

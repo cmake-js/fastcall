@@ -126,6 +126,14 @@ var Library = function () {
             return this;
         }
     }, {
+        key: 'isSymbolExists',
+        value: function isSymbolExists(name) {
+            assert(_.isString(name), 'Argument is not a string.');
+
+            this.initialize();
+            return Boolean(native.dynload.findSymbol(this._pLib, name));
+        }
+    }, {
         key: 'declare',
         value: function declare(str) {
             return new Parser(this).parseMultiline(str, null);
