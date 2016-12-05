@@ -161,7 +161,7 @@ class Library {
 
 Let's take a look at [ref](http://tootallnate.github.io/ref/) before going into the details (credits for [TooTallNate](https://github.com/TooTallNate)). **ref** is a native type system with pointers and other types those are required to address C based interfaces of native shared libraries. It also has a native interface compatible types for [structs](https://github.com/TooTallNate/ref-struct), [unions](https://github.com/TooTallNate/ref-union) and [arrays](https://github.com/TooTallNate/ref-array).
 
-In **fastcall** there is a **bundled versions** of [ref](https://github.com/TooTallNate/ref), [ref-array](https://github.com/TooTallNate/ref-array), [ref-struct](https://github.com/TooTallNate/ref-struct) and [ref-union](https://github.com/TooTallNate/ref-union). Those are 100% compatible with the originals, they are there because I didn't wanted to have a [CMake.js](https://github.com/cmake-js/cmake-js) based module to depend on anything node-gyp based stuff. Bundled versions are built with [CMake.js](https://github.com/cmake-js/cmake-js). The only exception is [ref-array](https://github.com/TooTallNate/ref-array), **fastcall**'s version contains some interface breaking changes for the sake of a way much better performance.
+In **fastcall** there are a **bundled versions** of [ref](https://github.com/TooTallNate/ref), [ref-array](https://github.com/TooTallNate/ref-array), [ref-struct](https://github.com/TooTallNate/ref-struct) and [ref-union](https://github.com/TooTallNate/ref-union). Those are 100% compatible with the originals, they are there because I didn't wanted to have a [CMake.js](https://github.com/cmake-js/cmake-js) based module to depend on anything node-gyp based stuff. Bundled versions are built with [CMake.js](https://github.com/cmake-js/cmake-js). The only exception is [ref-array](https://github.com/TooTallNate/ref-array), **fastcall**'s version contains some interface breaking changes for the sake of a way much better performance.
 
 ```js
 const fastcall = require('fastcall');
@@ -183,7 +183,7 @@ const ArrayType = fastcall.ArrayType;
 
 See the original FAQ there: https://github.com/TooTallNate/ref-array
 
-There is two huge performance bottleneck exists in this module. The first is the price of array indexer syntax:
+There are two huge performance bottleneck exists in this module. The first is the price of array indexer syntax:
 
 ```js
 const IntArray = new ArrayType('int');
@@ -326,7 +326,7 @@ const lib = new Library(...)
 
 ### declaring structs and unions
 
-Easy as goblin pie. (Note: struct interface is [ref-struct](#ref) based.)
+Easy as goblin pie. (Note: struct interface is [ref-struct](#ref), and union is [ref-array](#ref) based.)
 
 You can go with the traditional (node-ffi) way:
 
@@ -367,7 +367,7 @@ lib.struct({
 lib.struct('struct Point { int x; int y; }');
 ```
 
-After this the structure is accessible on library's `structs` property:
+After that the structure is accessible on library's `structs` property:
 
 ```js
 const pointMetadata = lib.structs.Point;
@@ -462,7 +462,7 @@ lib
 .function({ printSA: ['void', ['IntArray', 'int']] });
 ```
 
-After this the array is accessible on library's `arrays` property:
+After that the array is accessible on library's `arrays` property:
 
 ```js
 const intArrayMetadata = lib.arrays.IntArray;
@@ -888,7 +888,7 @@ Works exactly like [node-ffi](https://github.com/node-ffi/node-ffi) and [ref](#r
 # Showcase
 
 - [NOOOCL](https://github.com/unbornchikken/NOOOCL): I have recently ported NOOOCL from node-ffi to **fastcall**. It took only a hour or so thanks to **fastcall**'s node-ffi compatible interface. Take a look at its source code to have a better idea how ref and **fastcall** works together in a legacy code.
-- [ArrayFire.js](https://github.com/arrayfire/arrayfire-js): as soon as I finish writing this documentation, I'm gonna start to work on a brand new, **fastcall** based ArrayFire.js version. That will get implemented with **fastcall** from strach, so eventually you can take a look its source code for hints and ideas of using this library.
+- [ArrayFire.js](https://github.com/arrayfire/arrayfire-js): as soon as I finish writing this documentation, I'm gonna start to work on a brand new, **fastcall** based version of ArrayFire.js. That will get implemented with **fastcall** from strach, so eventually you can take a look its source code for hints and ideas of using this library.
 
 # License
 
