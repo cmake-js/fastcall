@@ -14,13 +14,19 @@
 
 cmake_minimum_required(VERSION 2.8)
 
+set(prod TRUE)
+set(node_env $ENV{NODE_ENV})
+if (NOT node_env STREQUAL production)
+  set(prod FALSE)
+endif()
+
 # Configure CCache if available
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
     message(STATUS "Using ccache.")
-endif(CCACHE_FOUND)
+endif()
 
 add_subdirectory(deps/dyncall)
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/deps/dyncall/dyncall")
@@ -69,8 +75,7 @@ endif()
 add_subdirectory(deps/ref-cmake)
 add_subdirectory(src)
 
-set(node_env $ENV{NODE_ENV})
-if (NOT node_env STREQUAL production)
+if (NOT prod)
     message(STATUS "Developer mode modules added to build configuration.")
     add_subdirectory(test/testlib)
     add_subdirectory(benchmarks/benchlib)
