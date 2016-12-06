@@ -891,7 +891,7 @@ Works exactly like [node-ffi](https://github.com/node-ffi/node-ffi) and [ref](#r
 # Showcase
 
 - [NOOOCL](https://github.com/unbornchikken/NOOOCL): I have recently ported NOOOCL from node-ffi to **fastcall**. It took only a hour or so thanks to **fastcall**'s node-ffi compatible interface. Take a look at its source code to have a better idea how ref and **fastcall** works together in a legacy code.
-- [ArrayFire.js](https://github.com/arrayfire/arrayfire-js): as soon as I finish writing this documentation, I'm gonna start to work on a brand new, **fastcall** based version of ArrayFire.js. That will get implemented with **fastcall** from strach, so eventually you can take a look its source code for hints and ideas of using this library.
+- [ArrayFire.js](https://github.com/arrayfire/arrayfire-js/tree/fastcall): as soon as I finish writing this documentation, I'm gonna start to work on a brand new, **fastcall** based version of ArrayFire.js. That will get implemented with **fastcall** from strach, so eventually you can take a look its source code for hints and ideas of using this library.
 
 # License
 
