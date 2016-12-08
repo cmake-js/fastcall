@@ -855,7 +855,7 @@ Coroutines supported by calling `scope.async`. So the above example turns to:
 
 ```js
 const result = yield scope.async(function* () {
-	const loaded = lib.loadAsync();
+	const loaded = yield lib.loadAsync();
 	return new Stuff();
 })
 ```
