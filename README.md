@@ -24,6 +24,7 @@
         - [scopes](#scopes)
     - [node-ffi compatible interface](#node-ffi-compatible-interface)
 - [Showcase](#showcase)
+- [Credits](#credits)
 - [License](#license)
 
 <!-- /TOC -->
@@ -892,6 +893,11 @@ Works exactly like [node-ffi](https://github.com/node-ffi/node-ffi) and [ref](#r
 
 - [NOOOCL](https://github.com/unbornchikken/NOOOCL): I have recently ported NOOOCL from node-ffi to **fastcall**. It took only a hour or so thanks to **fastcall**'s node-ffi compatible interface. Take a look at its source code to have a better idea how ref and **fastcall** works together in a legacy code.
 - [ArrayFire.js](https://github.com/arrayfire/arrayfire-js/tree/fastcall): as soon as I finish writing this documentation, I'm gonna start to work on a brand new, **fastcall** based version of ArrayFire.js. That will get implemented with **fastcall** from strach, so eventually you can take a look its source code for hints and ideas of using this library.
+
+# Credits
+
+- **Daniel Adler** and **Tassilo Philipp** - for [dyncall](http://www.dyncall.org/index)
+- [TooTallNate](https://github.com/TooTallNate) - [ref](https://github.com/TooTallNate/ref), [ref-array](https://github.com/TooTallNate/ref-array), [ref-struct](https://github.com/TooTallNate/ref-struct), [ref-union](https://github.com/TooTallNate/ref-union) and of course [node-ffi](https://github.com/node-ffi/node-ffi) for inspiration and ideas
 
 # License
 
