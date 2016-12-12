@@ -584,7 +584,7 @@ NAN_METHOD(callUInt64Async)
     CallAsync<uint64_t>(
         info,
         dcCallUInt64,
-        [](size_t value) {
+        [](uint64_t value) {
             return MakeUint64(value);
         });
 }

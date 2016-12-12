@@ -1,6 +1,6 @@
 {
   "name": "fastcall",
-  "version": "0.1.28",
+  "version": "0.1.29",
   "description": "fastcall - Very fast, asynchronous, dyncall based foreign function interface library for Node.js",
   "license": "Apache-2.0",
   "repository": {
@@ -19,7 +19,7 @@
   },
   "scripts": {
     "install": "cmake-js compile",
-    "test": "mocha",
+    "test": "mocha -gc",
     "babel": "babel lib -d es5/lib --source-maps&&babel test -d es5/test --source-maps&&babel benchmarks -d es5/benchmarks --source-maps"
   },
   "main": "lib/",
