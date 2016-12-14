@@ -8,6 +8,7 @@
     - [Features](#features)
     - [Requirements](#requirements)
     - [Install](#install)
+    - [Clone and Build](#clone-and-build)
 - [Benchmarks](#benchmarks)
 - [Documentation and Tutorials](#documentation-and-tutorials)
     - [fastcall.Library](#fastcalllibrary)
@@ -62,6 +63,26 @@ function call performance overhead when using [node-ffi](https://github.com/node
 
 ```bash
 npm install --save fastcall
+```
+
+## Clone and Build
+
+```bash
+git clone --recursive https://github.com/cmake-js/fastcall.git
+cd fastcall
+npm install
+```
+
+For subsequent builds type:
+
+```bash
+cmake-js compile
+```
+
+But don't forget to install [CMake.js](https://github.com/cmake-js/cmake-js) as a global module first>
+
+```bash
+npm install -g cmake-js
 ```
 
 # Benchmarks
