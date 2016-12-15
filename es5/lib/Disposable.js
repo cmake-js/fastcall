@@ -30,7 +30,8 @@ var Disposable = function () {
     function Disposable(disposeFunction, approxExternalMemoryUse) {
         _classCallCheck(this, Disposable);
 
-        this._dispose = watch(this, disposeFunction, approxExternalMemoryUse);
+        this._watched = {};
+        this._dispose = watch(this._watched, disposeFunction, approxExternalMemoryUse);
         this._disposed = false;
         scope._add(this);
     }
@@ -39,6 +40,13 @@ var Disposable = function () {
         key: 'dispose',
         value: function dispose() {
             doDispose(this);
+        }
+    }, {
+        key: 'resetDisposable',
+        value: function resetDisposable(disposeFunction, approxExternalMemoryUse) {
+            this._watched = {};
+            this._dispose = watch(this._watched, disposeFunction, approxExternalMemoryUse);
+            this._disposed = false;
         }
     }]);
 
@@ -55,6 +63,12 @@ function LegacyDisposable(disposeFunction, approxExternalMemoryUse) {
 
 LegacyDisposable.prototype.dispose = function () {
     doDispose(this);
+};
+
+LegacyDisposable.prototype.resetDisposable = function (disposeFunction, approxExternalMemoryUse) {
+    this._watched = {};
+    this._dispose = watch(this._watched, disposeFunction, approxExternalMemoryUse);
+    this._disposed = false;
 };
 
 function watch(obj, disposeFunction) {

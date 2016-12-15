@@ -37,7 +37,8 @@
             "preLaunchTask": "babel",
             "runtimeExecutable": null,
             "runtimeArgs": [
-                "--nolazy"
+                "--nolazy",
+                "--expose-gc"
             ],
             "env": {
                 "NODE_ENV": "development",

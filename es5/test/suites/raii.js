@@ -33,10 +33,10 @@ var Disposable = fastcall.Disposable;
 var Tester = function (_Disposable) {
     _inherits(Tester, _Disposable);
 
-    function Tester(disposeFunction, memUse) {
+    function Tester() {
         _classCallCheck(this, Tester);
 
-        return _possibleConstructorReturn(this, (Tester.__proto__ || Object.getPrototypeOf(Tester)).call(this, disposeFunction, memUse));
+        return _possibleConstructorReturn(this, (Tester.__proto__ || Object.getPrototypeOf(Tester)).apply(this, arguments));
     }
 
     return Tester;
@@ -209,35 +209,63 @@ describe('RAII scope', function () {
     });
 
     describe('dispose', function () {
-        it('GC should call dispose method', function () {
-            var counter = 0;
-            var dispose = function dispose() {
-                return counter++;
-            };
-            var value2 = void 0;
-            var f = function f() {
-                var value = new Tester(dispose);
-                gc();
-                assert(!counter);
-                value2 = value;
-                value2 = new Tester(dispose, 42);
-                assert(!counter);
-                gc();
-            };
-            var value3 = new Tester(dispose);
+        describe('GC', function () {
+            it('should call dispose function', function () {
+                var counter = 0;
+                var dispose = function dispose() {
+                    return counter++;
+                };
+                var value2 = void 0;
+                var f = function f() {
+                    var value = new Tester(dispose);
+                    gc();
+                    assert(!counter);
+                    value2 = value;
+                    value2 = new Tester(dispose, 42);
+                    assert(!counter);
+                    gc();
+                };
+                var value3 = new Tester(dispose);
 
-            f();
-            assert(!counter);
-            gc();
-            assert.equal(counter, 1);
-            value2 = null;
-            gc();
-            assert.equal(counter, 2);
-            value3.dispose();
-            assert.equal(counter, 3);
-            value3 = null;
-            gc();
-            assert.equal(counter, 3);
+                f();
+                assert(!counter);
+                gc();
+                assert.equal(counter, 1);
+                value2 = null;
+                gc();
+                assert.equal(counter, 2);
+                value3.dispose();
+                assert.equal(counter, 3);
+                value3 = null;
+                gc();
+                assert.equal(counter, 3);
+            });
+
+            it('should call all dispose functions after reset', function () {
+                var counter = 0;
+                var dispose1 = function dispose1() {
+                    return counter++;
+                };
+                var dispose2 = function dispose2() {
+                    return counter += 100;
+                };
+                var test = new Tester(dispose1, 10);
+                gc();
+                assert(!counter);
+                test.resetDisposable(dispose2);
+                assert(!counter);
+                gc();
+                assert.equal(counter, 1);
+                test.resetDisposable(dispose1);
+                assert.equal(counter, 1);
+                test.dispose();
+                assert.equal(counter, 2);
+                gc();
+                assert.equal(counter, 102);
+                test = null;
+                gc();
+                assert.equal(counter, 102);
+            });
         });
     });
 });

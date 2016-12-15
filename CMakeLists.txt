@@ -14,9 +14,11 @@
 
 cmake_minimum_required(VERSION 2.8)
 
+# Detect if production or developer mode.
+# .npmignore excludes "test" directory, so:
 set(prod TRUE)
-set(node_env $ENV{NODE_ENV})
-if (NOT node_env STREQUAL production)
+set(testDir "${CMAKE_SOURCE_DIR}/test")
+if(EXISTS "${testDir}" AND IS_DIRECTORY "${testDir}")
   set(prod FALSE)
 endif()
 

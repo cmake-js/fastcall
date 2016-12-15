@@ -37,5 +37,5 @@ documentation/site
 .vscode/*.DB*
 *.kdev*
 
-# Vendor
-deps/arrayfire
+test/
+benchmarks/

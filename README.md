@@ -54,7 +54,7 @@ function call performance overhead when using [node-ffi](https://github.com/node
 - A proper C/C++ compiler toolchain of the given platform
     - **Windows**:
         - [Visual C++ Build Tools](http://landinghub.visualstudio.com/visual-cpp-build-tools)
-        or a recent version of Visual C++ will do ([the free Community](https://www.visualstudio.com/products/visual-studio-community-vs) version works well)             
+        or a recent version of Visual C++ will do ([the free Community](https://www.visualstudio.com/products/visual-studio-community-vs) version works well)
     - **Unix/Posix**:
         - Clang or GCC
         - Ninja or Make (Ninja will be picked if both present)
@@ -127,9 +127,9 @@ class Library {
 	release();
 
 	declare(); declareSync(); declareAsync();
-	
+
 	function(); syncFunction(); asyncFunction();
-	
+
 	struct();
 
 	union();
@@ -137,17 +137,17 @@ class Library {
 	array();
 
 	callback();
-	
+
 	get functions();
-	
+
 	get structs();
-	
+
 	get unions();
-	
+
 	get arrays();
-	
+
 	get callbacks();
-	
+
 	get interface();
 }
 ```
@@ -227,7 +227,7 @@ const arr = new IntArray(5);
 arr.set(1, 1);
 arr.set(0, arr.get(1) + 1);
 ```
-Not that nice, but way much faster than the original. 
+Not that nice, but way much faster than the original.
 
 The other is the continous reinterpretation of a dynamically sized array.
 
@@ -305,7 +305,7 @@ lib.interface.mul(42, 42)
 .then(result => console.log(result));
 ```
 
-You can always switch between a function's sync and async modes: 
+You can always switch between a function's sync and async modes:
 
 ```js
 const lib = new Library(...)
@@ -414,7 +414,7 @@ lib.function('float dist(Point* point1, Point* point2)');
 
 // --- THEN ---
 
-const result = 
+const result =
 	lib.interface.mul({ x: 42, y: 42 }, { x: 43, y: 43 });
 ```
 
@@ -459,7 +459,7 @@ void printS5(S5* s);
 // print length number of values
 // length is a parameter, because SA knows nothing about
 // the length of SA.ints
-void printSA(SA* s, int length); 
+void printSA(SA* s, int length);
 ```
 
 Access those in **fastcall**:
@@ -520,7 +520,7 @@ lib
 So the array example could be written like:
 
 ```js
-lib.declare('int[] IntArray;' + 
+lib.declare('int[] IntArray;' +
 	'struct S5 { IntArray[5] ints; };' +
 	'struct SA { IntArray[] ints; };' +
 	'void printS5(S5* s);' +
@@ -603,7 +603,7 @@ lib.interface.printStruct(ptr);
 
 lib.declare('struct StructType { int a; double b; }');
 
-const ptr = lib.interface.StructType({ a: 1, b: 1.1 }); 
+const ptr = lib.interface.StructType({ a: 1, b: 1.1 });
 // ptr instanceof Buffer
 
 // You can create the modifyable struct instance of course
@@ -635,9 +635,9 @@ lib.interface.someNativeFunctionWithCallback(42, x => x * x);
 
 **string pointers**:
 
-For converting JavaScript string to ([ref](#ref)) pointers back and forth there are [ref.allocCString()](http://tootallnate.github.io/ref/#exports-allocCString) and [ref.readCString()](http://tootallnate.github.io/ref/#extensions-readCString) methods available. 
+For converting JavaScript string to ([ref](#ref)) pointers back and forth there are [ref.allocCString()](http://tootallnate.github.io/ref/#exports-allocCString) and [ref.readCString()](http://tootallnate.github.io/ref/#extensions-readCString) methods available.
 
-However for converting JavaScript strings to native-side **read-only** strings there is a much faster alternative available in **fastcall**: 
+However for converting JavaScript strings to native-side **read-only** strings there is a much faster alternative available in **fastcall**:
 
 `fastcall.makeStringBuffer([string] str)`
 
@@ -650,13 +650,13 @@ const fastcall = require('fastcall');
 lib.declare('void print(char* str)');
 
 const ptr = fastcall.makeStringBuffer(
-	'Sárgarigó, madárfészek, ' + 
+	'Sárgarigó, madárfészek, ' +
 	'az a legszebb, aki részeg');
 
 lib.interface.print(ptr);
 // that's faster than writing:
 lib.interface.print(
-	'Sárgarigó, madárfészek, ' + 
+	'Sárgarigó, madárfészek, ' +
 	'az a legszebb, aki részeg');
 ```
 
@@ -700,24 +700,31 @@ For accessing **fastcall**'s RAII features you need a class that inherits from `
 ```js
 class Disposable {
 	constructor(disposeFunction, aproxAllocatedMemory);
+
 	dispose();
+
+	resetDisposable(disposeFunction, aproxAllocatedMemory);
 }
 ```
 
 - `disposeFunction`: could be null or a function. If null, then `Disposable` doesn't dispose anything. If a function, then it should release your object's native resources. Please note that this function has no parameters, and only allowed to capture native handles from the source object, not a reference of the source itself because that would prevent garbage collection! More on this later, please keep reading!
-- `dispose()`: will invoke `disposeFunction` manually (for the mentioned try ... catch use cases). Subsequent calls does nothing. You can override this method for implementing custom disposing logic, just don't forget to call its prototype's dispose() if you passed a `disposeFunction` to `super`.
 - `aproxAllocatedMemory`: in bytes. You could inform Node.js' GC about your object's native memory usage (calls [Nan::AdjustExternalMemory()](https://github.com/nodejs/nan/blob/master/doc/v8_internals.md#api_nan_adjust_external_memory)). Will get considered only if it's a positive number.
+- `dispose()`: will invoke `disposeFunction` manually (for the mentioned try ... catch use cases). Subsequent calls does nothing. You can override this method for implementing custom disposing logic, just don't forget to call its prototype's dispose() if you passed a `disposeFunction` to `super`.
+- `resetDisposable(...)`: reinitializes the dispose function and the allocated memory of the given `Disposable`. You should call this, when the underlying handle changed. *WARNING*: the original `disposeFunction` is not called implicitly by this method. You can rely on garbage collector to clean it up, or you can call `dispose()` explicitly prior calling of this method.
 
 Example:
 
 ```js
 const lib = require('lib');
 const fastcall = require('fastcall');
+const ref = fastcall.ref;
 const Disposable = fastcall.Disposable;
 
 class Stuff {
 	constructor() {
-		const handle = lib.createStuff();
+		const out = ref.alloc('void*');
+		lib.createStuff(out);
+		const handle = out.defer();
 		super(
 			() => {
 				// you should NEVER mention "this" there
@@ -739,6 +746,22 @@ try {
 finally {
 	stuff && stuff.dispose();
 }
+
+// replace the underlying handle:
+
+const stuff = new Stuff();
+
+// get some native handle from anywhere
+const out = ref.alloc('void*');
+lib.createStuff(out);
+const someOtherHandle = out.defer();
+
+// now, stuff should wrap that
+
+// you should implement this in a private method:
+stuff.dispose(); // old handle gets released
+stuff.resetDisposable(() => lib.releaseStuff(someOtherHandle), 42);
+stuff.handle = someOtherHandle;
 ```
 For prototype based inheritance please use `Disposable.Legacy` as the base class:
 
@@ -761,7 +784,7 @@ For deterministic destruction without that try ... catch mess, **fastcall** offe
 ```js
 const scope = require('fastcall').scope;
 
-// Let's say, we have Stuff class 
+// Let's say, we have Stuff class
 // from the previous example.
 
 scope(() => {
@@ -781,9 +804,9 @@ Kinda C++ braces.
 **Rules:**
 
 - scope only affects objects whose classes inherits from `Disposable`, we refer them as *disposables* from now on
-- scope will affect implicitly created disposables also (like that hidden temporary result of the inner `fuseStuff` call of the above example) 
+- scope will affect implicitly created disposables also (like that hidden temporary result of the inner `fuseStuff` call of the above example)
 - all disposables gets disposed on the end of the scope, except returned ones
-- returned disposables are propagated to parent scope, if there is one - if there isn't a parent, they *escape* (see below) 
+- returned disposables are propagated to parent scope, if there is one - if there isn't a parent, they *escape* (see below)
 
 **Escaping and compound disposables:**
 
@@ -796,7 +819,7 @@ class MyClass extends Disposable {
 		// direct native references,
 		// so its disposeFunction is null
 		super(null);
-		
+
 		this.stuff1 = null;
 		this.stuff2 = null;
 		scope(() => {
@@ -806,11 +829,11 @@ class MyClass extends Disposable {
 			const tmp = new Stuff();
 			this.stuff2 = scope.escape(fuseStuffs(tmp, stuff1));
 		});
-		// at this point this.stuff1 and 
+		// at this point this.stuff1 and
 		// this.stuff2 will be alive
 		// despite their creator scope got ended
 	}
-	
+
 	dispose() {
 		// we should override dispose() to
 		// free our custom objects
@@ -824,14 +847,14 @@ class MyClass extends Disposable {
 scope(() => {
 	const poo = new MyClass();
 	// so this will open a child scope in
-	// MyClass' constructor that frees its 
+	// MyClass' constructor that frees its
 	// temporaries automatically.
 	// MyClass.stuff1 and MyClass.stuff2 escaped,
 	// so they has nothing to do with the current scope.
 });
-// However poo got created in the above scope, 
-// so it gets disposed at the end, 
-// and MyClass.stuff1 and MyClass.stuff2 gets disposed at that point 
+// However poo got created in the above scope,
+// so it gets disposed at the end,
+// and MyClass.stuff1 and MyClass.stuff2 gets disposed at that point
 // because of the overridden dispose().
 ```
 
@@ -859,7 +882,7 @@ This lookup is **recursive**, and apply for `scope.escape()`'s argument, so you 
 If a scope's function returns a promise (any then-able object will do) then it turns to an asynchronous scope, it also returns a promise. Same rules apply like with synchronous scopes.
 
 ```js
-const result = scope(() => 
+const result = scope(() =>
 	lib.loadAsync()
 	.then(loaded => {
 		// do something with loaded ...

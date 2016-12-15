@@ -24,9 +24,6 @@ const scope = fastcall.scope;
 const Disposable = fastcall.Disposable;
 
 class Tester extends Disposable {
-    constructor(disposeFunction, memUse) {
-        super(disposeFunction, memUse);
-    }
 }
 
 function doAsync(f) {
@@ -137,33 +134,57 @@ describe('RAII scope', function () {
     });
 
     describe('dispose', function () {
-        it('GC should call dispose method', function () {
-            let counter = 0;
-            const dispose = () => counter++;
-            let value2;
-            const f = () => {
-                const value = new Tester(dispose);
-                gc();
-                assert(!counter);
-                value2 = value;
-                value2 = new Tester(dispose, 42);
-                assert(!counter);
-                gc();
-            };
-            let value3 = new Tester(dispose);
+        describe('GC', function () {
+            it('should call dispose function', function () {
+                let counter = 0;
+                const dispose = () => counter++;
+                let value2;
+                const f = () => {
+                    const value = new Tester(dispose);
+                    gc();
+                    assert(!counter);
+                    value2 = value;
+                    value2 = new Tester(dispose, 42);
+                    assert(!counter);
+                    gc();
+                };
+                let value3 = new Tester(dispose);
 
-            f();
-            assert(!counter);
-            gc();
-            assert.equal(counter, 1);
-            value2 = null;
-            gc();
-            assert.equal(counter, 2);
-            value3.dispose();
-            assert.equal(counter, 3);
-            value3 = null;
-            gc();
-            assert.equal(counter, 3);
+                f();
+                assert(!counter);
+                gc();
+                assert.equal(counter, 1);
+                value2 = null;
+                gc();
+                assert.equal(counter, 2);
+                value3.dispose();
+                assert.equal(counter, 3);
+                value3 = null;
+                gc();
+                assert.equal(counter, 3);
+            });
+
+            it('should call all dispose functions after reset', function () {
+                let counter = 0;
+                const dispose1 = () => counter++;
+                const dispose2 = () => counter += 100;
+                let test = new Tester(dispose1, 10);
+                gc();
+                assert(!counter);
+                test.resetDisposable(dispose2);
+                assert(!counter);
+                gc();
+                assert.equal(counter, 1);
+                test.resetDisposable(dispose1);
+                assert.equal(counter, 1);
+                test.dispose();
+                assert.equal(counter, 2);
+                gc();
+                assert.equal(counter, 102);
+                test = null;
+                gc();
+                assert.equal(counter, 102);
+            });
         });
     });
 });

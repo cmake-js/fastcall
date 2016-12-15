@@ -36,6 +36,3 @@ documentation/site
 *.includes
 .vscode/*.DB*
 *.kdev*
-
-# Vendor
-deps/arrayfire
