@@ -73,13 +73,13 @@ cd fastcall
 npm install
 ```
 
-For subsequent builds type:
+For subsequent builds, type:
 
 ```bash
 cmake-js compile
 ```
 
-But don't forget to install [CMake.js](https://github.com/cmake-js/cmake-js) as a global module first>
+But don't forget to install [CMake.js](https://github.com/cmake-js/cmake-js) as a global module first:
 
 ```bash
 npm install -g cmake-js
