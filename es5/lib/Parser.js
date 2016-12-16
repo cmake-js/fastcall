@@ -70,9 +70,9 @@ var Parser = function () {
             var title = args.title;
             def = def.trim();
             assert(def, 'Invalid ' + title + ': ' + def);
-            var pos = _.lastIndexOf(def, ' ');
+            var pos = _.lastIndexOf(def, '*');
             if (pos === -1) {
-                pos = _.lastIndexOf(def, '*');
+                pos = _.lastIndexOf(def, ' ');
             }
             if (pos === -1) {
                 pos = def.length - 1;
@@ -114,7 +114,7 @@ var Parser = function () {
                         if (match.length) {
                             _type = def._makeTypeWithLength(match.length);
                         }
-                        var starCount = countStars(match.stars);
+                        var starCount = Parser._countStars(match.stars);
                         for (var i = 0; i < starCount; i++) {
                             _type = ref.refType(_type);
                         }
@@ -139,38 +139,6 @@ var Parser = function () {
             }
             this._ensureRegistered(type);
             return type;
-
-            function countStars(def) {
-                var count = 0;
-                var _iteratorNormalCompletion = true;
-                var _didIteratorError = false;
-                var _iteratorError = undefined;
-
-                try {
-                    for (var _iterator = def[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                        var ch = _step.value;
-
-                        if (ch === '*') {
-                            ++count;
-                        }
-                    }
-                } catch (err) {
-                    _didIteratorError = true;
-                    _iteratorError = err;
-                } finally {
-                    try {
-                        if (!_iteratorNormalCompletion && _iterator.return) {
-                            _iterator.return();
-                        }
-                    } finally {
-                        if (_didIteratorError) {
-                            throw _iteratorError;
-                        }
-                    }
-                }
-
-                return count;
-            }
         }
     }, {
         key: '_ensureRegistered',
@@ -231,7 +199,44 @@ var Parser = function () {
                     }
                 }
             }
+            var starCount = Parser._countStars(match.stars);
+            for (var i = 0; i < starCount; i++) {
+                type = ref.refType(type);
+            }
             return type;
+        }
+    }], [{
+        key: '_countStars',
+        value: function _countStars(str) {
+            var count = 0;
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = str[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var ch = _step.value;
+
+                    if (ch === '*') {
+                        ++count;
+                    }
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+
+            return count;
         }
     }]);
 

@@ -76,7 +76,7 @@ exports.matchFields = function (keyword, str) {
     return null;
 };
 
-var ARRAY_DECL = /^\s*([\w_][\w\d_]*)\s*\[\s*\]\s*([\w_][\w\d_]*)\s*$/;
+var ARRAY_DECL = /^\s*([\w_][\w\d_]*[\s\*]*)\s*\[\s*\]\s*([\w_][\w\d_]*)\s*$/;
 
 exports.matchArrayDeclaration = function (str) {
     a && ert(_.isString(str));

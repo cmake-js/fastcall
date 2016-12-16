@@ -88,7 +88,7 @@ var FunctionDefinition = function () {
         value: function findFastcallFunc(api, prefix, type) {
             var name = prefix + (type.indirection > 1 || type.code === 'p' ? 'Pointer' : this.toFastcallName(type.name));
             var func = api[name];
-            a && ert(_.isFunction(func));
+            a && ert(_.isFunction(func), 'Unknown API \'' + name + '\' for function \'' + this + '\'.');
             return { name: name, type: type, func: func };
         }
     }, {

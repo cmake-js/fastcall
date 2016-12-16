@@ -155,7 +155,7 @@ describe('Library', function () {
             });
 
             it("should send Node.js Buffer's memory content to native code", function () {
-                lib.function('long readLongPtr(long* ptr, uint offset)');
+                lib.function('long readLongPtr(long *ptr, uint offset)');
                 testReadLongPtrSync('long readLongPtr(long* ptr, uint offset)');
             });
 
