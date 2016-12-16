@@ -1,3 +1,7 @@
+# v0.2.2 (2016-12-16)
+
+- longlong argument access fixed.
+
 # v0.2.1 (2016-12-16)
 
 - Minor ref type parsing fixes.

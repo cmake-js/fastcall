@@ -81,7 +81,7 @@ var FunctionDefinition = function () {
     }, {
         key: 'toFastcallName',
         value: function toFastcallName(typeName) {
-            return _.upperFirst(_.camelCase(typeName)).replace('Uint', 'UInt');
+            return _.upperFirst(_.camelCase(typeName)).replace('Uint', 'UInt').replace('Longlong', 'LongLong');
         }
     }, {
         key: 'findFastcallFunc',
