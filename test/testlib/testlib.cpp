@@ -22,7 +22,7 @@ const char world[] = "world";
 const double numbers[] = { 1.1, 2.2, 3.3 };
 typedef int (*TMakeIntFunc)(float, double);
 
-struct TNumbers 
+struct TNumbers
 {
     short a;
     int64_t b;
@@ -67,6 +67,9 @@ NODE_MODULE_EXPORT long readLongPtr(long* ptr, unsigned offset)
 
 NODE_MODULE_EXPORT void writeString(char* str)
 {
+    if (str == nullptr) {
+        return;
+    }
     str[0] = 'h';
     str[1] = 'e';
     str[2] = 'l';

@@ -28,10 +28,13 @@ inline void* GetPointer(v8::Local<v8::Value> val)
     using namespace node;
     using namespace std;
 
-    if (!Buffer::HasInstance(val)) {
+    if (Buffer::HasInstance(val)) {
+        return reinterpret_cast<void*>(Buffer::Data(val));;
+    }
+    if (val->IsNull()) {
         return nullptr;
     }
-    return reinterpret_cast<void*>(Buffer::Data(val));
+    throw std::logic_error("Argument is not a pointer or null.");
 }
 
 inline int8_t GetInt8(v8::Local<v8::Value> val)

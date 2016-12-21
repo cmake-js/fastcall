@@ -124,6 +124,16 @@ describe('Library', function () {
                 testWriteStringSync('void writeString(char* arg0)');
             });
 
+            it("should pass null in place of pointers", function () {
+                lib.function({ writeString: ['void', ['char*']] });
+                testPassNullSync('void writeString(char* arg0)');
+            });
+
+            it("should fail on non pointer argument in place of pointer", function () {
+                lib.function({ writeString: ['void', ['char*']] });
+                testPassNonPointerSync('void writeString(char* arg0)');
+            });
+
             it('should read natvie memory', function () {
                 lib.function({ getString: ['char*', []] });
                 testGetStringSync('char* getString()');
@@ -162,6 +172,16 @@ describe('Library', function () {
             it("should allow to write Node.js's string content in native code", function () {
                 lib.function('void writeString(char* )');
                 testWriteStringSync('void writeString(char* arg0)');
+            });
+
+            it("should pass null in place of pointers", function () {
+                lib.function('void writeString(char*ch)');
+                testPassNullSync('void writeString(char* ch)');
+            });
+
+            it("should fail on non pointer argument in place of pointer", function () {
+                lib.function('void writeString(char * ch )');
+                testPassNonPointerSync('void writeString(char* ch)');
             });
 
             it('should read natvie memory', function () {
@@ -233,6 +253,29 @@ describe('Library', function () {
             var string = ref.allocCString('          ');
             writeString(string);
             assert.equal(ref.readCString(string), 'hello');
+        }
+
+        function testPassNullSync(declaration) {
+            var writeString = lib.interface.writeString;
+            assert(_.isFunction(writeString));
+            assert(writeString.function);
+            assert.equal(writeString.function.toString(), declaration);
+            // should not crash:
+            writeString(null);
+            writeString(ref.NULL);
+        }
+
+        function testPassNonPointerSync(declaration) {
+            var writeString = lib.interface.writeString;
+            assert(_.isFunction(writeString));
+            assert(writeString.function);
+            assert.equal(writeString.function.toString(), declaration);
+            assert.throws(function () {
+                writeString(42);
+            });
+            assert.throws(function () {
+                writeString();
+            });
         }
 
         function testGetStringSync(declaration) {
@@ -323,6 +366,16 @@ describe('Library', function () {
                 return testWriteStringAsync('void writeString(char* arg0)');
             });
 
+            it("should pass null in place of pointers", function () {
+                lib.function({ writeString: ['void', ['char*']] });
+                return testPassNullAsync('void writeString(char* arg0)');
+            });
+
+            it("should fail on non pointer argument in place of pointer", function () {
+                lib.function({ writeString: ['void', ['char*']] });
+                return testPassNonPointerAsync('void writeString(char* arg0)');
+            });
+
             it('should read natvie memory', function () {
                 lib.function({ getString: ['char*', []] });
                 return testGetStringAsync('char* getString()');
@@ -361,6 +414,16 @@ describe('Library', function () {
             it("should allow to write Node.js's string content in native code", function () {
                 lib.function('void writeString(char* )');
                 return testWriteStringAsync('void writeString(char* arg0)');
+            });
+
+            it("should pass null in place of pointers", function () {
+                lib.function('void writeString(char*ch)');
+                return testPassNullAsync('void writeString(char* ch)');
+            });
+
+            it("should fail on non pointer argument in place of pointer", function () {
+                lib.function('void writeString(char * ch )');
+                return testPassNonPointerAsync('void writeString(char* ch)');
             });
 
             it('should read natvie memory', function () {
@@ -556,21 +619,94 @@ describe('Library', function () {
             }, _callee4, this);
         }));
 
-        var testGetStringAsync = async(regeneratorRuntime.mark(function _callee5(declaration) {
-            var getString, string;
+        var testPassNullAsync = async(regeneratorRuntime.mark(function _callee5(declaration) {
+            var writeString;
             return regeneratorRuntime.wrap(function _callee5$(_context5) {
                 while (1) {
                     switch (_context5.prev = _context5.next) {
+                        case 0:
+                            writeString = lib.interface.writeString;
+
+                            assert(_.isFunction(writeString));
+                            assert(writeString.function);
+                            assert.equal(writeString.function.toString(), declaration);
+                            // should not crash:
+                            _context5.next = 6;
+                            return writeString(null);
+
+                        case 6:
+                            _context5.next = 8;
+                            return writeString(ref.NULL);
+
+                        case 8:
+                        case 'end':
+                            return _context5.stop();
+                    }
+                }
+            }, _callee5, this);
+        }));
+
+        var testPassNonPointerAsync = async(regeneratorRuntime.mark(function _callee6(declaration) {
+            var writeString;
+            return regeneratorRuntime.wrap(function _callee6$(_context6) {
+                while (1) {
+                    switch (_context6.prev = _context6.next) {
+                        case 0:
+                            writeString = lib.interface.writeString;
+
+                            assert(_.isFunction(writeString));
+                            assert(writeString.function);
+                            assert.equal(writeString.function.toString(), declaration);
+                            _context6.prev = 4;
+                            _context6.next = 7;
+                            return writeString(42);
+
+                        case 7:
+                            assert(false);
+                            _context6.next = 12;
+                            break;
+
+                        case 10:
+                            _context6.prev = 10;
+                            _context6.t0 = _context6['catch'](4);
+
+                        case 12:
+                            _context6.prev = 12;
+                            _context6.next = 15;
+                            return writeString();
+
+                        case 15:
+                            assert(false);
+                            _context6.next = 20;
+                            break;
+
+                        case 18:
+                            _context6.prev = 18;
+                            _context6.t1 = _context6['catch'](12);
+
+                        case 20:
+                        case 'end':
+                            return _context6.stop();
+                    }
+                }
+            }, _callee6, this, [[4, 10], [12, 18]]);
+        }));
+
+        var testGetStringAsync = async(regeneratorRuntime.mark(function _callee7(declaration) {
+            var getString, string;
+            return regeneratorRuntime.wrap(function _callee7$(_context7) {
+                while (1) {
+                    switch (_context7.prev = _context7.next) {
                         case 0:
                             getString = lib.interface.getString;
 
                             assert(_.isFunction(getString));
                             assert.equal(getString.function.toString(), declaration);
-                            _context5.next = 5;
+                            _context7.next = 5;
                             return getString();
 
                         case 5:
-                            string = _context5.sent;
+                            string = _context7.sent;
 
                             assert(_.isBuffer(string));
                             assert(_.isObject(string.type));
@@ -580,18 +716,18 @@ describe('Library', function () {
 
                         case 11:
                         case 'end':
-                            return _context5.stop();
+                            return _context7.stop();
                     }
                 }
-            }, _callee5, this);
+            }, _callee7, this);
         }));
 
         // void getNumbers(double** nums, size_t* size)
-        var testGetNumbersAsync = async(regeneratorRuntime.mark(function _callee6(declaration) {
+        var testGetNumbersAsync = async(regeneratorRuntime.mark(function _callee8(declaration) {
             var getNumbers, double, doublePtrType, doublePtrPtr, sizeTPtr, size, doublePtr, first;
-            return regeneratorRuntime.wrap(function _callee6$(_context6) {
+            return regeneratorRuntime.wrap(function _callee8$(_context8) {
                 while (1) {
-                    switch (_context6.prev = _context6.next) {
+                    switch (_context8.prev = _context8.next) {
                         case 0:
                             getNumbers = lib.interface.getNumbers;
 
@@ -602,7 +738,7 @@ describe('Library', function () {
                             doublePtrType = ref.refType(double);
                             doublePtrPtr = ref.alloc(doublePtrType);
                             sizeTPtr = ref.alloc('size_t');
-                            _context6.next = 9;
+                            _context8.next = 9;
                             return getNumbers(doublePtrPtr, sizeTPtr);
 
                         case 9:
@@ -622,17 +758,17 @@ describe('Library', function () {
 
                         case 19:
                         case 'end':
-                            return _context6.stop();
+                            return _context8.stop();
                     }
                 }
-            }, _callee6, this);
+            }, _callee8, this);
         }));
 
-        var testMakeIntAsync = async(regeneratorRuntime.mark(function _callee7(callbackDecl, funcDecl) {
+        var testMakeIntAsync = async(regeneratorRuntime.mark(function _callee9(callbackDecl, funcDecl) {
             var TMakeIntFunc, makeInt, predeclaredCallback, result;
-            return regeneratorRuntime.wrap(function _callee7$(_context7) {
+            return regeneratorRuntime.wrap(function _callee9$(_context9) {
                 while (1) {
-                    switch (_context7.prev = _context7.next) {
+                    switch (_context9.prev = _context9.next) {
                         case 0:
                             TMakeIntFunc = lib.interface.TMakeIntFunc;
 
@@ -648,20 +784,20 @@ describe('Library', function () {
                             predeclaredCallback = TMakeIntFunc(function (fv, dv) {
                                 return fv + dv;
                             });
-                            _context7.next = 10;
+                            _context9.next = 10;
                             return makeInt(1.1, 2.2, predeclaredCallback);
 
                         case 10:
-                            result = _context7.sent;
+                            result = _context9.sent;
 
                             assert.equal(result, Math.floor((1.1 + 2.2) * 2));
 
                         case 12:
                         case 'end':
-                            return _context7.stop();
+                            return _context9.stop();
                     }
                 }
-            }, _callee7, this);
+            }, _callee9, this);
         }));
     });
 

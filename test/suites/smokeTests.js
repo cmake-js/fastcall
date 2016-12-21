@@ -111,6 +111,16 @@ describe('Library', function () {
                 testWriteStringSync('void writeString(char* arg0)');
             });
 
+            it("should pass null in place of pointers", function () {
+                lib.function({ writeString: ['void', ['char*']] });
+                testPassNullSync('void writeString(char* arg0)');
+            });
+
+            it("should fail on non pointer argument in place of pointer", function () {
+                lib.function({ writeString: ['void', ['char*']] });
+                testPassNonPointerSync('void writeString(char* arg0)');
+            });
+
             it('should read natvie memory', function () {
                 lib.function({ getString: ['char*', []] });
                 testGetStringSync('char* getString()');
@@ -153,6 +163,16 @@ describe('Library', function () {
             it("should allow to write Node.js's string content in native code", function () {
                 lib.function('void writeString(char* )');
                 testWriteStringSync('void writeString(char* arg0)');
+            });
+
+            it("should pass null in place of pointers", function () {
+                lib.function('void writeString(char*ch)');
+                testPassNullSync('void writeString(char* ch)');
+            });
+
+            it("should fail on non pointer argument in place of pointer", function () {
+                lib.function('void writeString(char * ch )');
+                testPassNonPointerSync('void writeString(char* ch)');
             });
 
             it('should read natvie memory', function () {
@@ -228,6 +248,29 @@ describe('Library', function () {
             const string = ref.allocCString('          ');
             writeString(string);
             assert.equal(ref.readCString(string), 'hello');
+        }
+
+        function testPassNullSync(declaration) {
+            const writeString = lib.interface.writeString;
+            assert(_.isFunction(writeString));
+            assert(writeString.function);
+            assert.equal(writeString.function.toString(), declaration);
+            // should not crash:
+            writeString(null);
+            writeString(ref.NULL);
+        }
+
+        function testPassNonPointerSync(declaration) {
+            const writeString = lib.interface.writeString;
+            assert(_.isFunction(writeString));
+            assert(writeString.function);
+            assert.equal(writeString.function.toString(), declaration);
+            assert.throws(() => {
+                writeString(42);
+            });
+            assert.throws(() => {
+                writeString();
+            });
         }
 
         function testGetStringSync(declaration) {
@@ -316,6 +359,16 @@ describe('Library', function () {
                 return testWriteStringAsync('void writeString(char* arg0)');
             });
 
+            it("should pass null in place of pointers", function () {
+                lib.function({ writeString: ['void', ['char*']] });
+                return testPassNullAsync('void writeString(char* arg0)');
+            });
+
+            it("should fail on non pointer argument in place of pointer", function () {
+                lib.function({ writeString: ['void', ['char*']] });
+                return testPassNonPointerAsync('void writeString(char* arg0)');
+            });
+
             it('should read natvie memory', function () {
                 lib.function({ getString: ['char*', []] });
                 return testGetStringAsync('char* getString()');
@@ -358,6 +411,16 @@ describe('Library', function () {
             it("should allow to write Node.js's string content in native code", function () {
                 lib.function('void writeString(char* )');
                 return testWriteStringAsync('void writeString(char* arg0)');
+            });
+
+            it("should pass null in place of pointers", function () {
+                lib.function('void writeString(char*ch)');
+                return testPassNullAsync('void writeString(char* ch)');
+            });
+
+            it("should fail on non pointer argument in place of pointer", function () {
+                lib.function('void writeString(char * ch )');
+                return testPassNonPointerAsync('void writeString(char* ch)');
             });
 
             it('should read natvie memory', function () {
@@ -431,6 +494,35 @@ describe('Library', function () {
             const string = ref.allocCString('          ');
             yield writeString(string);
             assert.equal(ref.readCString(string), 'hello');
+        });
+
+        var testPassNullAsync = async(function* (declaration) {
+            const writeString = lib.interface.writeString;
+            assert(_.isFunction(writeString));
+            assert(writeString.function);
+            assert.equal(writeString.function.toString(), declaration);
+            // should not crash:
+            yield writeString(null);
+            yield writeString(ref.NULL);
+        });
+
+        var testPassNonPointerAsync = async(function* (declaration) {
+            const writeString = lib.interface.writeString;
+            assert(_.isFunction(writeString));
+            assert(writeString.function);
+            assert.equal(writeString.function.toString(), declaration);
+            try {
+                yield writeString(42);
+                assert(false);
+            }
+            catch (err) {
+            }
+            try {
+                yield writeString();
+                assert(false);
+            }
+            catch (err) {
+            }
         });
 
         var testGetStringAsync = async(function* (declaration) {

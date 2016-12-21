@@ -42,7 +42,7 @@ var Tester = function (_Disposable) {
     return Tester;
 }(Disposable);
 
-describe.only('RAII scope', function () {
+describe('RAII scope', function () {
     before(function () {
         assert(global.gc, 'GC is not enabled.');
     });
