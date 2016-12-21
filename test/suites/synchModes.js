@@ -65,7 +65,7 @@ describe(`Synchronization Modes`, function () {
             it('should create and use a mutex', function () {
                 lib.syncFunction('int mul(int value, int by)');
                 assert.equal(lib.interface.mul(21, 2), 42);
-                assert.strictEqual(lockCounter, 0);         
+                assert.strictEqual(lockCounter, 0);
             });
         });
 
@@ -73,7 +73,7 @@ describe(`Synchronization Modes`, function () {
             it('should create and use a mutex', async(function* () {
                 lib.asyncFunction('int mul(int value, int by)');
                 assert.equal(yield lib.interface.mul(21, 2), 42);
-                assert.strictEqual(lockCounter, 0);         
+                assert.strictEqual(lockCounter, 0);
             }));
         });
     });
@@ -104,7 +104,7 @@ describe(`Synchronization Modes`, function () {
                 for (let i = 0; i < 100; i++) {
                     promises.push(asyncMul(21, 2));
                 }
-                
+
                 try {
                     syncMul(21, 2);
                     assert(false, 'unreachable');

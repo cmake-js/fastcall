@@ -39,7 +39,7 @@ var Disposable = function () {
     _createClass(Disposable, [{
         key: 'dispose',
         value: function dispose() {
-            doDispose(this);
+            return doDispose(this);
         }
     }, {
         key: 'resetDisposable',
@@ -62,7 +62,7 @@ function LegacyDisposable(disposeFunction, approxExternalMemoryUse) {
 }
 
 LegacyDisposable.prototype.dispose = function () {
-    doDispose(this);
+    return doDispose(this);
 };
 
 LegacyDisposable.prototype.resetDisposable = function (disposeFunction, approxExternalMemoryUse) {
@@ -80,13 +80,15 @@ function watch(obj, disposeFunction) {
         if (disposed) {
             return;
         }
+        var result = void 0;
         if (disposeFunction) {
-            disposeFunction();
+            result = disposeFunction();
             if (approxExternalMemoryUse > 0) {
                 weak.adjustExternalMemory(-approxExternalMemoryUse);
             }
         }
         disposed = true;
+        return result;
     };
     weak.watch(obj, weakCallback);
     if (disposeFunction && approxExternalMemoryUse > 0) {
@@ -103,10 +105,12 @@ function doDispose(obj) {
     if (obj._disposed) {
         return;
     }
+    var result = void 0;
     if (obj._dispose) {
-        obj._dispose();
+        result = obj._dispose();
     }
     obj._disposed = true;
+    return result;
 }
 
 module.exports = scope.Disposable = Disposable;

@@ -76,7 +76,7 @@ describe(`ref types`, function () {
         });
 
         describe('sync', function () {
-           it('should get referenced by string syntax', function () {
+            it('should get referenced by string syntax', function () {
                 lib.struct({
                     TNumbers: {
                         a: 'short',
@@ -95,14 +95,14 @@ describe(`ref types`, function () {
                     b: 'int64',
                     c: ref.types.long
                 });
-                lib.function({ mulStructMembers: ['int64', [ ref.refType(TNumbers) ]] });
+                lib.function({ mulStructMembers: ['int64', [ref.refType(TNumbers)]] });
 
                 testMulStructMembersSync(true);
             });
         });
 
         describe('async', function () {
-           it('should get referenced by string syntax', async(function* () {
+            it('should get referenced by string syntax', async(function* () {
                 lib.struct({
                     TNumbers: {
                         a: 'short',
@@ -121,7 +121,7 @@ describe(`ref types`, function () {
                     b: 'int64',
                     c: ref.types.long
                 });
-                lib.asyncFunction({ mulStructMembers: ['int64', [ ref.refType(TNumbers) ]] });
+                lib.asyncFunction({ mulStructMembers: ['int64', [ref.refType(TNumbers)]] });
 
                 yield testMulStructMembersAsync(true);
             }));
@@ -241,7 +241,7 @@ describe(`ref types`, function () {
         });
 
         describe('sync', function () {
-           it('should get referenced by string syntax', function () {
+            it('should get referenced by string syntax', function () {
                 lib.union({
                     TUnion: {
                         a: 'short',
@@ -262,16 +262,16 @@ describe(`ref types`, function () {
                     b: 'int64',
                     c: ref.types.long
                 });
-                lib.function({ getAFromUnion: ['int64', [ ref.refType(TUnion) ]] })
-                .function({ getBFromUnion: ['int64', [ ref.refType(TUnion) ]] })
-                .function({ getCFromUnion: ['int64', [ ref.refType(TUnion) ]] });
+                lib.function({ getAFromUnion: ['int64', [ref.refType(TUnion)]] })
+                .function({ getBFromUnion: ['int64', [ref.refType(TUnion)]] })
+                .function({ getCFromUnion: ['int64', [ref.refType(TUnion)]] });
 
                 testAccessUnionMembersSync(true);
             });
         });
 
         describe('async', function () {
-           it('should get referenced by string syntax', async(function* () {
+            it('should get referenced by string syntax', async(function* () {
                 lib.union({
                     TUnion: {
                         a: 'short',
@@ -292,9 +292,9 @@ describe(`ref types`, function () {
                     b: 'int64',
                     c: ref.types.long
                 });
-                lib.asyncFunction({ getAFromUnion: ['int64', [ ref.refType(TUnion) ]] })
-                .asyncFunction({ getBFromUnion: ['int64', [ ref.refType(TUnion) ]] })
-                .asyncFunction({ getCFromUnion: ['int64', [ ref.refType(TUnion) ]] });
+                lib.asyncFunction({ getAFromUnion: ['int64', [ref.refType(TUnion)]] })
+                .asyncFunction({ getBFromUnion: ['int64', [ref.refType(TUnion)]] })
+                .asyncFunction({ getCFromUnion: ['int64', [ref.refType(TUnion)]] });
 
                 yield testAccessUnionMembersAsync(true);
             }));
@@ -404,7 +404,7 @@ describe(`ref types`, function () {
                 const TLongArray = new ArrayType(ref.types.long);
                 const TRecWithArray = new StructType({
                     values: new ArrayType(ref.types.long, 5),
-                    index: 'uint',
+                    index: 'uint'
                 });
                 const result = lib.array({ TLongArray }).struct({ TRecWithArray });
 
@@ -467,7 +467,7 @@ describe(`ref types`, function () {
                     const TLongArray = new ArrayType(ref.types.long);
                     const TRecWithArray = new StructType({
                         values: TLongArray,
-                        index: 'uint',
+                        index: 'uint'
                     });
                     const result = lib.array({ TLongArray }).struct({ TRecWithArray });
 
@@ -487,7 +487,7 @@ describe(`ref types`, function () {
         });
 
         describe('sync', function () {
-           it('should get referenced by string syntax', function () {
+            it('should get referenced by string syntax', function () {
                 lib
                 .array('long[] TLongArray')
                 .struct('struct TRecWithArray { TLongArray[5] values; uint index; }')
@@ -502,21 +502,21 @@ describe(`ref types`, function () {
             it('should get referenced by node-ffi-like syntax', function () {
                 const TRecWithArray = new StructType({
                     values: new ArrayType(ref.types.long, 5),
-                    index: 'uint',
+                    index: 'uint'
                 });
                 const TRecWithArrays = new ArrayType(TRecWithArray);
-                
+
                 lib
-                .function({ makeRecWithArrays: [ 'void', [ ref.refType(TRecWithArrays), ref.refType('long') ]] })
-                .function({ incRecWithArrays: [ 'void', [ TRecWithArrays, 'long' ]] })
-                .function({ freeRecWithArrays: [ 'void', [ TRecWithArrays ]] });
+                .function({ makeRecWithArrays: ['void', [ref.refType(TRecWithArrays), ref.refType('long')]] })
+                .function({ incRecWithArrays: ['void', [TRecWithArrays, 'long']] })
+                .function({ freeRecWithArrays: ['void', [TRecWithArrays]] });
 
                 testArrayFuncsSync(TRecWithArray, TRecWithArrays);
             });
         });
 
         describe('async', function () {
-           it('should get referenced by string syntax', async(function* () {
+            it('should get referenced by string syntax', async(function* () {
                 lib
                 .array('long[] TLongArray')
                 .struct('struct TRecWithArray { TLongArray[5] values; uint index; }')
@@ -531,14 +531,14 @@ describe(`ref types`, function () {
             it('should get referenced by node-ffi-like syntax', async(function* () {
                 const TRecWithArray = new StructType({
                     values: new ArrayType(ref.types.long, 5),
-                    index: 'uint',
+                    index: 'uint'
                 });
                 const TRecWithArrays = new ArrayType(TRecWithArray);
-                
+
                 lib
-                .function({ makeRecWithArrays: [ 'void', [ ref.refType(TRecWithArrays), ref.refType('long') ]] })
-                .function({ incRecWithArrays: [ 'void', [ TRecWithArrays, 'long' ]] })
-                .function({ freeRecWithArrays: [ 'void', [ ref.refType(TRecWithArray) ]] });
+                .function({ makeRecWithArrays: ['void', [ref.refType(TRecWithArrays), ref.refType('long')]] })
+                .function({ incRecWithArrays: ['void', [TRecWithArrays, 'long']] })
+                .function({ freeRecWithArrays: ['void', [ref.refType(TRecWithArray)]] });
 
                 yield testArrayFuncsAsync(TRecWithArray, TRecWithArrays);
             }));
@@ -590,13 +590,13 @@ describe(`ref types`, function () {
             assert(_.isFunction(TRecWithArray));
             TRecWithArrays = TRecWithArrays || lib.arrays.TRecWithArrays.type;
             assert(_.isFunction(TRecWithArrays));
-            assert(_.isFunction(lib.interface.makeRecWithArrays))
+            assert(_.isFunction(lib.interface.makeRecWithArrays));
             assert(_.isFunction(lib.interface.incRecWithArrays));
             assert(_.isFunction(lib.interface.freeRecWithArrays));
-            
+
             const resultRef = ref.alloc(TRecWithArrays);
             const sizeRef = ref.alloc('long');
-            
+
             lib.interface.makeRecWithArrays(resultRef, sizeRef);
             const size = sizeRef.deref();
             assert.equal(size, 5);
@@ -620,7 +620,7 @@ describe(`ref types`, function () {
             assert(_.isFunction(TRecWithArray));
             TRecWithArrays = TRecWithArrays || lib.arrays.TRecWithArrays.type;
             assert(_.isFunction(TRecWithArrays));
-            assert(_.isFunction(lib.interface.makeRecWithArrays))
+            assert(_.isFunction(lib.interface.makeRecWithArrays));
             assert(_.isFunction(lib.interface.incRecWithArrays));
             assert(_.isFunction(lib.interface.freeRecWithArrays));
 

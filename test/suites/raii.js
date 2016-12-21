@@ -26,11 +26,7 @@ const Disposable = fastcall.Disposable;
 class Tester extends Disposable {
 }
 
-function doAsync(f) {
-    return async(f)();
-}
-
-describe('RAII scope', function () {
+describe.only('RAII scope', function () {
     before(function () {
         assert(global.gc, 'GC is not enabled.');
     });
@@ -111,26 +107,57 @@ describe('RAII scope', function () {
             });
             assert(disposed);
         });
-    });
 
-    describe('async', function () {
-        it('should propagate value to parent scope', function () {
-            return doAsync(function* () {
-                let disposed = false;
-                const dispose = () => disposed = true;
-                yield scope.async(function* () {
-                    yield scope.async(function* () {
+        it('should throw when disposeFunction is asynchronous', function () {
+            let disposed = false;
+            const dispose = () => Promise.delay(1).then(() => disposed = true);
+            assert.throws(() => {
+                scope(() => {
+                    scope(() => {
                         assert(!disposed);
                         const value = new Tester(dispose);
                         assert(!disposed);
-                        yield Promise.delay(1);
-                        return value;
+                        return [{ value }, { value }];
                     });
                     assert(!disposed);
                 });
-                assert(disposed);
             });
         });
+    });
+
+    describe('async', function () {
+        it('should propagate value to parent scope', async(function* () {
+            let disposed = false;
+            const dispose = () => disposed = true;
+            yield scope.async(function* () {
+                yield scope.async(function* () {
+                    assert(!disposed);
+                    const value = new Tester(dispose);
+                    assert(!disposed);
+                    yield Promise.delay(1);
+                    return value;
+                });
+                assert(!disposed);
+            });
+            assert(disposed);
+        }));
+
+        it('should support asynchronous dispose function', async(function* () {
+            let counter = 0;
+            const dispose = () => Promise.delay(10).then(() => counter++);
+            yield scope.async(function* () {
+                yield scope.async(function* () {
+                    assert(!counter);
+                    const value1 = new Tester(dispose);
+                    const value2 = new Tester(dispose);
+                    assert(!counter);
+                    yield Promise.delay(1);
+                    return value1;
+                });
+                assert.equal(counter, 1);
+            });
+            assert.equal(counter, 2);
+        }));
     });
 
     describe('dispose', function () {

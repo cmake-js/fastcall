@@ -36,20 +36,32 @@ function scope(body) {
             if (_.isFunction(result.then)) {
                 return result.then(function (asyncResult) {
                     escape(asyncResult, true);
-                    end();
-                    return asyncResult;
+                    return Promise.try(end).then(function () {
+                        return asyncResult;
+                    });
                 }, function (asyncError) {
-                    end();
-                    throw asyncError;
+                    return Promise.try(end).then(function () {
+                        throw asyncError;
+                    });
                 });
             }
             escape(result, true);
         }
-        end();
+        var endSyncResult = end();
+        verifyEndSyncResult(endSyncResult);
         return result;
     } catch (err) {
         end();
         throw err;
+    }
+
+    function verifyEndSyncResult(endSyncResult) {
+        if (endSyncResult) {
+            if (_.isFunction(endSyncResult.then)) {
+                throw new Error('disposeFunction should be synchronous in a synchronous scope.');
+            }
+            throw new Error('disposeFunction should not return anything in a synchronous scope.');
+        }
     }
 }
 
@@ -77,6 +89,7 @@ function begin() {
 
 function end() {
     var last = layers.pop();
+    var promises = null;
     if (last) {
         var _iteratorNormalCompletion = true;
         var _didIteratorError = false;
@@ -86,7 +99,13 @@ function end() {
             for (var _iterator = last.values()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
                 var disposable = _step.value;
 
-                disposable.dispose();
+                var result = disposable.dispose();
+                if (result && _.isFunction(result.then)) {
+                    if (!promises) {
+                        promises = [];
+                    }
+                    promises.push(Promise.resolve(result));
+                }
             }
         } catch (err) {
             _didIteratorError = true;
@@ -103,6 +122,10 @@ function end() {
             }
         }
     }
+    if (promises) {
+        return Promise.all(promises);
+    }
+    return null;
 }
 
 function add(disposable, layer) {

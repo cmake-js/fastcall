@@ -54,8 +54,8 @@ var MultilineParser = function () {
                 for (var _iterator = splitter.split(str)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
                     var part = _step.value;
 
-                    var match = void 0;
-                    if (match = rex.matchFunction(part)) {
+                    var match = rex.matchFunction(part);
+                    if (match) {
                         if (match.isCallback) {
                             lib.callback(part);
                         } else if (callMode === defs.callMode.sync) {
