@@ -707,9 +707,9 @@ class Disposable {
 }
 ```
 
-- `disposeFunction`: could be null or a function. If null, then `Disposable` doesn't dispose anything. If a function, then it should release your object's native resources. Please note that this function has no parameters, and only allowed to capture native handles from the source object, not a reference of the source itself because that would prevent garbage collection! More on this later, please keep reading!
+- `disposeFunction`: could be null or a function. If null, then `Disposable` doesn't dispose anything. If a function, then it should release your object's native resources. **It could be asynchronous**, and should return a Promise on that case (any *thenable* object will do). Please note that this function has no parameters, and only allowed to capture native handles from the source object, not a reference of the source itself because that would prevent garbage collection! More on this later, please keep reading!
 - `aproxAllocatedMemory`: in bytes. You could inform Node.js' GC about your object's native memory usage (calls [Nan::AdjustExternalMemory()](https://github.com/nodejs/nan/blob/master/doc/v8_internals.md#api_nan_adjust_external_memory)). Will get considered only if it's a positive number.
-- `dispose()`: will invoke `disposeFunction` manually (for the mentioned try ... catch use cases). Subsequent calls does nothing. You can override this method for implementing custom disposing logic, just don't forget to call its prototype's dispose() if you passed a `disposeFunction` to `super`.
+- `dispose()`: will invoke `disposeFunction` manually (for the mentioned try ... catch use cases). Subsequent calls does nothing. You can override this method for implementing custom disposing logic, just don't forget to call its prototype's `dispose()` if you passed a `disposeFunction` to `super`. If `disposeFunction` is asynchronous then `dipsose()` should be asynchronous too by returning a Promise (or any *thenable* object).
 - `resetDisposable(...)`: reinitializes the dispose function and the allocated memory of the given `Disposable`. You should call this, when the underlying handle changed. *WARNING*: the original `disposeFunction` is not called implicitly by this method. You can rely on garbage collector to clean it up, or you can call `dispose()` explicitly prior calling of this method.
 
 Example:
