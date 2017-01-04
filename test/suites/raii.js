@@ -47,6 +47,34 @@ describe('RAII scope', function () {
             assert(disposed);
         });
 
+        it.only('should dispose explicitly', function () {
+            let disposed1 = 0;
+            const dispose1 = () => disposed1++;
+            let disposed2 = 0;
+            const dispose2 = () => disposed2++;
+            scope(() => {
+                const value = scope(() => {
+                    assert(!disposed1);
+                    assert(!disposed2);
+                    const value = new Tester(dispose1);
+                    assert(!disposed1);
+                    assert(!disposed2);
+                    return value;
+                });
+                assert(!disposed1);
+                assert(!disposed2);
+                value.dispose();
+                assert.equal(disposed1, 1);
+                assert(!disposed2);
+                value.resetDisposable(dispose2);
+                value.dispose();
+                assert.equal(disposed1, 1);
+                assert.equal(disposed2, 1);
+            });
+            assert.equal(disposed1, 1);
+            assert.equal(disposed2, 1);
+        });
+
         it('should detach value at root scope', function () {
             let disposed = false;
             const dispose = () => disposed = true;
