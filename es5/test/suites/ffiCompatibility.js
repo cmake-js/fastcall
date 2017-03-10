@@ -186,25 +186,23 @@ describe('ffi compatibility', function () {
                 });
 
                 try {
-                    (function () {
-                        var v = 0.1;
-                        var cb = new Callback('int', [ref.types.float, 'double'], function (float, double) {
-                            return float + double + v;
-                        });
+                    var v = 0.1;
+                    var cb = new Callback('int', [ref.types.float, 'double'], function (float, double) {
+                        return float + double + v;
+                    });
 
-                        var cb2 = cbFunc.toPointer(function (float, double) {
-                            return float + double + v;
-                        });
+                    var cb2 = cbFunc.toPointer(function (float, double) {
+                        return float + double + v;
+                    });
 
-                        assert(_.isFunction(lib.makeInt));
-                        assert(_.isFunction(lib.makeInt.async));
-                        assert(_.isFunction(lib.makeInt.asyncPromise));
-                        assert.deepEqual(_.keys(lib._library.callbacks), []);
-                        assert.equal(lib.makeInt(19.9, 2, cb), 42);
-                        v += 0.1;
-                        assert.equal(lib.makeInt(19.9, 2, cb2), 44);
-                        assert.deepEqual(_.keys(lib._library.callbacks), ['FFICallback0', 'FFICallback1']);
-                    })();
+                    assert(_.isFunction(lib.makeInt));
+                    assert(_.isFunction(lib.makeInt.async));
+                    assert(_.isFunction(lib.makeInt.asyncPromise));
+                    assert.deepEqual(_.keys(lib._library.callbacks), []);
+                    assert.equal(lib.makeInt(19.9, 2, cb), 42);
+                    v += 0.1;
+                    assert.equal(lib.makeInt(19.9, 2, cb2), 44);
+                    assert.deepEqual(_.keys(lib._library.callbacks), ['FFICallback0', 'FFICallback1']);
                 } finally {
                     lib.release();
                 }

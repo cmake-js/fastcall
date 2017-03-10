@@ -16,8 +16,6 @@ limitations under the License.
 
 'use strict';
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -106,24 +104,16 @@ var FastCallback = function (_FunctionDefinition) {
     }, {
         key: '_makeExecuteMethod',
         value: function _makeExecuteMethod() {
-            var _this3 = this;
-
             var processArgsFunc = this._makeProcessArgsFunc();
             var resultTypeCode = this.resultType.code;
             var callArgs = new Array(this.args.length);
             if (resultTypeCode !== 'v') {
-                var _ret = function () {
-                    var setResultFunc = _this3._findSetResultFunc();
-                    return {
-                        v: function v(argsPtr, resultPtr, func) {
-                            processArgsFunc(argsPtr, callArgs);
-                            var result = func.apply(undefined, callArgs);
-                            setResultFunc(resultPtr, result);
-                        }
-                    };
-                }();
-
-                if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+                var setResultFunc = this._findSetResultFunc();
+                return function (argsPtr, resultPtr, func) {
+                    processArgsFunc(argsPtr, callArgs);
+                    var result = func.apply(undefined, callArgs);
+                    setResultFunc(resultPtr, result);
+                };
             }
             return function (argsPtr, resultPtr, func) {
                 processArgsFunc(argsPtr, callArgs);
@@ -133,10 +123,10 @@ var FastCallback = function (_FunctionDefinition) {
     }, {
         key: '_makeProcessArgsFunc',
         value: function _makeProcessArgsFunc() {
-            var _this4 = this;
+            var _this3 = this;
 
             var processArgFuncs = this.args.map(function (arg) {
-                return _this4._findProcessArgFunc(arg.type);
+                return _this3._findProcessArgFunc(arg.type);
             });
             var funcArgs = ['argsPtr', 'callArgs'];
             var funcBody = '';

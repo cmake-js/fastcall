@@ -1,3 +1,7 @@
+# v0.2.4 (2017-03-10)
+
+- fixed: https://github.com/cmake-js/fastcall/issues/15
+
 # v0.2.3 (2016-12-22)
 
 - support for asynchronous `dispose()` method of `Disposabe`

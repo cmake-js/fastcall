@@ -47,7 +47,7 @@ describe('RAII scope', function () {
             assert(disposed);
         });
 
-        it.only('should dispose explicitly', function () {
+        it('should dispose explicitly', function () {
             let disposed1 = 0;
             const dispose1 = () => disposed1++;
             let disposed2 = 0;

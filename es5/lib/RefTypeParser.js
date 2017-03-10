@@ -90,7 +90,7 @@ var RefTypeParser = function () {
                 parsed = this._parseFields(def, typeHint);
             }
 
-            var _makeType2 = this._makeType(factoryType, parsed.defBody),
+            var _makeType2 = this._makeType(factoryType, parsed.defBody, parsed.length),
                 type = _makeType2.type,
                 body = _makeType2.body;
 
@@ -109,7 +109,12 @@ var RefTypeParser = function () {
             } else if (_.isString(body)) {
                 body = this.parser._resolveStringType(body);
             }
-            return { type: new factoryType(body), body: body };
+
+            for (var _len = arguments.length, args = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+                args[_key - 2] = arguments[_key];
+            }
+
+            return { type: new (Function.prototype.bind.apply(factoryType, [null].concat([body], args)))(), body: body };
         }
     }, {
         key: '_parseFields',

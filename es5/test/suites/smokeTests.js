@@ -505,47 +505,48 @@ describe('Library', function () {
                             _context2.t6.equal.call(_context2.t6, _context2.t7, 20);
 
                             _context2.t8 = assert;
-                            _context2.next = 37;
+                            _context2.t9 = mul;
+                            _context2.next = 38;
                             return mul(4, 4);
 
-                        case 37:
-                            _context2.t9 = _context2.sent;
-                            _context2.next = 40;
-                            return mul(_context2.t9, 2);
-
-                        case 40:
+                        case 38:
                             _context2.t10 = _context2.sent;
+                            _context2.next = 41;
+                            return (0, _context2.t9)(_context2.t10, 2);
 
-                            _context2.t8.equal.call(_context2.t8, _context2.t10, 32);
+                        case 41:
+                            _context2.t11 = _context2.sent;
 
-                            _context2.t11 = assert;
-                            _context2.next = 45;
+                            _context2.t8.equal.call(_context2.t8, _context2.t11, 32);
+
+                            _context2.t12 = assert;
+                            _context2.next = 46;
                             return mul(10);
 
-                        case 45:
-                            _context2.t12 = _context2.sent;
+                        case 46:
+                            _context2.t13 = _context2.sent;
 
-                            _context2.t11.equal.call(_context2.t11, _context2.t12, 0);
+                            _context2.t12.equal.call(_context2.t12, _context2.t13, 0);
 
-                            _context2.t13 = assert;
-                            _context2.next = 50;
+                            _context2.t14 = assert;
+                            _context2.next = 51;
                             return mul();
 
-                        case 50:
-                            _context2.t14 = _context2.sent;
+                        case 51:
+                            _context2.t15 = _context2.sent;
 
-                            _context2.t13.equal.call(_context2.t13, _context2.t14, 0);
+                            _context2.t14.equal.call(_context2.t14, _context2.t15, 0);
 
-                            _context2.t15 = assert;
-                            _context2.next = 55;
+                            _context2.t16 = assert;
+                            _context2.next = 56;
                             return mul("a", "b");
 
-                        case 55:
-                            _context2.t16 = _context2.sent;
+                        case 56:
+                            _context2.t17 = _context2.sent;
 
-                            _context2.t15.equal.call(_context2.t15, _context2.t16, 0);
+                            _context2.t16.equal.call(_context2.t16, _context2.t17, 0);
 
-                        case 57:
+                        case 58:
                         case 'end':
                             return _context2.stop();
                     }

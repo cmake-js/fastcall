@@ -76,15 +76,16 @@ exports.matchFields = function (keyword, str) {
     return null;
 };
 
-var ARRAY_DECL = /^\s*([\w_][\w\d_]*[\s\*]*)\s*\[\s*\]\s*([\w_][\w\d_]*)\s*$/;
+var ARRAY_DECL = /^\s*([\w_][\w\d_]*[\s\*]*)\s*\[\s*(\d*)\s*\]\s*([\w_][\w\d_]*)\s*$/;
 
 exports.matchArrayDeclaration = function (str) {
     a && ert(_.isString(str));
 
     var match = ARRAY_DECL.exec(str);
-    if (match && match.length === 3) {
+    if (match && match.length === 4) {
         return {
-            name: match[2],
+            name: match[3],
+            length: Number(match[2]),
             defBody: match[1]
         };
     }

@@ -545,11 +545,20 @@ describe('ref types', function () {
                 testArrayInterface(true);
             });
 
-            it('should supports C union like syntax', function () {
-                var result = lib.array('long[] TLongArray').struct('struct TRecWithArray { TLongArray[5] values; uint index; }');
+            describe('with C like syntax', function () {
+                it('should work for a simple declaration (https://github.com/cmake-js/fastcall/issues/15)', function () {
+                    var result = lib.array('int[4] IntArray4');
 
-                assert.equal(result, lib);
-                testArrayInterface(true);
+                    assert(_.isFunction(lib.arrays.IntArray4.type));
+                    assert.equal(lib.arrays.IntArray4.type.fixedLength, 4);
+                });
+
+                it('should support length definition in actual use', function () {
+                    var result = lib.array('long[] TLongArray').struct('struct TRecWithArray { TLongArray[5] values; uint index; }');
+
+                    assert.equal(result, lib);
+                    testArrayInterface(true);
+                });
             });
         });
 

@@ -16,8 +16,6 @@ limitations under the License.
 
 'use strict';
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -281,39 +279,37 @@ var FastFunction = function (_FunctionDefinition) {
                         var setter = _step2.value;
 
                         if (refHelpers.isPointerType(setter.type)) {
-                            (function () {
-                                var specPtrDef = setter.type.callback || setter.type.struct || setter.type.union || setter.type.array;
-                                if (specPtrDef) {
-                                    _this5['argSetter' + i++] = function (value, ptrs) {
-                                        var ptr = specPtrDef.makePtr(value);
-                                        ptrs.push(ptr);
-                                        setter.func(ptr);
-                                    };
-                                } else if (refHelpers.isArrayType(setter.type)) {
-                                    _this5['argSetter' + i++] = function (value, ptrs) {
-                                        var ptr = FastFunction._makeArrayPtr(value);
-                                        ptrs.push(ptr);
-                                        setter.func(ptr);
-                                    };
-                                } else if (refHelpers.isFunctionType(setter.type)) {
-                                    _this5['argSetter' + i++] = function (value, ptrs) {
-                                        var ptr = fn._makeCallbackPtr(value);
-                                        ptrs.push(ptr);
-                                        setter.func(ptr);
-                                    };
-                                } else if (refHelpers.isStringType(setter.type)) {
-                                    _this5['argSetter' + i++] = function (value, ptrs) {
-                                        var ptr = fn._makeStringPtr(value);
-                                        ptrs.push(ptr);
-                                        setter.func(ptr);
-                                    };
-                                } else {
-                                    _this5['argSetter' + i++] = function (value, ptrs) {
-                                        ptrs.push(value);
-                                        setter.func(value);
-                                    };
-                                }
-                            })();
+                            var _specPtrDef = setter.type.callback || setter.type.struct || setter.type.union || setter.type.array;
+                            if (_specPtrDef) {
+                                _this5['argSetter' + i++] = function (value, ptrs) {
+                                    var ptr = _specPtrDef.makePtr(value);
+                                    ptrs.push(ptr);
+                                    setter.func(ptr);
+                                };
+                            } else if (refHelpers.isArrayType(setter.type)) {
+                                _this5['argSetter' + i++] = function (value, ptrs) {
+                                    var ptr = FastFunction._makeArrayPtr(value);
+                                    ptrs.push(ptr);
+                                    setter.func(ptr);
+                                };
+                            } else if (refHelpers.isFunctionType(setter.type)) {
+                                _this5['argSetter' + i++] = function (value, ptrs) {
+                                    var ptr = fn._makeCallbackPtr(value);
+                                    ptrs.push(ptr);
+                                    setter.func(ptr);
+                                };
+                            } else if (refHelpers.isStringType(setter.type)) {
+                                _this5['argSetter' + i++] = function (value, ptrs) {
+                                    var ptr = fn._makeStringPtr(value);
+                                    ptrs.push(ptr);
+                                    setter.func(ptr);
+                                };
+                            } else {
+                                _this5['argSetter' + i++] = function (value, ptrs) {
+                                    ptrs.push(value);
+                                    setter.func(value);
+                                };
+                            }
                         } else {
                             _this5['argSetter' + i++] = setter.func;
                         }
@@ -406,22 +402,16 @@ var FastFunction = function (_FunctionDefinition) {
 
             if (async) {
                 if (isPtr) {
-                    var _ret4 = function () {
-                        var resultDerefType = ref.derefType(_this6.resultType);
-                        return {
-                            v: function v(vm, callback) {
-                                func(vm, _this6._ptr, function (err, result) {
-                                    if (err) {
-                                        return callback(err);
-                                    }
-                                    result.type = resultDerefType;
-                                    callback(null, result);
-                                });
+                    var resultDerefType = ref.derefType(this.resultType);
+                    return function (vm, callback) {
+                        func(vm, _this6._ptr, function (err, result) {
+                            if (err) {
+                                return callback(err);
                             }
-                        };
-                    }();
-
-                    if ((typeof _ret4 === 'undefined' ? 'undefined' : _typeof(_ret4)) === "object") return _ret4.v;
+                            result.type = resultDerefType;
+                            callback(null, result);
+                        });
+                    };
                 }
 
                 return function (vm, callback) {
@@ -430,18 +420,12 @@ var FastFunction = function (_FunctionDefinition) {
             }
 
             if (isPtr) {
-                var _ret5 = function () {
-                    var resultDerefType = ref.derefType(_this6.resultType);
-                    return {
-                        v: function v() {
-                            var result = func(_this6._ptr);
-                            result.type = resultDerefType;
-                            return result;
-                        }
-                    };
-                }();
-
-                if ((typeof _ret5 === 'undefined' ? 'undefined' : _typeof(_ret5)) === "object") return _ret5.v;
+                var _resultDerefType = ref.derefType(this.resultType);
+                return function () {
+                    var result = func(_this6._ptr);
+                    result.type = _resultDerefType;
+                    return result;
+                };
             }
 
             return function () {

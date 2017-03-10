@@ -94,23 +94,24 @@ var asyncRun = async(regeneratorRuntime.mark(function _callee5(module) {
                             while (1) {
                                 switch (_context2.prev = _context2.next) {
                                     case 0:
-                                        _context2.next = 2;
+                                        _context2.t0 = addNumbersAsync;
+                                        _context2.next = 3;
                                         return addNumbersAsync(5.5, 5);
 
-                                    case 2:
-                                        _context2.t0 = _context2.sent;
-                                        _context2.next = 5;
+                                    case 3:
+                                        _context2.t1 = _context2.sent;
+                                        _context2.next = 6;
                                         return addNumbersAsync(1.1, 1);
 
-                                    case 5:
-                                        _context2.t1 = _context2.sent;
-                                        _context2.next = 8;
-                                        return addNumbersAsync(_context2.t0, _context2.t1);
-
-                                    case 8:
-                                        result = _context2.sent;
+                                    case 6:
+                                        _context2.t2 = _context2.sent;
+                                        _context2.next = 9;
+                                        return (0, _context2.t0)(_context2.t1, _context2.t2);
 
                                     case 9:
+                                        result = _context2.sent;
+
+                                    case 10:
                                     case 'end':
                                         return _context2.stop();
                                 }
@@ -156,24 +157,25 @@ var asyncRun = async(regeneratorRuntime.mark(function _callee5(module) {
                             while (1) {
                                 switch (_context4.prev = _context4.next) {
                                     case 0:
-                                        _context4.next = 2;
+                                        _context4.t0 = makeIntAsync;
+                                        _context4.next = 3;
                                         return makeIntAsync(5.5, 5.1, cb);
 
-                                    case 2:
-                                        _context4.t0 = _context4.sent;
-                                        _context4.next = 5;
+                                    case 3:
+                                        _context4.t1 = _context4.sent;
+                                        _context4.next = 6;
                                         return makeIntAsync(1.1, 1.8, cb);
 
-                                    case 5:
-                                        _context4.t1 = _context4.sent;
-                                        _context4.t2 = cb;
-                                        _context4.next = 9;
-                                        return makeIntAsync(_context4.t0, _context4.t1, _context4.t2);
-
-                                    case 9:
-                                        result = _context4.sent;
+                                    case 6:
+                                        _context4.t2 = _context4.sent;
+                                        _context4.t3 = cb;
+                                        _context4.next = 10;
+                                        return (0, _context4.t0)(_context4.t1, _context4.t2, _context4.t3);
 
                                     case 10:
+                                        result = _context4.sent;
+
+                                    case 11:
                                     case 'end':
                                         return _context4.stop();
                                 }
