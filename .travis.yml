@@ -1,0 +1,18 @@
+os:
+  - linux
+language: node_js
+node_js:
+  - '6'
+  - '4'
+env:
+  - CXX=g++-4.8
+install:
+  - npm install
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+    - g++-4.8
+script:
+  - npm test
