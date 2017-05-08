@@ -12,7 +12,10 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+      - george-edison55-precise-backports
     packages:
     - g++-4.8
+    - cmake
+    - cmake-data
 script:
   - npm test
