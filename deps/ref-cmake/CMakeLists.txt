@@ -22,5 +22,4 @@ set_target_properties(
   ref
   PROPERTIES
   PREFIX "" 
-  SUFFIX ".node"
-  POSITION_INDEPENDENT_CODE ON)
+  SUFFIX ".node")
