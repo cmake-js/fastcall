@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/cmake-js/fastcall.svg?branch=master)](https://travis-ci.org/cmake-js/fastcall)
+
 # TOC
 
 <!-- TOC -->
