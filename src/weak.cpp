@@ -16,6 +16,11 @@ struct WatchStuff {
         persistentObj.SetWeak<WatchStuff>(this, WeakCallback, Nan::WeakCallbackType::kParameter);
     }
 
+    ~WatchStuff()
+    {
+        callback.Reset();
+    }
+
     Nan::Persistent<Object> persistentObj;
     Nan::Persistent<Function> callback;
 
