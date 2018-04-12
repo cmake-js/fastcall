@@ -23,7 +23,7 @@ var imports = require('./imports');
 var config = require('./config');
 var common = require('./common');
 
-module.exports = async(regeneratorRuntime.mark(function _callee() {
+module.exports = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
     var lib;
     return regeneratorRuntime.wrap(function _callee$(_context) {
         while (1) {

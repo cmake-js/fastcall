@@ -31,7 +31,7 @@ var ArrayType = fastcall.ArrayType;
 describe('ref types', function () {
     var libPath = null;
     var lib = null;
-    before(async(regeneratorRuntime.mark(function _callee() {
+    before(async( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
         return regeneratorRuntime.wrap(function _callee$(_context) {
             while (1) {
                 switch (_context.prev = _context.next) {
@@ -117,7 +117,7 @@ describe('ref types', function () {
         });
 
         describe('async', function () {
-            it('should get referenced by string syntax', async(regeneratorRuntime.mark(function _callee2() {
+            it('should get referenced by string syntax', async( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
                 return regeneratorRuntime.wrap(function _callee2$(_context2) {
                     while (1) {
                         switch (_context2.prev = _context2.next) {
@@ -141,7 +141,7 @@ describe('ref types', function () {
                 }, _callee2, this);
             })));
 
-            it('should get referenced by node-ffi-like syntax', async(regeneratorRuntime.mark(function _callee3() {
+            it('should get referenced by node-ffi-like syntax', async( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
                 var TNumbers;
                 return regeneratorRuntime.wrap(function _callee3$(_context3) {
                     while (1) {
@@ -220,7 +220,7 @@ describe('ref types', function () {
             assert.equal(result, 1 * 2 * 3);
         }
 
-        var testMulStructMembersAsync = async(regeneratorRuntime.mark(function _callee4(noname) {
+        var testMulStructMembersAsync = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(noname) {
             var result, ptr;
             return regeneratorRuntime.wrap(function _callee4$(_context4) {
                 while (1) {
@@ -333,7 +333,7 @@ describe('ref types', function () {
         });
 
         describe('async', function () {
-            it('should get referenced by string syntax', async(regeneratorRuntime.mark(function _callee5() {
+            it('should get referenced by string syntax', async( /*#__PURE__*/regeneratorRuntime.mark(function _callee5() {
                 return regeneratorRuntime.wrap(function _callee5$(_context5) {
                     while (1) {
                         switch (_context5.prev = _context5.next) {
@@ -357,7 +357,7 @@ describe('ref types', function () {
                 }, _callee5, this);
             })));
 
-            it('should get referenced by node-ffi-like syntax', async(regeneratorRuntime.mark(function _callee6() {
+            it('should get referenced by node-ffi-like syntax', async( /*#__PURE__*/regeneratorRuntime.mark(function _callee6() {
                 var TUnion;
                 return regeneratorRuntime.wrap(function _callee6$(_context6) {
                     while (1) {
@@ -425,7 +425,7 @@ describe('ref types', function () {
             }
         }
 
-        var testAccessUnionMembersAsync = async(regeneratorRuntime.mark(function _callee7(noname) {
+        var testAccessUnionMembersAsync = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(noname) {
             var ptr, result, union, _result2;
 
             return regeneratorRuntime.wrap(function _callee7$(_context7) {
@@ -639,7 +639,7 @@ describe('ref types', function () {
         });
 
         describe('async', function () {
-            it('should get referenced by string syntax', async(regeneratorRuntime.mark(function _callee8() {
+            it('should get referenced by string syntax', async( /*#__PURE__*/regeneratorRuntime.mark(function _callee8() {
                 return regeneratorRuntime.wrap(function _callee8$(_context8) {
                     while (1) {
                         switch (_context8.prev = _context8.next) {
@@ -657,7 +657,7 @@ describe('ref types', function () {
                 }, _callee8, this);
             })));
 
-            it('should get referenced by node-ffi-like syntax', async(regeneratorRuntime.mark(function _callee9() {
+            it('should get referenced by node-ffi-like syntax', async( /*#__PURE__*/regeneratorRuntime.mark(function _callee9() {
                 var TRecWithArray, TRecWithArrays;
                 return regeneratorRuntime.wrap(function _callee9$(_context9) {
                     while (1) {
@@ -754,7 +754,7 @@ describe('ref types', function () {
             lib.interface.freeRecWithArrays(result);
         }
 
-        var testArrayFuncsAsync = async(regeneratorRuntime.mark(function _callee10(TRecWithArray, TRecWithArrays) {
+        var testArrayFuncsAsync = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(TRecWithArray, TRecWithArrays) {
             var records, i;
             return regeneratorRuntime.wrap(function _callee10$(_context10) {
                 while (1) {
@@ -836,7 +836,7 @@ describe('ref types', function () {
                 assert.equal(result, 42);
             });
 
-            it('works asynchronously', async(regeneratorRuntime.mark(function _callee11() {
+            it('works asynchronously', async( /*#__PURE__*/regeneratorRuntime.mark(function _callee11() {
                 var result;
                 return regeneratorRuntime.wrap(function _callee11$(_context11) {
                     while (1) {

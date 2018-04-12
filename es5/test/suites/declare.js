@@ -28,7 +28,7 @@ var async = Promise.coroutine;
 describe('Library.declare()', function () {
     var libPath = null;
     var lib = null;
-    before(async(regeneratorRuntime.mark(function _callee() {
+    before(async( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
         return regeneratorRuntime.wrap(function _callee$(_context) {
             while (1) {
                 switch (_context.prev = _context.next) {
@@ -70,7 +70,7 @@ describe('Library.declare()', function () {
     });
 
     describe('async', function () {
-        it('should declare stuff as async by default if options.callMode is async', async(regeneratorRuntime.mark(function _callee2() {
+        it('should declare stuff as async by default if options.callMode is async', async( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
             return regeneratorRuntime.wrap(function _callee2$(_context2) {
                 while (1) {
                     switch (_context2.prev = _context2.next) {
@@ -91,7 +91,7 @@ describe('Library.declare()', function () {
             }, _callee2, this);
         })));
 
-        it('should declare stuff as async if options.callMode is different', async(regeneratorRuntime.mark(function _callee3() {
+        it('should declare stuff as async if options.callMode is different', async( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
             return regeneratorRuntime.wrap(function _callee3$(_context3) {
                 while (1) {
                     switch (_context3.prev = _context3.next) {
@@ -136,7 +136,7 @@ describe('Library.declare()', function () {
         assert.equal(result, Math.floor((1.1 + 2.2) * 2));
     }
 
-    var testAsyncInterface = async(regeneratorRuntime.mark(function _callee4() {
+    var testAsyncInterface = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
         var result;
         return regeneratorRuntime.wrap(function _callee4$(_context4) {
             while (1) {

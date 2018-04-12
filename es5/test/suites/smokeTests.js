@@ -27,7 +27,7 @@ var async = Promise.coroutine;
 
 describe('Library', function () {
     var libPath = null;
-    before(async(regeneratorRuntime.mark(function _callee() {
+    before(async( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
         return regeneratorRuntime.wrap(function _callee$(_context) {
             while (1) {
                 switch (_context.prev = _context.next) {
@@ -443,7 +443,7 @@ describe('Library', function () {
             });
         });
 
-        var testMulAsync = async(regeneratorRuntime.mark(function _callee2(declaration) {
+        var testMulAsync = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(declaration) {
             var mul;
             return regeneratorRuntime.wrap(function _callee2$(_context2) {
                 while (1) {
@@ -554,7 +554,7 @@ describe('Library', function () {
             }, _callee2, this);
         }));
 
-        var testReadLongPtrAsync = async(regeneratorRuntime.mark(function _callee3(declaration) {
+        var testReadLongPtrAsync = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(declaration) {
             var readLongPtr, long, data;
             return regeneratorRuntime.wrap(function _callee3$(_context3) {
                 while (1) {
@@ -595,7 +595,7 @@ describe('Library', function () {
             }, _callee3, this);
         }));
 
-        var testWriteStringAsync = async(regeneratorRuntime.mark(function _callee4(declaration) {
+        var testWriteStringAsync = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(declaration) {
             var writeString, string;
             return regeneratorRuntime.wrap(function _callee4$(_context4) {
                 while (1) {
@@ -620,7 +620,7 @@ describe('Library', function () {
             }, _callee4, this);
         }));
 
-        var testPassNullAsync = async(regeneratorRuntime.mark(function _callee5(declaration) {
+        var testPassNullAsync = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(declaration) {
             var writeString;
             return regeneratorRuntime.wrap(function _callee5$(_context5) {
                 while (1) {
@@ -647,7 +647,7 @@ describe('Library', function () {
             }, _callee5, this);
         }));
 
-        var testPassNonPointerAsync = async(regeneratorRuntime.mark(function _callee6(declaration) {
+        var testPassNonPointerAsync = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(declaration) {
             var writeString;
             return regeneratorRuntime.wrap(function _callee6$(_context6) {
                 while (1) {
@@ -693,7 +693,7 @@ describe('Library', function () {
             }, _callee6, this, [[4, 10], [12, 18]]);
         }));
 
-        var testGetStringAsync = async(regeneratorRuntime.mark(function _callee7(declaration) {
+        var testGetStringAsync = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(declaration) {
             var getString, string;
             return regeneratorRuntime.wrap(function _callee7$(_context7) {
                 while (1) {
@@ -724,7 +724,7 @@ describe('Library', function () {
         }));
 
         // void getNumbers(double** nums, size_t* size)
-        var testGetNumbersAsync = async(regeneratorRuntime.mark(function _callee8(declaration) {
+        var testGetNumbersAsync = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(declaration) {
             var getNumbers, double, doublePtrType, doublePtrPtr, sizeTPtr, size, doublePtr, first;
             return regeneratorRuntime.wrap(function _callee8$(_context8) {
                 while (1) {
@@ -765,7 +765,7 @@ describe('Library', function () {
             }, _callee8, this);
         }));
 
-        var testMakeIntAsync = async(regeneratorRuntime.mark(function _callee9(callbackDecl, funcDecl) {
+        var testMakeIntAsync = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(callbackDecl, funcDecl) {
             var TMakeIntFunc, makeInt, predeclaredCallback, result;
             return regeneratorRuntime.wrap(function _callee9$(_context9) {
                 while (1) {

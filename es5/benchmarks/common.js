@@ -36,7 +36,7 @@ common.measure = function (name, callsPerIteration, f) {
     common.showResult(name, callsPerIteration, toMs(process.hrtime(begin)));
 };
 
-common.measureAsync = async(regeneratorRuntime.mark(function _callee(name, callsPerIteration, f) {
+common.measureAsync = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee(name, callsPerIteration, f) {
     var iterations, begin, i;
     return regeneratorRuntime.wrap(function _callee$(_context) {
         while (1) {

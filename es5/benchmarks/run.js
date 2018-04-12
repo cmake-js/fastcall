@@ -26,7 +26,7 @@ var ffiRun = require('./ffiRun');
 var imports = require('./imports');
 var config = require('./config');
 
-var run = async(regeneratorRuntime.mark(function _callee() {
+var run = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
     return regeneratorRuntime.wrap(function _callee$(_context) {
         while (1) {
             switch (_context.prev = _context.next) {

@@ -294,7 +294,7 @@ var Library = function () {
 
 module.exports = Library;
 
-var doFind = async(regeneratorRuntime.mark(function _callee(moduleDir, name) {
+var doFind = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee(moduleDir, name) {
     var rootDir, libPath;
     return regeneratorRuntime.wrap(function _callee$(_context) {
         while (1) {
@@ -341,7 +341,7 @@ var doFind = async(regeneratorRuntime.mark(function _callee(moduleDir, name) {
     }, _callee, this);
 }));
 
-var findIn = async(regeneratorRuntime.mark(function _callee2(rootDir, subDir, name) {
+var findIn = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(rootDir, subDir, name) {
     var dir, files, rex, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, file;
 
     return regeneratorRuntime.wrap(function _callee2$(_context2) {

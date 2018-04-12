@@ -24,7 +24,7 @@ var path = require('path');
 
 var testlib = null;
 
-exports.findTestlib = async(regeneratorRuntime.mark(function _callee() {
+exports.findTestlib = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
     return regeneratorRuntime.wrap(function _callee$(_context) {
         while (1) {
             switch (_context.prev = _context.next) {

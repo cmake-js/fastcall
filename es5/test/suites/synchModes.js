@@ -28,7 +28,7 @@ var async = Promise.coroutine;
 describe('Synchronization Modes', function () {
     var libPath = null;
     var lib = null;
-    before(async(regeneratorRuntime.mark(function _callee() {
+    before(async( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
         return regeneratorRuntime.wrap(function _callee$(_context) {
             while (1) {
                 switch (_context.prev = _context.next) {
@@ -86,7 +86,7 @@ describe('Synchronization Modes', function () {
         });
 
         describe('async', function () {
-            it('should create and use a mutex', async(regeneratorRuntime.mark(function _callee2() {
+            it('should create and use a mutex', async( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
                 return regeneratorRuntime.wrap(function _callee2$(_context2) {
                     while (1) {
                         switch (_context2.prev = _context2.next) {
@@ -126,7 +126,7 @@ describe('Synchronization Modes', function () {
         });
 
         describe('sync', function () {
-            it('should fail when there are async operations in the queue', async(regeneratorRuntime.mark(function _callee3() {
+            it('should fail when there are async operations in the queue', async( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
                 var syncMul, asyncMul, promises, i;
                 return regeneratorRuntime.wrap(function _callee3$(_context3) {
                     while (1) {
@@ -186,7 +186,7 @@ describe('Synchronization Modes', function () {
         });
 
         describe('async', function () {
-            it('should queue asyncronous function calls', async(regeneratorRuntime.mark(function _callee4() {
+            it('should queue asyncronous function calls', async( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
                 var promises, strBuff, a, reference, i, str;
                 return regeneratorRuntime.wrap(function _callee4$(_context4) {
                     while (1) {

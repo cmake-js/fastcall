@@ -1,6 +1,6 @@
 {
   "name": "fastcall",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "fastcall - Very fast, asynchronous, dyncall based foreign function interface library for Node.js",
   "license": "Apache-2.0",
   "repository": {

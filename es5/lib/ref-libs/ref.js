@@ -840,13 +840,12 @@ types.void = {
   set: function set(buf, offset, val) {
     debug('setting `void` type (no-op)');
   }
-};
 
-/**
- * The `int8` type.
- */
+  /**
+   * The `int8` type.
+   */
 
-types.int8 = {
+};types.int8 = {
   size: exports.sizeof.int8,
   indirection: 1,
   get: function get(buf, offset) {
@@ -858,13 +857,12 @@ types.int8 = {
     }
     return buf.writeInt8(val, offset || 0);
   }
-};
 
-/**
- * The `uint8` type.
- */
+  /**
+   * The `uint8` type.
+   */
 
-types.uint8 = {
+};types.uint8 = {
   size: exports.sizeof.uint8,
   indirection: 1,
   get: function get(buf, offset) {
@@ -876,13 +874,12 @@ types.uint8 = {
     }
     return buf.writeUInt8(val, offset || 0);
   }
-};
 
-/**
- * The `int16` type.
- */
+  /**
+   * The `int16` type.
+   */
 
-types.int16 = {
+};types.int16 = {
   size: exports.sizeof.int16,
   indirection: 1,
   get: function get(buf, offset) {
@@ -891,13 +888,12 @@ types.int16 = {
   set: function set(buf, offset, val) {
     return buf['writeInt16' + exports.endianness](val, offset || 0);
   }
-};
 
-/**
- * The `uint16` type.
- */
+  /**
+   * The `uint16` type.
+   */
 
-types.uint16 = {
+};types.uint16 = {
   size: exports.sizeof.uint16,
   indirection: 1,
   get: function get(buf, offset) {
@@ -906,13 +902,12 @@ types.uint16 = {
   set: function set(buf, offset, val) {
     return buf['writeUInt16' + exports.endianness](val, offset || 0);
   }
-};
 
-/**
- * The `int32` type.
- */
+  /**
+   * The `int32` type.
+   */
 
-types.int32 = {
+};types.int32 = {
   size: exports.sizeof.int32,
   indirection: 1,
   get: function get(buf, offset) {
@@ -921,13 +916,12 @@ types.int32 = {
   set: function set(buf, offset, val) {
     return buf['writeInt32' + exports.endianness](val, offset || 0);
   }
-};
 
-/**
- * The `uint32` type.
- */
+  /**
+   * The `uint32` type.
+   */
 
-types.uint32 = {
+};types.uint32 = {
   size: exports.sizeof.uint32,
   indirection: 1,
   get: function get(buf, offset) {
@@ -936,13 +930,12 @@ types.uint32 = {
   set: function set(buf, offset, val) {
     return buf['writeUInt32' + exports.endianness](val, offset || 0);
   }
-};
 
-/**
- * The `int64` type.
- */
+  /**
+   * The `int64` type.
+   */
 
-types.int64 = {
+};types.int64 = {
   size: exports.sizeof.int64,
   indirection: 1,
   get: function get(buf, offset) {
@@ -951,13 +944,12 @@ types.int64 = {
   set: function set(buf, offset, val) {
     return buf['writeInt64' + exports.endianness](val, offset || 0);
   }
-};
 
-/**
- * The `uint64` type.
- */
+  /**
+   * The `uint64` type.
+   */
 
-types.uint64 = {
+};types.uint64 = {
   size: exports.sizeof.uint64,
   indirection: 1,
   get: function get(buf, offset) {
@@ -966,13 +958,12 @@ types.uint64 = {
   set: function set(buf, offset, val) {
     return buf['writeUInt64' + exports.endianness](val, offset || 0);
   }
-};
 
-/**
- * The `float` type.
- */
+  /**
+   * The `float` type.
+   */
 
-types.float = {
+};types.float = {
   size: exports.sizeof.float,
   indirection: 1,
   get: function get(buf, offset) {
@@ -981,13 +972,12 @@ types.float = {
   set: function set(buf, offset, val) {
     return buf['writeFloat' + exports.endianness](val, offset || 0);
   }
-};
 
-/**
- * The `double` type.
- */
+  /**
+   * The `double` type.
+   */
 
-types.double = {
+};types.double = {
   size: exports.sizeof.double,
   indirection: 1,
   get: function get(buf, offset) {
@@ -996,14 +986,13 @@ types.double = {
   set: function set(buf, offset, val) {
     return buf['writeDouble' + exports.endianness](val, offset || 0);
   }
-};
 
-/**
- * The `Object` type. This can be used to read/write regular JS Objects
- * into raw memory.
- */
+  /**
+   * The `Object` type. This can be used to read/write regular JS Objects
+   * into raw memory.
+   */
 
-types.Object = {
+};types.Object = {
   size: exports.sizeof.Object,
   indirection: 1,
   get: function get(buf, offset) {
@@ -1012,18 +1001,17 @@ types.Object = {
   set: function set(buf, offset, val) {
     return buf.writeObject(val, offset || 0);
   }
-};
 
-/**
- * The `CString` (a.k.a `"string"`) type.
- *
- * CStrings are a kind of weird thing. We say it's `sizeof(char *)`, and
- * `indirection` level of 1, which means that we have to return a Buffer that
- * is pointer sized, and points to a some utf8 string data, so we have to create
- * a 2nd "in-between" buffer.
- */
+  /**
+   * The `CString` (a.k.a `"string"`) type.
+   *
+   * CStrings are a kind of weird thing. We say it's `sizeof(char *)`, and
+   * `indirection` level of 1, which means that we have to return a Buffer that
+   * is pointer sized, and points to a some utf8 string data, so we have to create
+   * a 2nd "in-between" buffer.
+   */
 
-types.CString = {
+};types.CString = {
   size: exports.sizeof.pointer,
   alignment: exports.alignof.pointer,
   indirection: 1,
@@ -1044,10 +1032,9 @@ types.CString = {
     }
     return exports.writePointer(buf, offset, _buf);
   }
-};
 
-// alias Utf8String
-var utfstringwarned = false;
+  // alias Utf8String
+};var utfstringwarned = false;
 Object.defineProperty(types, 'Utf8String', {
   enumerable: false,
   configurable: true,

@@ -32,7 +32,7 @@ var async = Promise.coroutine;
 
 describe('ffi compatibility', function () {
     var libPath = null;
-    before(async(regeneratorRuntime.mark(function _callee() {
+    before(async( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
         return regeneratorRuntime.wrap(function _callee$(_context) {
             while (1) {
                 switch (_context.prev = _context.next) {
@@ -139,7 +139,7 @@ describe('ffi compatibility', function () {
             });
         });
 
-        it('supports promises', async(regeneratorRuntime.mark(function _callee2() {
+        it('supports promises', async( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
             var lib;
             return regeneratorRuntime.wrap(function _callee2$(_context2) {
                 while (1) {

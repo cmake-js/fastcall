@@ -188,7 +188,7 @@ describe('RAII scope', function () {
     });
 
     describe('async', function () {
-        it('should propagate value to parent scope', async(regeneratorRuntime.mark(function _callee3() {
+        it('should propagate value to parent scope', async( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
             var disposed, dispose;
             return regeneratorRuntime.wrap(function _callee3$(_context3) {
                 while (1) {
@@ -201,13 +201,13 @@ describe('RAII scope', function () {
                             };
 
                             _context3.next = 4;
-                            return scope.async(regeneratorRuntime.mark(function _callee2() {
+                            return scope.async( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
                                 return regeneratorRuntime.wrap(function _callee2$(_context2) {
                                     while (1) {
                                         switch (_context2.prev = _context2.next) {
                                             case 0:
                                                 _context2.next = 2;
-                                                return scope.async(regeneratorRuntime.mark(function _callee() {
+                                                return scope.async( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
                                                     var value;
                                                     return regeneratorRuntime.wrap(function _callee$(_context) {
                                                         while (1) {
@@ -253,7 +253,7 @@ describe('RAII scope', function () {
             }, _callee3, this);
         })));
 
-        it('should support asynchronous dispose function', async(regeneratorRuntime.mark(function _callee6() {
+        it('should support asynchronous dispose function', async( /*#__PURE__*/regeneratorRuntime.mark(function _callee6() {
             var counter, dispose;
             return regeneratorRuntime.wrap(function _callee6$(_context6) {
                 while (1) {
@@ -268,13 +268,13 @@ describe('RAII scope', function () {
                             };
 
                             _context6.next = 4;
-                            return scope.async(regeneratorRuntime.mark(function _callee5() {
+                            return scope.async( /*#__PURE__*/regeneratorRuntime.mark(function _callee5() {
                                 return regeneratorRuntime.wrap(function _callee5$(_context5) {
                                     while (1) {
                                         switch (_context5.prev = _context5.next) {
                                             case 0:
                                                 _context5.next = 2;
-                                                return scope.async(regeneratorRuntime.mark(function _callee4() {
+                                                return scope.async( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
                                                     var value1, value2;
                                                     return regeneratorRuntime.wrap(function _callee4$(_context4) {
                                                         while (1) {

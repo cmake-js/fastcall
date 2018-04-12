@@ -26,7 +26,7 @@ var ffi = require('ffi');
 var ffiLib = null;
 var fastcallLib = null;
 
-exports.ffiWay = async(regeneratorRuntime.mark(function _callee() {
+exports.ffiWay = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
     var libPath;
     return regeneratorRuntime.wrap(function _callee$(_context) {
         while (1) {
@@ -63,7 +63,7 @@ exports.ffiWay = async(regeneratorRuntime.mark(function _callee() {
     }, _callee, this);
 }));
 
-exports.fastcallWay = async(regeneratorRuntime.mark(function _callee2() {
+exports.fastcallWay = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
     var libPath;
     return regeneratorRuntime.wrap(function _callee2$(_context2) {
         while (1) {
@@ -100,7 +100,7 @@ exports.close = function () {
     }
 };
 
-var findLib = async(regeneratorRuntime.mark(function _callee3() {
+var findLib = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
     var libPath;
     return regeneratorRuntime.wrap(function _callee3$(_context3) {
         while (1) {

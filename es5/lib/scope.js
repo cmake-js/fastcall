@@ -16,7 +16,7 @@ limitations under the License.
 
 'use strict';
 
-var _marked = [enumDisposable].map(regeneratorRuntime.mark);
+var _marked = /*#__PURE__*/regeneratorRuntime.mark(enumDisposable);
 
 var _ = require('lodash');
 var verify = require('./verify');
@@ -363,6 +363,6 @@ function enumDisposable(result) {
                     return _context.stop();
             }
         }
-    }, _marked[0], this, [[10, 20, 24, 32], [25,, 27, 31], [38, 48, 52, 60], [53,, 55, 59]]);
+    }, _marked, this, [[10, 20, 24, 32], [25,, 27, 31], [38, 48, 52, 60], [53,, 55, 59]]);
 }
 //# sourceMappingURL=scope.js.map

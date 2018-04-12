@@ -24,7 +24,7 @@ var config = require('./config');
 var assert = require('assert');
 var common = require('./common');
 
-module.exports = async(regeneratorRuntime.mark(function _callee() {
+module.exports = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
     var module;
     return regeneratorRuntime.wrap(function _callee$(_context) {
         while (1) {
@@ -80,7 +80,7 @@ function syncRun(module) {
     assert.equal(result, 5 + 5 + 1 + 1);
 }
 
-var asyncRun = async(regeneratorRuntime.mark(function _callee5(module) {
+var asyncRun = async( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(module) {
     var result, addNumbersAsync, concatAsync, cb, makeIntAsync;
     return regeneratorRuntime.wrap(function _callee5$(_context5) {
         while (1) {
@@ -89,7 +89,7 @@ var asyncRun = async(regeneratorRuntime.mark(function _callee5(module) {
                     result = void 0;
                     addNumbersAsync = Promise.promisify(module.addNumbersAsync);
                     _context5.next = 4;
-                    return common.measureAsync('addNumbers', 3, async(regeneratorRuntime.mark(function _callee2() {
+                    return common.measureAsync('addNumbers', 3, async( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
                         return regeneratorRuntime.wrap(function _callee2$(_context2) {
                             while (1) {
                                 switch (_context2.prev = _context2.next) {
@@ -124,7 +124,7 @@ var asyncRun = async(regeneratorRuntime.mark(function _callee5(module) {
 
                     concatAsync = Promise.promisify(module.concatAsync);
                     _context5.next = 8;
-                    return common.measureAsync('concat', 1, async(regeneratorRuntime.mark(function _callee3() {
+                    return common.measureAsync('concat', 1, async( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
                         return regeneratorRuntime.wrap(function _callee3$(_context3) {
                             while (1) {
                                 switch (_context3.prev = _context3.next) {
@@ -152,7 +152,7 @@ var asyncRun = async(regeneratorRuntime.mark(function _callee5(module) {
 
                     makeIntAsync = Promise.promisify(module.makeIntAsync);
                     _context5.next = 13;
-                    return common.measureAsync('callback', 3, async(regeneratorRuntime.mark(function _callee4() {
+                    return common.measureAsync('callback', 3, async( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
                         return regeneratorRuntime.wrap(function _callee4$(_context4) {
                             while (1) {
                                 switch (_context4.prev = _context4.next) {

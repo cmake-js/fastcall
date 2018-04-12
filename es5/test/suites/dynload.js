@@ -26,7 +26,7 @@ var async = Promise.coroutine;
 describe('native dynload interface', function () {
     var dynload = native.dynload;
     var libPath = null;
-    before(async(regeneratorRuntime.mark(function _callee() {
+    before(async( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
         return regeneratorRuntime.wrap(function _callee$(_context) {
             while (1) {
                 switch (_context.prev = _context.next) {
