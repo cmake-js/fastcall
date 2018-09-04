@@ -21,21 +21,6 @@ var a = verify.a;
 var ert = verify.ert;
 var _ = require('lodash');
 
-var TYPE_AND_LEN = /^\s*([\w_][\w\d_]*)\s*(?:\[\s*(\d+)\s*\])?\s*$/;
-
-exports.matchType = function (str) {
-    a && ert(_.isString(str));
-
-    var match = TYPE_AND_LEN.exec(str);
-    if (!match) {
-        return null;
-    }
-    return {
-        name: match[1],
-        length: match[2] || null
-    };
-};
-
 var FUNC = /^\s*([\w_][\w\d_]*\s*\**)\s*((?:\s*\(\s*\*\s*)?([\w_][\w\d_]*)(?:\s*\)\s*)?)\s*\((.*)\)\s*$/;
 
 exports.matchFunction = function (str) {
