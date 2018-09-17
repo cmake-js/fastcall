@@ -46,7 +46,8 @@ include_directories(
     ${DYNLOAD_INCLUDE_DIRS}
     ${CMAKE_JS_INC}
     "${CMAKE_SOURCE_DIR}/deps/optional"
-    "${CMAKE_SOURCE_DIR}/src")
+    "${CMAKE_SOURCE_DIR}/src"
+    "../nan")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
