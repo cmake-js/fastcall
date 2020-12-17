@@ -28,7 +28,7 @@ namespace {
 NAN_METHOD(loadLibrary)
 {
     char* str = *Nan::Utf8String(info[0]);
-    DLLib* pLib = dlLoadLibrary(str);
+    DLLib* pLib = dlLoadLibrary((*str) ? str : nullptr);
     if (!pLib) {
         return Nan::ThrowTypeError((string("Cannot load library or library not found: ") + str).c_str());
     }
