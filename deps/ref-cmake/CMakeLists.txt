@@ -22,4 +22,5 @@ set_target_properties(
   ref
   PROPERTIES
   PREFIX "" 
-  SUFFIX ".node")
+  SUFFIX ".node"
+  LINKER_LANGUAGE CXX)
