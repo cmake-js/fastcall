@@ -11,11 +11,11 @@
     "babel-polyfill": "^6.16.0",
     "bindings": "1",
     "bluebird": "3",
-    "cmake-js": "3",
+    "cmake-js": "^6.2.1",
+    "debug": "^2.2.0",
     "lodash": "4",
     "minimist": "^1.2.0",
-    "nan": "^2.4.0",
-    "debug": "^2.2.0"
+    "nan": "^2.4.0"
   },
   "scripts": {
     "install": "cmake-js compile",
